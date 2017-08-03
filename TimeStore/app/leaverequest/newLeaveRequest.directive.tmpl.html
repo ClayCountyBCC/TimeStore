@@ -1,0 +1,106 @@
+﻿<script type="text/ng-template" id="newLeaveRequest.directive.tmpl.html">
+
+    <div layout="row"
+         layout-align="center center"
+         flex="100">
+
+        <div flex="90"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+
+            <md-progress-linear flex="100" ng-if="showProgress" md-mode="indeterminate"></md-progress-linear>
+
+            <div style="margin-bottom: .5em; margin-top: .5em;"
+                 class="md-whiteframe-z1"
+                 layout-wrap
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+                <div layout="row"
+                     layout-align="space-around center"
+                     flex="100">
+                    <md-button style="margin-right: .5em;"
+                               ng-disabled="!showSelection || !allowPrevious"
+                               ng-click="goPrevious()"
+                               class="md-raised">
+                        {{ prevDay }}
+                    </md-button>
+
+                    <div>
+                        <label layout="row"
+                               layout-align="center center"
+                               flex="100">
+                            Select A Date
+                        </label>
+                        <div style="background-color: cornsilk;"
+                             class="md-whiteframe-z1">
+                            <md-datepicker style="background-color: cornsilk;"
+                                           md-min-date="minDate"
+                                           md-max-date="maxDate"
+                                           ng-change="leaveDateSelected()"
+                                           ng-model="selectedDate">
+
+                            </md-datepicker>
+                        </div>
+                    </div>
+                    <md-button style="margin-right: .5em; margin-left: .5em;"
+                               ng-disabled="!showSelection || !allowNext"
+                               ng-click="goNext()"
+                               class="md-raised">
+                        {{ nextDay }}
+                    </md-button>
+                </div>
+                <div style="margin-top: .5em;"
+                     flex="100"
+                     layout="row"
+                     layout-align="space-around center"
+                     layout-wrap
+                     ng-show="showSelection">
+                    <div layout="row"
+                         layout-align="space-around center"
+                         layout-wrap
+                         flex="70">
+                        <hours-display tctd="TCTD" hours="TCTD.VacationHours" calc="calculateTotalHours()"></hours-display>
+                        <hours-display tctd="TCTD" hours="TCTD.SickHours" calc="calculateTotalHours()"></hours-display>
+                        <hours-display tctd="TCTD" hours="TCTD.SickFamilyLeave" calc="calculateTotalHours()"></hours-display>
+                        <hours-display tctd="TCTD" hours="TCTD.ScheduledLWOPHours" calc="calculateTotalHours()"></hours-display>
+                        <md-input-container class="md-whiteframe-z1 margin-left-bottom"
+                                            flex-gt-lg="70"
+                                            flex="90">
+                            <label>
+                                <md-icon aria-label="comment icon"
+                                         md-svg-src="/TimeStore/images/ic_insert_comment_24px.svg">
+                                </md-icon>
+                                Add a Comment for this day
+                            </label>
+                            <input ng-model="TCTD.Comment" name="comment" md-maxlength="100" />
+                        </md-input-container>
+                    </div>
+
+                    <md-button ng-click="resetSelection()"
+                               class="md-raised">
+                        Reset
+                        <md-icon aria-label="reset icon"
+                                 md-svg-src="images/ic_settings_backup_restore_24px.svg">
+                        </md-icon>
+                    </md-button>
+                    <md-button ng-click="saveTCTD()"
+                               class="md-raised md-warn">
+                        Save
+                        <md-icon aria-label="save icon"
+                                 md-svg-src="images/ic_save_24px.svg">
+                        </md-icon>
+                    </md-button>
+                </div>
+                <div layout="row"
+                     layout-align="end center"
+                     flex="100">
+                    {{ responseMessage }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</script>

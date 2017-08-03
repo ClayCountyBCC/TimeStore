@@ -1,0 +1,33 @@
+﻿<script type=text/ng-template id=TimeCardView.tmpl.html>
+    <div flex="100"
+         layout="row"
+         layout-align="center start"
+         layout-wrap
+         layout-margin>
+
+        <div flex="90"
+             layout="row"
+             layout-align="center center">
+
+            <timecard-header flex="100"
+                             shortheader="false"
+                             timecard="timecard">
+            </timecard-header>
+
+        </div>
+
+        <div flex="90"
+             class="md-whiteframe-z1"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+            <date-selector title="Pay Period Ending:"
+                           label="Select Pay Period"
+                           datetype="ppd"
+                           flex="100">
+            </date-selector>
+            <timecard-detail flex="100" timecard="timecard"></timecard-detail>
+
+        </div>
+    </div>
+</script>

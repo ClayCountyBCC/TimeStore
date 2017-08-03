@@ -1,0 +1,89 @@
+﻿
+(function () {
+    "use strict";
+    var timestoreApp = angular.module('timestoreApp');
+
+    timestoreApp.controller('TimeCardOptionsController', function ($scope, $location, $routeParams, timestoredata, viewOptions) {
+
+        $scope.options = viewOptions.value;
+        $scope.payperiodindex = 0;
+        $scope.selectedPP = null;
+        $scope.employeeid = $routeParams.employeeId;
+        $scope.employeeSearchText = null;
+        $scope.employee = null;
+
+        $scope.$on('shareViewOptions', function () {
+            $scope.options = viewOptions.value;
+        });
+
+        $scope.querySearch = function (query, aMap) {
+            var results = query ? aMap.filter(createFilterFor(query)) : []; 
+            return results;
+        };        
+
+        function createFilterFor(query) {
+            var lowercaseQuery = angular.lowercase(query);
+            return function filterFn(item) {                
+                return (item.displayLower.indexOf(lowercaseQuery) >= 0);
+            };
+        }
+
+        timestoredata.getEmployees().then(function (data) {
+            $scope.employeelist = data;
+            $scope.employeeMapV = $scope.employeelist.map(function (employeeMap) {
+                return {
+                    value: employeeMap,
+                    displayLower: angular.lowercase(employeeMap.EmployeeDisplay),
+                    display: employeeMap.EmployeeDisplay
+                };
+            });
+
+            if ($scope.employeeid == 'default') {
+                loadDefaultEmployee();
+            }
+
+        }, onError('getEmployees'));
+
+        var loadDefaultEmployee = function () {
+            timestoredata.getDefaultEmployee().then(function (data) {
+                $scope.employeeid = data.employeeID;
+            }, onError('loadDefaultEmployee'));
+        };
+
+        timestoredata.getPayPeriods().then(function (data) {
+            $scope.payperiodlist = data;
+        }, function () { });
+                
+        var getSelectedPayPeriod = function (ppi) {
+            console.log('setting selected pay period');
+            if ($scope.payperiodlist === undefined) {
+                return '';
+            }
+            var index = _.findIndex($scope.payperiodlist, function (b) {
+                return b.Index == ppi;
+            });
+            return $scope.payperiodlist[index].PayPeriodEndDisplay;
+        };
+        $scope.getSelectedPayPeriod = getSelectedPayPeriod;
+
+        function onError(err) {
+            console.log('Error: ' + err);
+        }
+
+        function setLocation() {
+            $location.path('/employeeid/' + $scope.employeeid);
+        }
+
+        $scope.selectedEmployeeChanged = function (employee) {
+            $scope.employeeid = employee.value.EmployeeID;
+            setLocation();
+        };
+
+        $scope.selectedPayPeriodChanged = function () {
+            console.log($scope.selectedPP);
+            //setLocation();
+        };
+
+    });
+
+}());

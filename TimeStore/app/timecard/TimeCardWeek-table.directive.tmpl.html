@@ -1,0 +1,58 @@
+﻿<script type="text/ng-template" id="TimeCardWeek-table.tmpl.html">
+
+    <table>
+        <tr>
+            <th class="width15">
+                Day / Date
+            </th>
+            <th class="autoWidth">
+                Work Times
+            </th>
+            <th class="width10">
+                Comment
+            </th>
+            <th class="width10" ng-repeat="gtu in typelist">
+                {{gtu}}
+            </th>
+            <th class="width5">
+                Total
+            </th>
+        </tr>
+        <tr ng-repeat="r in week">
+            <td class="width15">
+                {{r.workDateDayOfWeek}} {{r.workDateDisplay}}
+            </td>
+            <td class="autoWidth">
+                <div style="display: block; width: 100%;">
+                    <span style="padding-right: .5em;"
+                          ng-repeat="work in r.workTimeList">
+                        {{work.WorkTime}}
+                    </span>
+                </div>
+            </td>
+            <td class="width10">
+                {{r.comment}}
+            </td>
+            <td class="width10"
+                ng-repeat="gtu in typelist">
+                {{ getHours(gtu, r.workHoursList) }}
+            </td>
+            <td class="width5">
+                {{ r.totalWorkHours}}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3"
+                style="">
+                Total for {{title}}
+            </td>
+            <td class="width10"
+                ng-repeat="gtu in typelist">
+                {{ getTotalHours(gtu)}}
+            </td>
+            <td class="width5">
+                {{getTotalHours(null)}}
+            </td>
+        </tr>
+    </table>
+</script>

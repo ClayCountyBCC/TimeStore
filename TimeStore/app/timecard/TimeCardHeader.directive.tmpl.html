@@ -1,0 +1,158 @@
+﻿<script type="text/ng-template" id="TimeCardHeader.tmpl.html">
+
+    <div class="md-whiteframe-z1" ng-cloak>
+        <md-grid-list ng-cloak
+                      md-cols="3"
+                      md-cols-md="2"
+                      md-cols-sm="1"
+                      md-gutter="8px"
+                      md-row-height="28px">
+
+            <md-grid-tile md-rowspan="2"
+                          md-colspan="1"
+                          md-rowspan-md="4"
+                          md-rowspan-sm="1"
+                          md-colspan-md="1"
+                          md-colspan-sm="1">
+
+                <div layout="row"
+                     layout-align="center center"
+                     layout-wrap>
+                    <h4>
+                        {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
+                    </h4>
+                </div>
+            </md-grid-tile>
+
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="1">
+                <div layout="row"
+                     flex="100"
+                     layout-align="center center"
+                     layout-wrap>
+                    {{ ::timecard.title }} ( {{ ::timecard.classify }} )
+                </div>
+            </md-grid-tile>
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="1">
+                <div layout="row"
+                     flex="100"
+                     layout-align="center center"
+                     layout-wrap>
+                    {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
+                </div>
+            </md-grid-tile>
+
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="1">
+                <div layout="row"
+                     flex="100"
+                     layout-align="center center"
+                     layout-wrap>
+                    <span>
+                        Payrate {{ ::timecard.shortPayrate}} {{ ::timecard.exemptStatus }}
+                        <md-tooltip md-direction="right">
+                            {{ ::timecard.Payrate }}
+                        </md-tooltip>
+                    </span>
+                </div>
+            </md-grid-tile>
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="1">
+                <div layout="row"
+                     flex="100"
+                     layout-align="center center"
+                     layout-wrap>
+                    {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
+                </div>
+            </md-grid-tile>
+
+        </md-grid-list>
+
+        <md-grid-list ng-if="shortheader === false"
+                      md-cols="4"
+                      md-cols-md="2"
+                      md-cols-sm="1"
+                      md-gutter="8px"
+                      md-row-height="28px">
+
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="4"
+                          md-colspan-md="2"
+                          md-colspan-sm="1">
+
+                <div flex="100"
+                     class="short-toolbar my-accent"
+                     layout="row"
+                     layout-align="center center">
+                    <h5>
+                        Current Banked Hours
+                    </h5>
+                </div>
+            </md-grid-tile>
+
+            <md-grid-tile layout="row"
+                          layout-align="center center"
+                          md-rowspan="1"
+                          md-colspan="1">
+
+                {{ 'Vacation ' + timecard.bankedVacation }}
+
+            </md-grid-tile>
+            <md-grid-tile layout="row"
+                          layout-align="center center"
+                          md-rowspan="1"
+                          md-colspan="1">
+                {{ 'Sick ' + timecard.bankedSick }}
+            </md-grid-tile>
+            <md-grid-tile ng-if="timecard.exemptStatus === 'Non Exempt' && !timecard.isHolidayTimeBankable"
+                          layout="row"
+                          layout-align="center center"
+                          md-rowspan="1"
+                          md-colspan="1">
+                {{ 'Comp ' + timecard.bankedComp }}
+            </md-grid-tile>
+            <md-grid-tile ng-if="timecard.isHolidayTimeBankable || timecard.bankedHoliday > 0"
+                          layout="row"
+                          layout-align="center center"
+                          md-rowspan="1"
+                          md-colspan="1">
+                {{ 'Holiday ' + timecard.bankedHoliday }}
+            </md-grid-tile>
+        </md-grid-list>
+
+        <md-grid-list ng-if="timecard.Approval_Level > 0 && shortheader === false"
+                      md-cols="2"
+                      md-cols-md="1"
+                      md-cols-sm="1"
+                      md-gutter="8px"
+                      md-row-height="28px">
+
+            <md-grid-tile md-rowspan="1"
+                          md-colspan="2"
+                          md-colspan-md="1"
+                          md-colspan-sm="1">
+
+                <div flex="100"
+                     class="short-toolbar my-accent"
+                     layout="row"
+                     layout-align="center center">
+                    <h5>
+                        Approval Information
+                    </h5>
+                </div>
+            </md-grid-tile>
+
+            <md-grid-tile layout="row"
+                          layout-align="center center">
+                Initial Approval By {{ ::timecard.Initial_Approval_By}} on {{ ::timecard.Initial_Approval_DateTime }}
+            </md-grid-tile>
+            <md-grid-tile ng-if="timecard.Approval_Level > 1"
+                          layout="row"
+                          layout-align="center center">
+                Final Approval By {{ ::timecard.Final_Approval_By }} on {{ ::timecard.Final_Approval_DateTime }}
+            </md-grid-tile>
+        </md-grid-list>
+
+    </div>
+</script>

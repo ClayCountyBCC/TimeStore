@@ -1,0 +1,377 @@
+﻿<script type="text/ng-template" id="LeaveApproval.tmpl.html">
+
+  <md-progress-linear ng-if="showProgress === true"
+                      flex="100"
+                      md-mode="indeterminate">
+  </md-progress-linear>
+
+  <div layout="row"
+       layout-align="center center"
+       layout-padding
+       flex="100">
+
+    <div layout="row"
+         layout-align="center center"
+         class="md-whiteframe-z1"
+         layout-wrap
+         flex="90">
+
+      <div ng-show="deptList.length > 1"
+           layout="row"
+           layout-align="center center"
+           layout-wrap
+           flex="100">
+        <label style="margin-right: .5em;">
+          Filter By Department
+        </label>
+        <md-select md-on-close="updateFilter()"
+                   aria-label="View By Department"
+                   ng-model="filterDept">
+          <md-option value="Select Dept">
+            Select Dept
+          </md-option>
+          <md-option value="all">
+            All
+          </md-option>
+          <md-option ng-repeat="dept in deptList | orderBy:dept"
+                     ng-value="dept">
+            {{ dept }}
+          </md-option>
+        </md-select>
+      </div>
+
+      <div layout="row"
+           layout-align="center center"
+           layout-wrap
+           flex="100">
+        <label>Filter by Status</label>
+        <md-radio-group layout="row"
+                        layout-align="start center"
+                        ng-change="updateFilter()"
+                        ng-model="filterStatus">
+          <md-radio-button value="undecided">
+            Undecided
+          </md-radio-button>
+          <md-radio-button value="approved">
+            Approved
+          </md-radio-button>
+          <md-radio-button value="denied">
+            Denied
+          </md-radio-button>
+          <md-radio-button value="all">
+            All
+          </md-radio-button>
+        </md-radio-group>
+        <span flex="5"></span>
+        <md-button ng-click="refreshData()"
+                   class="md-primary md-raised">
+          Refresh Data
+        </md-button>
+      </div>
+      <div ng-show="filteredDataList.length > 0"
+           layout="row"
+           layout-align="center center"
+           layout-wrap
+           flex="100">
+
+        <div style="margin-top: 8px; margin-bottom: 8px;"
+             class="my-accent padding"
+             layout-align="center center"
+             flex="100"
+             layout-wrap
+             layout="row">
+          <span flex="10">
+            Dept
+          </span>
+          <span flex="20">
+            Date
+          </span>
+          <span flex="15">
+            Name
+          </span>
+          <span flex="20">
+            Type
+          </span>
+          <span flex="10">
+            Hours
+          </span>
+          <span flex="20">
+            Status
+          </span>
+          <md-divider class="padding"
+                      flex="100"></md-divider>
+        </div>
+
+        <div style="cursor: pointer;"
+             class="padding"
+             ng-repeat="d in filteredDataList track by $index"
+             ng-class="{highlightBorder: selectedId == d.approval_hours_id}"
+             layout="row"
+             layout-align="center"
+             layout-wrap
+             flex="100">
+          <span ng-click="showDetail($index)"
+                flex="10">
+            {{ d.dept_id }}
+          </span>
+          <span ng-click="showDetail($index)"
+                flex="20">
+            {{ d.work_date_display }}
+          </span>
+          <span ng-click="showDetail($index)"
+                flex="15">
+            {{ d.employee_name }}
+          </span>
+          <span ng-click="showDetail($index)"
+                flex="20">
+            {{ d.field.Field_Display }}
+          </span>
+          <span ng-click="showDetail($index)"
+                flex="10">
+            {{ d.hours_used }}
+          </span>
+          <span ng-if="d.approval_id === 0"
+                ng-click="showDetail($index)"
+                flex="20">
+            <span class="undecidedLeave">
+              Undecided
+            </span>
+          </span>
+          <span ng-if="d.approval_id !== 0 && d.Approved"
+                ng-click="showDetail($index)"
+                flex="20">
+            <span class="approvedLeave">
+              Approved
+              <md-icon aria-label="approved icon"
+                       md-svg-src="/TimeStore/images/ic_done_24px.svg">
+              </md-icon>
+            </span>
+          </span>
+          <span ng-if="d.approval_id !== 0 && !d.Approved"
+                ng-click="showDetail($index)"
+                flex="20">
+            <span class="deniedLeave">
+              Denied
+              <md-icon aria-label="denied icon"
+                       md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+              </md-icon>
+            </span>
+          </span>
+          <div style="margin-top: .5em;"
+               ng-if="d.comment.length > 0"
+               layout="row"
+               layout-align="start center"
+               flex="100">
+            <span style="text-align: right;"
+                  flex="20">
+              Comment:
+            </span>
+            <span flex="5"></span>
+            <span style="text-align: left;"
+                  flex>
+              {{ d.comment}}
+            </span>
+          </div>
+          <div style="margin-top: .5em;"
+               ng-if="d.note.length > 0"
+               layout="row"
+               layout-align="start center"
+               flex="100">
+            <span style="text-align: right;"
+                  flex="20">
+              Decision Note:
+            </span>
+            <span flex="5"></span>
+            <span style="text-align: left;"
+                  flex>
+              {{ d.note}}
+            </span>
+          </div>
+          <div style="margin-top: .5em;"
+               ng-if="d.approval_id !== 0"
+               layout="row"
+               layout-align="start center"
+               flex="100">
+            <span style="text-align: right;"
+                  flex="20">
+              Approved By: 
+            </span>
+            <span flex="5"></span>
+            <span flex>
+              {{ d.by_username }}
+            </span>
+          </div>
+          <div style="margin-top: .5em;"
+               ng-if="d.approval_id !== 0"
+               layout="row"
+               layout-align="start center"
+               flex="100">
+            <span style="text-align: right;"
+                  flex="20">
+              Approved On:
+            </span>
+            <span flex="5"></span>
+            <span style="text-align: left;"
+                  flex>
+              {{ d.approval_date_display }}
+            </span>
+          </div>
+          <md-divider class="padding"
+                      flex="100"></md-divider>
+          <div class="padding"
+               flex="100"
+               layout="row"
+               layout-align="center center"
+               layout-wrap
+               ng-show="d.showDetail">
+
+            <div ng-show="d.approval_id === 0"
+                 layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <md-button ng-disabled="approving"
+                         ng-click="finalizeLeaveRequest(true, $index)"
+                         class="md-raised md-primary">
+                Approve Leave Request
+              </md-button>
+
+              <span flex="5"></span>
+              <md-button ng-click="closeDetail()"
+                         class="md-raised">
+                Close
+              </md-button>
+
+            </div>
+            <div ng-if="d.approval_id === 0 && approving"
+                 layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <md-progress-circular md-diameter="25%"
+                                    md-mode="indeterminate">
+              </md-progress-circular>
+              <span>Processing your request, please wait...</span>
+            </div>
+            <div ng-show="d.approval_id === 0"
+                 layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <md-button ng-click="finalizeLeaveRequest(false, $index)"
+                         ng-disabled="d.note.length === 0 || approving"
+                         class="md-raised md-warn">
+                Deny Leave Request
+              </md-button>
+              <span flex="5"></span>
+              <md-input-container flex="50">
+                <label style="color: black;">
+                  Reason for Denial - Required for Denials
+                  <md-icon aria-label="denial reason icon"
+                           md-svg-src="/Timestore/images/ic_mode_edit_24px.svg"></md-icon>
+                </label>
+                <input ng-model="d.note"
+                       type="text"
+                       md-max-length="1000" />
+              </md-input-container>
+            </div>
+              <div ng-show="d.approval_id !== 0"
+                   layout="row"
+                   layout-align="center center"
+                   flex="100">
+                <span flex="80"></span>
+                <md-button ng-click="closeDetail()"
+                           class="md-raised">
+                  Close
+                </md-button>
+              </div>
+              <div flex="100"
+                   layout-align="center center"
+                   layout="row">
+                {{ responseMessage }}
+              </div>
+
+              <div ng-if="filteredDataByDateAndDeptList.length > 0"
+                   style="margin-top: .25em; margin-bottom: .25em; cursor: text;"
+                   flex="100"
+                   class="short-toolbar my-accent"
+                   layout="row"
+                   layout-align="start center">
+                <span flex="5"></span>
+                <h5>
+                  Showing leave requests found on this date
+                </h5>
+              </div>
+              <div style="margin-top: .75em; cursor: text;"
+                   ng-if="filteredDataByDateAndDeptList.length > 0"
+                   ng-repeat="x in filteredDataByDateAndDeptList"
+                   layout="row"
+                   layout-align="center center"
+                   layout-wrap
+                   flex="100">
+                <span flex="5">
+                  {{ x.dept_id }}
+                </span>
+                <span flex="20">
+                  {{ x.work_date_display }}
+                </span>
+                <span flex="20">
+                  {{ x.employee_name }}
+                </span>
+                <span flex="20">
+                  {{ x.field.Field_Display }}
+                </span>
+                <span flex="10">
+                  {{ x.hours_used }}
+                </span>
+                <span ng-if="x.approval_id === 0"
+                      flex="20">
+                  <span class="undecidedLeave">
+                    Undecided
+                  </span>
+                </span>
+                <span ng-if="x.approval_id !== 0 && x.Approved"
+                      flex="20">
+                  <span class="approvedLeave">
+                    Approved
+                    <md-icon aria-label="approved icon"
+                             md-svg-src="/TimeStore/images/ic_done_24px.svg">
+                    </md-icon>
+                  </span>
+                </span>
+                <span ng-if="x.approval_id !== 0 && !x.Approved"
+                      flex="20">
+                  <span class="deniedLeave">
+                    Denied
+                    <md-icon aria-label="denied icon"
+                             md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+                    </md-icon>
+                  </span>
+                </span>
+                <md-divider class="padding"
+                            flex="100"></md-divider>
+              </div>
+            </div>
+        </div>
+
+
+      </div>
+
+      <div ng-show="filteredDataList.length === 0 && showProgress === false"
+           layout="row"
+           layout-align="center center"
+           flex="100">
+
+        No requests to view for the selected Department.
+
+      </div>
+
+      <!--
+          Show a listing of all of the Leave Requests, with unapproved at the top.
+          Upon selecting a request, the request expands and all of the other requests found
+          on this day are shown
+
+
+      -->
+    </div>
+
+  </div>
+
+</script>

@@ -1,0 +1,207 @@
+﻿<script type=text/ng-template id=Approval.tmpl.html>
+    <div flex="100"
+         layout="row"
+         layout-align="center center"
+         layout-wrap>
+
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>
+
+        <date-selector title="Pay Period Ending:"
+                       label="Select Pay Period"
+                       datetype="ppd"
+                       flex="100">
+        </date-selector>
+
+        <h3 flex="100"
+            layout="row"
+            layout-align="center center">
+            {{ Title }}
+        </h3>
+        <h3 ng-if="timeData.length === 0"
+            flex="100"
+            layout="row"
+            layout-align="center center">
+            {{ Message }}
+        </h3>
+        <md-select aria-label="View By Department or Custom Group"
+                   flex="50"
+                   id="viewGroups"
+                   ng-if="timeData.length > 0"
+                   placeholder="View By Department or Custom Group"
+                   ng-model="selectedGroup">
+            <md-select-label flex="100">
+                <span style="text-align: center;"
+                      flex="100">
+                    View By Department or Custom Group {{ selectedGroup }}
+                </span>
+            </md-select-label>
+            <md-optgroup label="Departments">
+                <md-option ng-repeat="dept in getDepts() | orderBy:dept"
+                           ng-value="dept"
+                           ng-click="groupSelected(dept)">
+                    {{ dept }}
+                </md-option>
+            </md-optgroup>
+
+            <md-optgroup label="Custom Groups">
+                <md-option ng-repeat="group in getGroups() | orderBy:group"
+                           ng-value="group"
+                           ng-click="groupSelected(group)">
+                    {{ group }}
+                </md-option>
+            </md-optgroup>
+        </md-select>
+        <md-button class="md-raised md-primary"
+                   ng-click="RefreshApprovalData()">
+            Refresh Data
+        </md-button>
+
+        <div ng-if="currentPage !== null"
+             flex="100"
+             layout="row"
+             layout-align="space-around center"
+             layout-padding>
+            <md-button ng-click="loadPage(-1)"
+                       ng-disabled="currentPage === 1"
+                       flex="40"
+                       class="md-raised md-primary"
+                       layout="row"
+                       layout-align="center center">
+                Previous Page
+            </md-button>
+            <md-button ng-click="loadPage(1)"
+                       ng-disabled="currentPage === totalPages"
+                       flex="40"
+                       class="md-raised md-primary"
+                       layout="row"
+                       layout-align="center center">
+                Next Page
+            </md-button>
+        </div>
+
+        <md-list ng-if="filteredData.length > 0"
+                 layout="row"
+                 layout-align="center center"
+                 flex="100"
+                 layout-wrap>
+
+            <md-item ng-repeat="t in filteredData | orderBy: t.EmployeeDisplay"
+                     flex="100"
+                     layout="row"
+                     layout-align="center center"
+                     layout-wrap>
+
+                <md-item-content flex="100"
+                                 layout="row"
+                                 layout-align="center center">
+
+                    <div flex="100"
+                         layout="row"
+                         layout-align="start center"
+                         layout-wrap
+                         layout-padding>
+
+                        <div flex="100"
+                             layout="row"
+                             layout-align="center center"
+                             layout-wrap
+                             ng-class=" { myprimaryhue1: t.Approval_Level == 0, myprimary: t.Approval_Level == 1 } ">
+                            <span flex="40">
+                                <md-button class="ButtonAsLink" ng-click="loadTimeCard(t.employeeID)">
+                                    {{ t.EmployeeDisplay }}
+                                </md-button>
+                            </span>
+                            <span flex="30">
+                                {{ getApprovalText(t.Approval_Level) }}
+                            </span>
+                            <span flex></span>
+                            <md-button ng-if="t.Approval_Level === 1"
+                                       class="md-raised md-warn"
+                                       ng-click="approveTime(t.employeeID)">
+                                Approve Time
+                            </md-button>
+                            <md-checkbox ng-if="(approvalType === 'I' && t.Approval_Level === 1) || (approvalType !== 'I' && t.Approval_Level === 2)"
+                                         ng-disabled="true"
+                                         class="veryshort makeWhite"
+                                         ng-model="t.Approved">
+                                Approved
+                            </md-checkbox>
+                            <md-divider flex="100"></md-divider>
+                        </div>
+
+                        <timecard-detail flex="100"
+                                         timecard="t"
+                                         ng-if="t.showTimecard === true">
+                        </timecard-detail>
+                        <md-divider flex="100" ng-if="t.showTimecard === true"></md-divider>
+
+                        <div ng-repeat="wtl in t.approvalTimeList"
+                             flex="30"
+                             layout="row"
+                             layout-align="center center"
+                             layout-wrap>
+
+                            <span flex="80" layout="row" layout-align="end center">
+                                {{wtl.name}}
+                            </span>
+                            <span flex="20" layout="row" layout-align="center center">
+                                {{wtl.hours}}
+                            </span>
+
+                        </div>
+
+                        <md-divider flex="100"></md-divider>
+
+                        <div flex="100"
+                             layout="row"
+                             layout-align="center center"
+                             layout-wrap
+                             class="my-accent">
+                            <span flex></span>
+                            <span flex="30"
+                                  layout="row"
+                                  layout-align="end center">
+                                Total Hours
+                            </span>
+                            <span flex="10"
+                                  layout="row"
+                                  layout-align="center center">
+                                {{getTotalHours(t.approvalTimeList)}}
+                            </span>
+
+                        </div>
+                    </div>
+                </md-item-content>
+
+            </md-item>
+
+        </md-list>
+
+        <div ng-if="currentPage !== null"
+             flex="100"
+             layout="row"
+             layout-align="space-around center"
+             layout-padding>
+            <md-button ng-click="loadPage(-1)"
+                       ng-disabled="currentPage === 1"
+                       flex="40"
+                       class="md-raised md-primary"
+                       layout="row"
+                       layout-align="center center">
+                Previous Page
+            </md-button>
+            <md-button ng-click="loadPage(1)"
+                       ng-disabled="currentPage === totalPages"
+                       flex="40"
+                       class="md-raised md-primary"
+                       layout="row"
+                       layout-align="center center">
+                Next Page
+            </md-button>
+        </div>
+
+    </div>
+</script>

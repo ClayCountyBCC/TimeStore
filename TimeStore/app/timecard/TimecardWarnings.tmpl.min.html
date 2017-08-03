@@ -1,0 +1,33 @@
+﻿<script type=text/ng-template id=TimecardWarnings.tmpl.html>
+    <md-list ng-if="dl.length > 0"
+             flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             layout-padding>
+
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div class="short-toolbar my-accent"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5>{{title}}</h5>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 ng-repeat="wl in dl" layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="start center">
+                <span flex="100">{{wl}}</span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+    </md-list>
+</script>

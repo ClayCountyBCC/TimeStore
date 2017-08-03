@@ -1,0 +1,141 @@
+﻿<script type=text/ng-template id=Access.tmpl.html>
+    <div flex="100" layout="row" layout-align="center start" layout-wrap layout-margin>
+        <div flex="40" layout="row" layout-align="center start" layout-wrap layout-padding layout-margin>
+
+            <md-autocomplete ng-if="employeeList.length > 0"
+                             flex="100"
+                             id="employeeList"
+                             md-items="employee in querySearch(employeeSearchText, employeeMapV)"
+                             md-item-text="employee.display"
+                             md-selected-item="employee"
+                             md-search-text="employeeSearchText"
+                             md-selected-item-change="selectedEmployeeChanged(employee)"
+                             md-autofocus="true"
+                             placeholder="Search by Name or Employee Id to begin">
+                <span md-highlight-text="employeeSearchText">{{employee.display}}</span>
+            </md-autocomplete>
+
+            <div flex="100" class="md-whiteframe-z1" layout-wrap layout="row" layout-align="start center">
+                <md-select aria-label="Select Access Level"
+                           flex="90" id="AccessTypes"
+                           ng-disabled="employee === null"
+                           ng-model="timecardAccess.Raw_Access_Type">
+                    <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
+                    <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
+                        {{ al }}
+                    </md-option>
+                </md-select>
+                <md-select aria-label="Select Data Type"
+                           flex="90" id="dataTypeList"
+                           ng-disabled="employee === null"
+                           ng-model="timecardAccess.Data_Type">
+                    <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
+                    <md-option ng-value="dt" ng-repeat="dt in dataTypes">
+                        {{ dt }}
+                    </md-option>
+                </md-select>
+
+                <md-checkbox flex="100"
+                             id="BackendReportAccess"
+                             ng-disabled="employee === null"
+                             ng-model="timecardAccess.Backend_Reports_Access">
+                    Does this user have access to the Backend Reports?
+                </md-checkbox>
+                <md-divider flex="100"></md-divider>
+                <md-checkbox flex="100"
+                             ng-disabled="employee === null"
+                             id="ApprovalRequired"
+                             ng-model="timecardAccess.RequiresApproval">
+                    Does this user require approval?
+                </md-checkbox>
+                <md-divider flex="100"></md-divider>
+                <md-checkbox flex="100"
+                             id="CanChangeAccess"
+                             ng-disabled="employee === null"
+                             ng-model="timecardAccess.CanChangeAccess">
+                    Can this user change Timestore Access?
+                </md-checkbox>
+                <md-divider flex="100"></md-divider>
+                <md-select aria-label="Select Reports To"
+                           flex="90"
+                           id="reportsToList"
+                           ng-disabled="employee === null"
+                           ng-model="timecardAccess.ReportsTo">
+                    <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
+                    <md-option ng-value="0">No Specific User</md-option>
+                    <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
+                        {{ emp.EmployeeDisplay }}
+                    </md-option>
+                </md-select>
+                <md-divider flex="100"></md-divider>
+                <div flex="100" layout="row" layout-padding layout-align="end center">
+                    <span flex></span>
+                    <md-button ng-disabled="employee === null"
+                               class="md-primary md-raised md-whiteframe-z1"
+                               ng-click="saveTimecardAccess()">
+                        SAVE User Access
+                    </md-button>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div flex="50" class="md-whiteframe-z1" layout-margin layout-wrap layout="row" layout-align="start center" layout-fill>
+            <md-content class="Tall">
+                <md-list flex="100" layout="row" layout-wrap layout-align="center center">
+
+                    <md-item flex="100"
+                             layout="row"
+                             layout-wrap
+                             layout-align="start center">
+
+                        <span class="indent" flex="100">Department</span>
+                    </md-item>
+
+                    <md-item flex="100"
+                             layout="row"
+                             layout-wrap
+                             layout-align="start center">
+
+                        <md-divider flex="100"></md-divider>
+
+                        <md-checkbox id="ViewAll"
+                                     ng-disabled="timecardAccess.approveAll || employee === null || timecardAccess.Raw_Access_Type < 2"
+                                     ng-model="timecardAccess.viewAll">
+                            All Departments - View Only
+                        </md-checkbox>
+                    </md-item>
+
+                    <md-item flex="100"
+                             layout="row"
+                             layout-wrap
+                             layout-align="start center">
+                        <md-divider flex="100"></md-divider>
+                        <md-checkbox id="viewApproveAll"
+                                     ng-disabled="timecardAccess.viewAll || employee === null || timecardAccess.Raw_Access_Type < 2"
+                                     ng-model="timecardAccess.approveAll">
+                            All Departments - View And Approve
+                        </md-checkbox>
+
+                    </md-item>
+                    <md-item flex="100"
+                             layout="row"
+                             layout-align="start center"
+                             layout-wrap
+                             ng-repeat="dept in departmentList">
+
+                        <md-divider flex="100"></md-divider>
+
+                        <md-checkbox ng-disabled="timecardAccess.approveAll || timecardAccess.viewAll || employee === null || timecardAccess.Raw_Access_Type < 2"
+                                     ng-model="dept.selected"
+                                     name="chk-{{dept.DepartmentNumber}}">
+                            {{dept.DepartmentDisplay}}
+                        </md-checkbox>
+
+                    </md-item>
+                </md-list>
+            </md-content>
+        </div>
+    </div>
+</script>

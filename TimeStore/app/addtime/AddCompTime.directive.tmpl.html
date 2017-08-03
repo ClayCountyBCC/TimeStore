@@ -1,0 +1,99 @@
+﻿<script type="text/ng-template" id="AddCompTime.directive.tmpl.html">
+    <div style="margin-top: .5em;"
+         layout-fill
+         layout="row"
+         layout-align="center center"
+         layout-wrap
+         flex="100">
+        <div ng-show="timecard.exemptStatus !== 'Exempt'"
+             flex="100">
+            <div class="short-toolbar my-accent"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5>Week 1</h5>
+            </div>
+            <time-list flex="100" tl="timecard.calculatedTimeList_Week1"></time-list>
+
+            <div class="short-toolbar my-accent"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5>Week 2</h5>
+            </div>
+            <time-list flex="100" tl="timecard.calculatedTimeList_Week2"></time-list>
+            <div layout="row"
+                 layout-align="start center"
+                 layout-wrap
+                 flex="95">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="100">
+                    <span style="text-align: center;"
+                          flex="25">
+                        Week 1 - {{ week1OT }} hours eligible:
+                    </span>
+                    <md-slider aria-label="Week 1 Overtime to Comp Time"
+                               flex="50"
+                               ng-disabled="week1OT <= 0"
+                               md-discrete
+                               min="0"
+                               max="{{ week1OT }}"
+                               step=".25"
+                               ng-model="week1CompTimeEarned">
+                    </md-slider>
+                    <span layout="row"
+                          layout-align="center center"
+                          flex="20">
+                        {{ formatNumber(week1CompTimeEarned) }} hours ( {{ formatNumber(week1CompTimeEarned * 1.5) }} calculated hours )
+                    </span>                   
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="100">
+                    <span style="text-align: center;"
+                          flex="25">
+                        Week 2 - {{ week2OT }} hours eligible:
+                    </span>
+                    <md-slider aria-label="Week 2 Overtime to Comp Time"
+                               flex="50"
+                               ng-disabled="week2OT <= 0"
+                               md-discrete
+                               min="0"
+                               max="{{ week2OT }}"
+                               step=".25"
+                               ng-model="week2CompTimeEarned">
+                    </md-slider>
+                    <span layout="row"
+                          layout-align="center center"
+                          flex="20">
+                        {{ formatNumber(week2CompTimeEarned) }} hours ( {{ formatNumber(week2CompTimeEarned * 1.5) }} calculated hours )
+                    </span>
+                </div>
+                <div layout="row"
+                     layout-align="center center"
+                     flex="100">
+                    <span layout="row"
+                          layout-align="end center"
+                          flex>
+                        {{ responseMessage }}
+                    </span>
+                    <span flex="5"></span>
+                    <md-button class="md-warn md-raised"
+                               ng-click="SaveCompTime()">
+                        Save Comp Time
+                        <md-icon aria-label="save icon"
+                                 md-svg-src="images/ic_save_24px.svg">
+                        </md-icon>
+                    </md-button>
+                </div>
+            </div>
+        </div>
+        <div layout="row"
+             layout-align="center center"
+             flex="100"
+             ng-if="timecard.exemptStatus === 'Exempt'">
+            Exempt employees are ineligible for comp time.
+        </div>
+    </div>
+</script>

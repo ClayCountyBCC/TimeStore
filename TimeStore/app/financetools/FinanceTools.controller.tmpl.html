@@ -1,0 +1,55 @@
+﻿<script type="text/ng-template" id="FinanceTools.tmpl.html">
+    <div layout="row"
+         layout-align="center center"
+         flex="100"
+         layout-wrap>
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>
+        <div layout="row"
+             layout-align="center center"
+             layout-padding
+             layout-wrap
+             flex="90">
+            <md-select aria-label="Select Pay Period"
+                       flex="40"
+                       ng-model="selectedPayPeriod">
+                <md-select-label>
+                    Select the Pay Period to Post {{ selectedPayPeriod }}
+                </md-select-label>
+                <md-option ng-repeat="pp in payperiodlist"
+                           ng-value="pp">
+                    {{ pp }}
+                </md-option>
+            </md-select>
+            <md-button ng-click="PostToFinance()"
+                       class="md-warn md-raised">
+                Post Timestore Data to Finplus
+            </md-button>
+            <div layout="row"
+                 layout-align="center center"
+                 flex="50">
+                Clicking this button will post all of the data from Timestore for the selected pay period to the Finplus database.
+            </div>
+            <div ng-if="postResult.length > 0"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap
+                 layout-padding
+                 layout-margin>
+                <span layout="row"
+                      layout-align="end center"
+                      flex="25">
+                    Post Result:
+                </span>
+                <span layout="row"
+                      layout-align="start center"
+                      flex="50">
+                    {{ postResult }}
+                </span>
+            </div>
+        </div>
+    </div>
+</script>

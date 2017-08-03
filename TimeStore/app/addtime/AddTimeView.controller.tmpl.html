@@ -1,0 +1,39 @@
+﻿<script type="text/ng-template" id="AddTimeView.tmpl.html">
+
+    <div flex="100"
+         layout="row"
+         layout-align="center start"
+         layout-wrap
+         layout-margin>
+
+        <div flex="90"
+             layout="row"
+             layout-align="center center">
+
+            <timecard-header flex="100" 
+                             shortheader="true" 
+                             timecard="timecard">
+            </timecard-header>
+
+        </div>
+
+        <div flex="90"
+             class="md-whiteframe-z1"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+
+            <add-date-and-time flex="100" timecard="timecard"></add-date-and-time>
+
+
+            <div layout="row"
+                 layout-align="end center"
+                 flex="100">
+                <md-button ng-click="returnToTimeStore()"
+                           class="md-raised md-primary">
+                    Return to TimeStore
+                </md-button>
+            </div>
+        </div>
+    </div>
+</script>

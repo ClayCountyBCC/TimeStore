@@ -1,0 +1,73 @@
+﻿<script type="text/ng-template" id="DateSelect.tmpl.html">
+  <div layout="row"
+       layout-align="start center"
+       layout-wrap
+       flex="100">
+    <div layout="row"
+         layout-align="center center"
+         class="short-toolbar my-accent"
+         flex-gt-md="50"
+         flex="100">
+      <h5 style="text-align: center;">
+        {{ title }}
+      </h5>
+    </div>
+    <div flex="50"
+         layout="row"
+         layout-align="center center">
+      <div layout="row"
+           layout-align="center center"
+           flex="100">
+
+
+        <md-button ng-disabled="allowPrevious === false"
+                   aria-label="previous day"
+                   ng-click="dateChange(prevDate)"
+                   class="md-fab md-mini">
+          <md-tooltip>
+            View Previous {{ datetypeDisplay }}
+          </md-tooltip>
+          <md-icon aria-label="previous day icon"
+                   md-svg-src="/Timestore/images/ic_navigate_before_24px.svg"></md-icon>
+        </md-button>
+        <h4 style="margin-left: .5em; margin-right: .5em; margin-top: 0; margin-bottom: 0;"
+              ng-if="showDayOfWeek">
+          {{ dayOfWeek }}
+        </h4>
+        <md-select ng-show="datetype === 'ppd'"
+                   style="margin-left: 8px !important; margin-right: 8px !important; min-width: 200px;"
+                   class="min"
+                   ng-model="selectedPayPeriodDate"
+                   md-on-close="dateChange()"
+                   placeholder="{{ selectedDate }}"
+                   aria-label="Select Date">
+          <md-option ng-repeat="d in dateList track by $index"
+                     ng-value="d">
+            <span style="text-align: center;">
+              {{ d }}
+            </span>
+          </md-option>
+        </md-select>
+        <md-datepicker ng-hide="datetype === 'ppd'"
+                       style="background-color: cornsilk;"
+                       md-min-date="minDate"
+                       md-max-date="maxDate"
+                       ng-change="dateChange()"
+                       ng-model="selectedWorkDate">
+
+        </md-datepicker>
+        <md-button aria-label="next day"
+                   ng-click="dateChange(nextDate)"
+                   class="md-fab md-mini">
+          <md-tooltip>
+            View Next {{ datetypeDisplay }}
+          </md-tooltip>
+          <md-icon aria-label="next day icon"
+                   md-svg-src="/Timestore/images/ic_navigate_next_24px.svg"></md-icon>
+        </md-button>
+
+
+      </div>
+    </div>
+  </div>
+</script>

@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ArrayOfArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app_code\modulemain.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app_code\dataaccess.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\timecard.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\telestaff.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2010\projects\tools\tools\db.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\mycache.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\timestore.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\times.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\crosstab.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\controllers\tccontroller.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\views\_timestorelayout.vbhtml</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\main\app.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\calendar\calendarview.controller.js</string>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\calendar\calendarview.controller.tmpl.html</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\views\reports\index.vbhtml</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\20011123\PVL.asp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\telestaff_profile_info.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\web.config</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\controllers\reportscontroller.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\controllers\maincontroller.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\common\timestoredata.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\common\timestoredata.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\models\finplus.vb</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\main\defaultcontroller.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\css\main.scss</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\common\viewoptions.factory.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\app\common\viewoptions.factory.js</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\users\mccartneyd\documents\visual studio 2013\projects\timestore\timestore\views\main\crosstab.vbhtml</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\mccartneyd\Documents\Visual Studio 2013\Projects\TimeStore\TimeStore\app\addtime\AddTimeFunctions.factory.js</string>
+    </ArrayOfString>
+  </ArrayOfArrayOfString>
+</ArrayOfArrayOfArrayOfString>

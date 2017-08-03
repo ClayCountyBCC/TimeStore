@@ -1,0 +1,58 @@
+﻿<script type="text/ng-template" id="TimeCardSignatureView.tmpl.html">
+    <div style="overflow: visible !important; width: 100%;">
+
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>
+
+        <date-selector title="Pay Period Ending:"
+                       label="Select Pay Period"
+                       datetype="ppd"
+                       flex="100">
+        </date-selector>
+
+        <span>{{Message}}</span>
+
+        <table class="addPageBreak"
+               ng-if="Message === ''"
+               ng-repeat="t in timeData track by $index">
+            <tr>
+                <td style="width: 50%; text-align: center;">
+                    <h5 class="short">
+                        {{ t.employeeName }} ( {{ t.employeeID }} )
+                    </h5>
+                </td>
+                <td style="width: 50%; text-align: center; ">
+                    <h5 class="short">
+                        Pay Period Ending {{ t.payPeriodEndingDisplay }}
+                    </h5>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <timecard-week-table style="width: 100%;" title="Week 1" week="t.RawTime_Week1"
+                                         typelist="t.Get_Types_Used"></timecard-week-table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <timecard-week-table style="width: 100%;" title="Week 2" week="t.RawTime_Week2"
+                                         typelist="t.Get_Types_Used"></timecard-week-table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="border-bottom: 2px solid black; width: 100%; text-align: left;">
+                        Signature:
+                    </div>
+                </td>
+                <td>
+                    <div style="border-bottom: 2px solid black; width: 100%;">
+                        Date:
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</script>

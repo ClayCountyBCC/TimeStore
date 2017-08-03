@@ -1,0 +1,149 @@
+﻿<script type="text/ng-template" id="existingLeaveRequest.directive.tmpl.html">
+
+    <div layout="row"
+         layout-align="center center"         
+         flex="100">
+
+        <div class=""
+             flex="90"
+             layout="row"
+             layout-align="start center"
+             layout-wrap>
+            <div class="my-accent padding"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+                <span style="text-align: center;"
+                      flex="25">
+                    Date
+                </span>
+                <span flex="25">
+                    Type
+                </span>
+                <span style="text-align: center;"
+                      flex="25">
+                    Hours
+                </span>
+                <span flex="25">
+                    Status
+                </span>
+            </div>
+            <div class="padding"
+                 ng-if="requests.length > 0"
+                 ng-repeat="r in requests track by $index"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap
+                 flex="100">
+                <span style="text-align: center;"
+                      flex="25">
+                    {{ ::r.work_date_display }}
+                </span>
+                <span flex="25">
+                    {{ ::r.field.Field_Display }}
+                </span>
+                <span style="text-align: center;"
+                      flex="25">
+                    {{ ::r.hours_used }}
+                </span>
+                <span ng-if="r.approval_id === 0"
+                      ng-click="showDetail($index)"
+                      flex="25">
+                    <span class="undecidedLeave">
+                        Undecided
+                    </span>
+                </span>
+                <span ng-if="r.approval_id !== 0 && r.Approved"
+                      ng-click="showDetail($index)"
+                      flex="25">
+                    <span class="approvedLeave">
+                        Approved
+                        <md-icon aria-label="approved icon"
+                                 md-svg-src="/TimeStore/images/ic_done_24px.svg">
+                        </md-icon>
+                    </span>
+                </span>
+                <span ng-if="r.approval_id !== 0 && !r.Approved"
+                      ng-click="showDetail($index)"
+                      flex="25">
+                    <span class="deniedLeave">
+                        Denied
+                        <md-icon aria-label="denied icon"
+                                 md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+                        </md-icon>
+                    </span>
+                </span>
+
+              <div style="margin-top: .5em;"
+                   ng-if="r.comment.length > 0"
+                   layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <span style="text-align: right;"
+                      flex="20">
+                  Comment:
+                </span>
+                <span flex="5"></span>
+                <span style="text-align: left;"
+                      flex>
+                  {{ r.comment}}
+                </span>
+              </div>
+              <div style="margin-top: .5em;"
+                   ng-if="r.note.length > 0"
+                   layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <span style="text-align: right;"
+                      flex="20">
+                  Decision Note:
+                </span>
+                <span flex="5"></span>
+                <span style="text-align: left;"
+                      flex>
+                  {{ r.note}}
+                </span>
+              </div>
+              <div style="margin-top: .5em;"
+                   ng-if="r.approval_id !== 0"
+                   layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <span style="text-align: right;"
+                      flex="20">
+                  Approved By:
+                </span>
+                <span flex="5"></span>
+                <span flex>
+                  {{ r.by_username }}
+                </span>
+              </div>
+              <div style="margin-top: .5em;"
+                   ng-if="r.approval_id !== 0"
+                   layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <span style="text-align: right;"
+                      flex="20">
+                  Approved On:
+                </span>
+                <span flex="5"></span>
+                <span style="text-align: left;"
+                      flex>
+                  {{ r.approval_date_display }}
+                </span>
+              </div>
+                <md-divider class="padding"
+                            flex="100"></md-divider>
+            </div>
+            <div layout="row"
+                 layout-align="start start"                 
+                 flex="100"
+                 ng-if="requests.length === 0">
+                No future leave requests found.
+            </div>
+
+        </div>
+    </div>
+
+</script>

@@ -1,0 +1,211 @@
+﻿<script type="text/ng-template" id="LeaveCalendar.directive.tmpl.html">
+
+    <div class="leaveCalendar" flex>
+
+        <md-toolbar flex="100">
+            <div class="md-toolbar-tools" layout="row" layout-align="center center" layout-margin>
+                <div flex="30">
+                    <md-button aria-label="view Calendar"
+                               ng-click="previousMonth()"
+                               class="md-fab md-mini">
+                        <md-icon aria-label="previous month icon"
+                                 md-svg-src="/Timestore/images/ic_navigate_before_24px.svg"></md-icon>
+                    </md-button>
+                    <md-button aria-label="view Calendar"
+                               ng-click="nextMonth()"
+                               class="md-fab md-mini">
+                        <md-icon aria-label="next month icon"
+                                 md-svg-src="/Timestore/images/ic_navigate_next_24px.svg"></md-icon>
+                    </md-button>
+                </div>
+                <span class="md-display-1"
+                      style="text-align: center;"
+                      flex>
+                    {{ monthTitle }}
+                </span>
+
+                <div ng-show="deptList.length > 1"
+                     layout="row"
+                     layout-align="center center"
+                     flex="15">
+                    <label style="margin-right: .25em;">
+                        Dept
+                    </label>
+                    <md-select class="deptSelect"
+                                flex="60"                                   
+                                md-on-close="deptChanged()"
+                                aria-label="View By Department"
+                                ng-model="selectedDept">
+                        <md-option ng-repeat="dept in deptList | orderBy:dept"
+                                    ng-value="dept">
+                            {{ dept }}
+                        </md-option>
+                    </md-select>
+                </div>
+                <div layout="row"
+                     layout-align="end center"
+                     flex="15">
+                    <md-button ng-click="goHome()"
+                               class="md-raised md-warn">
+                        TimeStore
+                        <md-icon aria-label="return home icon"
+                                 md-svg-src="/TimeStore/images/ic_replay_24px.svg">
+                        </md-icon>
+                    </md-button>
+                </div>
+
+            </div>
+        </md-toolbar>
+
+
+        <md-grid-list style="margin-top: 1em;"
+                      md-cols="7"
+                      md-gutter="0"
+                      md-row-height="28px">
+            <md-grid-tile class="Framed"
+                          ng-repeat="d in days"
+                          md-rowspan="1"
+                          md-colspan="1">
+                <h3 layout-align="center center"
+                    layout="row">
+                    {{ d }}
+                </h3>
+            </md-grid-tile>
+        </md-grid-list>
+        <md-grid-list class="myCalendar"
+                      md-cols="7"
+                      md-gutter="0"
+                      md-row-height="140px">
+            <md-grid-tile class="noFocus"
+                          ng-class="{'calendarHoliday': c.isHoliday}"
+                          ng-click="showCalendarDayDetail($index)"
+                          ng-repeat="c in calendarDays track by $index"
+                          md-rowspan="{{ c.span }}"
+                          md-colspan="1">
+
+                <md-grid-tile-header flex="100"
+                                     layout-align="end center"
+                                     layout="row">
+                    <h3 flex="100" ng-class="{'currentMonth': c.isCurrent, 'notCurrentMonth': !c.isCurrent }">
+                        <md-icon aria-label="birthday cake icon"
+                                 ng-if="c.birthdayList.length > 0"
+                                 class="md-icon-button" 
+                                 md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                        </md-icon>
+                        {{ c.isHoliday ? 'Holiday' : '' }}
+                        {{ c.dayOfWeek }}
+                        {{ c.day }}
+                    </h3>
+                </md-grid-tile-header>
+                <div class="noFocus gridTileHeight"
+                     flex="100"
+                     layout="row"
+                     layout-align="start start"
+                     layout-wrap>
+                    <div ng-show="c.showDetail === false"
+                         style="margin-top: 24px;"
+                         layout-align="start start"
+                         layout="row"
+                         layout-wrap
+                         flex="100"
+                         class="smaller">
+                        <div layout-align="start start"
+                             layout="row"
+                             layout-wrap
+                             flex="100"
+                             ng-if="c.birthdayList.length > 0 && c.shortList.length + c.birthdayList.length < 4">
+                            <div ng-repeat="b in c.birthdayList"
+                                 flex="100"
+                                 layout-align="center center"
+                                 layout="row"
+                                 layout-padding
+                                 layout-wrap>
+                                <span style="text-align: center;"
+                                      flex="75">
+                                    {{ b.toProperCase() }}
+                                </span>
+                                <span layout="row"
+                                      layout-align="center center"
+                                      flex="25">
+                                    <md-icon aria-label="birthday cake icon"
+                                             class="md-icon-button" md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                                    </md-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <span layout="row"
+                              layout-align="start center"
+                              style="padding-left: 1em; margin-bottom: .25em;"
+                              ng-repeat="sl in c.shortList"
+                              flex="100">
+                            {{ sl.toProperCase() }}
+                        </span>
+
+                    </div>
+
+                    <div class="smaller"
+                         ng-show="c.birthdayList.length > 0 && c.showDetail === true"
+                         style="margin-top: 24px;"
+                         layout-align="start start"
+                         layout="row"
+                         layout-wrap
+                         layout-padding
+                         flex="100">
+                        <div ng-repeat="b in c.birthdayList"
+                             flex="100"
+                             layout-align="center center"
+                             layout="row"
+                             layout-padding
+                             layout-wrap>
+                            <span style="text-align: center;"
+                                  flex="75">
+                                {{ b.toProperCase() }}
+                            </span>
+                            <span layout="row"
+                                  layout-align="center center"
+                                  flex="25">
+                                <md-icon aria-label="birthday cake icon"
+                                         class="md-icon-button" md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                                </md-icon>
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="smaller"
+                         ng-show="c.showDetail === true && c.detailedList.length > 0"
+                         style="margin-top: 24px; padding-top: .5em;"
+                         layout-align="start start"
+                         layout="row"
+                         layout-wrap
+                         flex="100">
+                        <div ng-repeat="dl in c.detailedList"
+                             flex="100"
+                             layout-align="center center"
+                             layout="row"
+                             layout-padding
+                             layout-wrap>
+                            <span style="text-align: center;"
+                                  flex="75">
+                                {{ dl.employee_name.toProperCase() }}
+                            </span>
+                            <span style="text-align: center;"
+                                  flex="25">
+                                {{ dl.hours_used }}
+                            </span>
+                            <md-tooltip md-direction="right"
+                                        ng-if="dl.comment.length > 0">
+                                {{dl.comment}}
+                            </md-tooltip>
+                        </div>
+
+                    </div>
+                </div>
+            </md-grid-tile>
+        </md-grid-list>
+
+    </div>
+
+
+
+</script>

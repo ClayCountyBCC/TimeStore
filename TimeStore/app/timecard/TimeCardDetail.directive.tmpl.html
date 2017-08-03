@@ -1,0 +1,237 @@
+﻿<script type="text/ng-template" id="TimeCardDetail.tmpl.html">
+  <md-tabs class="md-primary"
+           flex="100"
+           md-selected="selectedWeekTab"
+           md-no-pagination="false"
+           md-center-tabs="false"
+           md-stretch="never"
+           md-dynamic-height="true">
+
+    <md-tab label="Week 1" id="week1" layout-padding>
+      <div flex="100">
+
+        <timecard-week flex="95"
+                       title="Week 1"
+                       week="timecard.RawTime_Week1"
+                       typelist="timecard.Get_Types_Used"
+                       employeeid="timecard.employeeID"
+                       showaddtime="timecard.showAddTime"
+                       datatype="timecard.Data_Type">
+        </timecard-week>
+
+      </div>
+    </md-tab>
+
+    <md-tab label="Week 2" id="week2" layout-padding>
+      <div flex="100"
+           layout-wrap>
+        <timecard-week flex="95"
+                       title="Week 2"
+                       week="timecard.RawTime_Week2"
+                       typelist="timecard.Get_Types_Used"
+                       employeeid="timecard.employeeID"
+                       showaddtime="timecard.showAddTime"
+                       datatype="timecard.Data_Type"></timecard-week>
+
+      </div>
+    </md-tab>
+
+    <md-tab label="{{ (timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'? 'Comp / ': '') }} Time Summary"
+            layout-padding
+            id="calctimelist">
+      <div flex="100">
+
+        <div style="margin-top: .75em;"
+             class="short-toolbar my-accent"
+             flex="100"
+             layout="row"
+             layout-align="center center">
+          <h5>Pay Period Summary</h5>
+        </div>
+
+        <time-list flex="100" tl="timecard.calculatedTimeList"></time-list>
+
+        <add-comp-time flex="100"
+                       ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+                       timecard="timecard"></add-comp-time>
+
+      </div>
+
+    </md-tab>
+
+    <md-tab label="Approve"
+            id="approveyourhours">
+
+      <div ng-show="timecard.ErrorList.length === 0 && timecard.Approval_Level === 0 && timecard.Days_Since_PPE <= 1 && timecard.timeList.length > 0"
+           flex="100"
+           layout-padding>
+
+        <time-approval flex="95" tl="timecard.timeList" tc="timecard"></time-approval>
+
+      </div>
+      <div ng-show="timecard.ErrorList.length > 0"
+           layout="row"
+           layout-align="center center"
+           layout-padding
+           layout-wrap
+           flex="100">
+        Your time cannot be approved while there are Errors present.
+        <timecard-warnings flex="100"
+                           alignheader="center"
+                           headerclass="warn"
+                           dl="timecard.ErrorList"
+                           title="Errors"></timecard-warnings>
+      </div>
+      <div ng-show="timecard.Approval_Level > 0 && timecard.Days_Since_PPE < 1"
+           layout="row"
+           layout-align="center center"
+           layout-padding
+           flex="100">
+        Your time has already been approved.
+      </div>
+      <div ng-show="timecard.Days_Since_PPE > 1"
+           layout="row"
+           layout-align="center center"
+           layout-padding
+           flex="100">
+        It is too late to approve your time for this pay period.
+      </div>
+      <div ng-show="timecard.timeList.length === 0 && timecard.Days_Since_PPE < 1"
+           layout="row"
+           layout-align="center center"
+           layout-padding
+           flex="100">
+        No time has been entered to approve.  You can enter time by going to the Week 1 or Week 2 tabs and clicking the Time Entry button.
+      </div>
+      <div ng-show="timecard.WarningList.length > 0"
+           layout="row"
+           layout-align="center center"
+           layout-padding
+           layout-wrap
+           flex="100">
+        These warnings should be considered before you approve your time.
+        <timecard-warnings flex="100"
+                           alignheader="center"
+                           headerclass="my-accent"
+                           dl="timecard.WarningList"
+                           title="Warnings"></timecard-warnings>
+      </div>
+    </md-tab>
+
+    <md-tab label="Notes"
+            id="notelist">
+
+      <div flex="100">
+
+        <timecard-notes flex="100"
+                        datatype="timecard.Data_Type"
+                        employeeid="timecard.employeeID"
+                        payperiodending="timecard.payPeriodEndingDisplay"
+                        notes="timecard.Notes">
+        </timecard-notes>
+
+      </div>
+
+    </md-tab>
+
+    <md-tab label="Holiday" ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
+      <div style="margin-top: .5em;"
+           flex="100">
+        <div ng-if="timecard.HolidaysInPPD.length > 0"
+             flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+          <div flex="100" class="short-toolbar my-accent" layout="row" layout-align="center center">
+            <h5>
+              How do you want to handle this Holiday?
+            </h5>
+          </div>
+          <md-radio-group flex="100"
+                          layout="row"
+                          layout-align="center center"
+                          layout-wrap
+                          ng-model="timecard.HolidayHoursChoice[$index]"
+                          ng-repeat="holiday in timecard.HolidaysInPPD">
+            <span flex="25">
+              {{holiday}}
+            </span>
+            <md-radio-button ng-value="'Bank'">
+              Bank this holiday
+            </md-radio-button>
+            <md-radio-button ng-value="'Paid'">
+              Pay me for this holiday
+            </md-radio-button>
+            <md-radio-button ng-value="'None'">
+              No choice made
+            </md-radio-button>
+            <md-radio-button ng-value="'Ineligible'">
+              Ineligible for Holiday
+              <md-tooltip>
+                Select this if you are not eligible to receive this Holiday.
+              </md-tooltip>
+            </md-radio-button>
+          </md-radio-group>
+        </div>
+        <div flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             ng-if="timecard.bankedHoliday >= timecard.holidayIncrement">
+          <div flex="100"
+               class="short-toolbar my-accent"
+               layout="row"
+               layout-align="center center">
+            <h5>
+              Do you want to be paid for any of your banked Holidays?
+            </h5>
+          </div>
+          <md-input-container>
+            <label>Pay me for these Banked Holiday Hours</label>
+            <input required type="number"
+                   step="{{timecard.holidayIncrement}}"
+                   name="amount"
+                   min="0"
+                   max="{{timecard.bankedHoliday - timecard.HolidayHoursUsed}}"
+                   ng-model="timecard.BankedHoursPaid" />
+          </md-input-container>
+          <span flex="50">You have {{ timecard.bankedHoliday }} hours banked, and have currently marked {{ timecard.HolidayHoursUsed + timecard.BankedHoursPaid }} hours for use so far this pay period.  You can elect to be paid for them in groups of {{ timecard.holidayIncrement }} hours.</span>
+        </div>
+        <div layout="row"
+             layout-align="center center"
+             flex="100"
+             ng-if="timecard.bankedHoliday < timecard.holidayIncrement">
+          You must have {{ timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
+        </div>
+        <div layout="row"
+             layout-align="center center"
+             flex="100">
+          <md-button ng-click="SaveHolidays()"
+                     class="md-warn md-raised">
+            Save
+          </md-button>
+        </div>
+      </div>
+
+    </md-tab>
+
+    <!--<md-tab ng-if="timecard.Data_Type === 'timecard'">
+        <md-tab-label>
+            Leave Requests
+        </md-tab-label>
+        <md-tab-body>
+            <div flex="100">
+
+                <new-leave-request></new-leave-request>
+
+                <existing-leave-request flex="100" requests="leaveRequests">
+                </existing-leave-request>
+
+            </div>
+        </md-tab-body>
+    </md-tab>-->
+
+
+
+  </md-tabs>
+</script>

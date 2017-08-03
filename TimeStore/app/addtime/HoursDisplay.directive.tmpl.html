@@ -1,0 +1,15 @@
+﻿<script type="text/ng-template" id="HoursDisplay.directive.tmpl.html">
+    <md-input-container ng-show="::hours.visible"
+                        class="shortpaddingbottom shortInput">
+        <label class="longerLabel"
+               style="width: auto;"
+               >{{ ::hours.label }}</label>
+        <input ng-model="hours.value"
+               ng-change="calc()"
+               type="{{ ::hours.type }}"
+               min="{{ ::hours.min }}"
+               max="{{ ::hours.max }}"
+               step="{{ ::hours.step }}" 
+               ng-disabled="hours.disabled"/>
+    </md-input-container>
+</script>

@@ -1,0 +1,565 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>
+    </SchemaVersion>
+    <ProjectGuid>{FB628CBB-FBA6-4E44-BE29-D11A7536D0BB}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TimeStore</RootNamespace>
+    <AssemblyName>TimeStore</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <MyType>Custom</MyType>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication>disabled</IISExpressAnonymousAuthentication>
+    <IISExpressWindowsAuthentication>enabled</IISExpressWindowsAuthentication>
+    <IISExpressUseClassicPipelineMode />
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <TargetFrameworkProfile />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>TimeStore.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>TimeStore.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dapper, Version=1.50.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.50.2\lib\net451\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.DirectoryServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Linq.Dynamic, Version=1.0.6132.35681, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Linq.Dynamic.1.0.7\lib\net40\System.Linq.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Caching">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.3\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Tools">
+      <HintPath>.\Tools.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Dapper" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Configuration" />
+    <Import Include="System.Data" />
+    <Import Include="System.DirectoryServices" />
+    <Import Include="System.IO" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Collections.Specialized" />
+    <Import Include="System.Text" />
+    <Import Include="System.Text.RegularExpressions" />
+    <Import Include="System.Web" />
+    <Import Include="System.Web.Caching" />
+    <Import Include="System.Web.SessionState" />
+    <Import Include="System.Web.Security" />
+    <Import Include="System.Web.Profile" />
+    <Import Include="System.Web.UI" />
+    <Import Include="System.Web.UI.WebControls" />
+    <Import Include="System.Web.UI.WebControls.WebParts" />
+    <Import Include="System.Web.UI.HtmlControls" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="app\access\Access.tmpl.min.html">
+      <DependentUpon>Access.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\AddCompTime.directive.js" />
+    <Content Include="app\addtime\AddCompTime.directive.tmpl.html" />
+    <Content Include="app\addtime\AddTime.directive.js" />
+    <Content Include="app\addtime\AddTimeFunctions.factory.js" />
+    <Content Include="app\addtime\AddTime.tmpl.min.html">
+      <DependentUpon>AddTime.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\AddTimeChoice.tmpl.min.html">
+      <DependentUpon>AddTimeView.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\addtimedialogtmp.html" />
+    <Content Include="app\addtime\HoursDisplay.directive.js" />
+    <Content Include="app\approval\Approval.tmpl.min.html">
+      <DependentUpon>Approval.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\calendar\LeaveCalendar.directive.js" />
+    <Content Include="app\calendar\CalendarView.controller.js" />
+    <Content Include="app\calendar\CalendarView.controller.tmpl.html" />
+    <Content Include="app\calendar\LeaveCalendar.directive.tmpl.html" />
+    <Content Include="app\common\commonFunc.factory.js" />
+    <Content Include="app\leaverequest\existingLeaveRequest.directive.js" />
+    <Content Include="app\leaverequest\existingLeaveRequest.directive.tmpl.html" />
+    <Content Include="app\common\loadingIndicator.directive.js" />
+    <Content Include="app\common\Navigation.factory.js" />
+    <Content Include="app\common\DateList.factory.js" />
+    <Content Include="app\common\DateSelect.directive.js" />
+    <Content Include="app\common\DateSelect.directive.tmpl.html" />
+    <Content Include="app\common\viewOptions.factory.js" />
+    <Content Include="app\dailycheckoff\DailyCheckoff.tmpl.min.html">
+      <DependentUpon>DailyCheckoff.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\exceptions\Exceptions.controller.js" />
+    <Content Include="app\exceptions\Exceptions.controller.tmpl.html" />
+    <Content Include="app\financetools\FinanceTools.tmpl.min.html">
+      <DependentUpon>FinanceTools.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\incentives\Incentives.tmpl.min.html">
+      <DependentUpon>Incentives.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\leaveapproval\LeaveApproval.controller.js" />
+    <Content Include="app\leaveapproval\LeaveApproval.controller.tmpl.html" />
+    <Content Include="app\leaverequest\LeaveRequestView.controller.js" />
+    <Content Include="app\leaverequest\LeaveRequestView.controller.tmpl.html" />
+    <Content Include="app\leaverequest\newLeaveRequest.directive.js" />
+    <Content Include="app\leaverequest\newLeaveRequest.directive.tmpl.html" />
+    <Content Include="app\main\DefaultController.js" />
+    <Content Include="app\notapproved\TimecardNotApproved.controller.js" />
+    <Content Include="app\notapproved\TimecardNotApproved.controller.tmpl.html" />
+    <Content Include="app\signatureview\TimeCardSignatureView.tmpl.min.html">
+      <DependentUpon>TimecardSignatures.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeApproval.directive.js" />
+    <Content Include="app\timecard\TimeApproval.tmpl.min.html">
+      <DependentUpon>TimeApproval.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardDetail.directive.js" />
+    <Content Include="app\timecard\TimeCardDetail.tmpl.min.html">
+      <DependentUpon>TimeCardDetail.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardHeader.directive.js" />
+    <Content Include="app\timecard\TimeCardHeader.tmpl.min.html">
+      <DependentUpon>TimeCardHeader.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardNotes.directive.js" />
+    <Content Include="app\timecard\TimecardNotes.tmpl.min.html">
+      <DependentUpon>TimeCardNotes.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardView.tmpl.min.html">
+      <DependentUpon>TimeCardView.controller.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardWarnings.directive.js" />
+    <Content Include="app\timecard\TimecardWarnings.tmpl.min.html">
+      <DependentUpon>TimeCardWarnings.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardWeek-table.directive.js" />
+    <Content Include="app\timecard\TimeCardWeek-table.tmpl.min.html">
+      <DependentUpon>TimeCardWeek-table.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardWeek.directive.js" />
+    <Content Include="app\timecard\TimeCardWeek.tmpl.min.html">
+      <DependentUpon>TimeCardWeek.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeList.directive.js" />
+    <Content Include="app\timecard\TimeList.tmpl.min.html">
+      <DependentUpon>TimeList.directive.tmpl.html</DependentUpon>
+    </Content>
+    <Content Include="CSS\angular-material.1.1.0.css" />
+    <Content Include="CSS\angular-material.1.1.4.min.css" />
+    <Content Include="CSS\angular-material.11.2.css" />
+    <Content Include="CSS\bundle.css" />
+    <Content Include="CSS\bundle.min.css">
+      <DependentUpon>bundle.css</DependentUpon>
+    </Content>
+    <Content Include="CSS\Main.css">
+      <DependentUpon>Main.scss</DependentUpon>
+    </Content>
+    <Content Include="CSS\Main.min.css">
+      <DependentUpon>Main.css</DependentUpon>
+    </Content>
+    <Content Include="Global.asax" />
+    <Content Include="CSS\Main.scss" />
+    <Content Include="app\access\Access.tmpl.min.html.gz">
+      <DependentUpon>Access.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\AddTime.tmpl.min.html.gz">
+      <DependentUpon>AddTime.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\AddTimeChoice.tmpl.min.html.gz">
+      <DependentUpon>AddTimeChoice.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\approval\Approval.tmpl.min.html.gz">
+      <DependentUpon>Approval.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\dailycheckoff\DailyCheckoff.tmpl.min.html.gz">
+      <DependentUpon>DailyCheckoff.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\financetools\FinanceTools.tmpl.min.html.gz">
+      <DependentUpon>FinanceTools.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\incentives\Incentives.tmpl.min.html.gz">
+      <DependentUpon>Incentives.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\signatureview\TimeCardSignatureView.tmpl.min.html.gz">
+      <DependentUpon>TimeCardSignatureView.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeApproval.tmpl.min.html.gz">
+      <DependentUpon>TimeApproval.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardDetail.tmpl.min.html.gz">
+      <DependentUpon>TimeCardDetail.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardHeader.tmpl.min.html.gz">
+      <DependentUpon>TimeCardHeader.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimecardNotes.tmpl.min.html.gz">
+      <DependentUpon>TimecardNotes.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardView.tmpl.min.html.gz">
+      <DependentUpon>TimeCardView.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimecardWarnings.tmpl.min.html.gz">
+      <DependentUpon>TimecardWarnings.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardWeek-table.tmpl.min.html.gz">
+      <DependentUpon>TimeCardWeek-table.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeCardWeek.tmpl.min.html.gz">
+      <DependentUpon>TimeCardWeek.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\timecard\TimeList.tmpl.min.html.gz">
+      <DependentUpon>TimeList.tmpl.min.html</DependentUpon>
+    </Content>
+    <Content Include="app\addtime\HoursDisplay.directive.tmpl.html" />
+    <None Include="bundleconfig.json" />
+    <None Include="compilerconfig.json" />
+    <Content Include="ConnectionStrings.config" />
+    <None Include="My Project\PublishProfiles\DeployFolder.pubxml" />
+    <None Include="My Project\PublishProfiles\DV10.pubxml" />
+    <Content Include="images\ic_alarm_24px.svg" />
+    <Content Include="images\ic_alarm_add_24px.svg" />
+    <Content Include="images\ic_alarm_black_48dp_2x.png" />
+    <Content Include="images\ic_cake_24px.svg" />
+    <Content Include="images\ic_clear_24px.svg" />
+    <Content Include="images\ic_collections_bookmark_24px.svg" />
+    <Content Include="images\ic_done_24px.svg" />
+    <Content Include="images\ic_file_download_24px.svg" />
+    <Content Include="images\ic_insert_comment_24px.svg" />
+    <Content Include="images\ic_list_24px.svg" />
+    <Content Include="images\ic_mode_comment_24px.svg" />
+    <Content Include="images\ic_mode_edit_24px.svg" />
+    <Content Include="images\ic_navigate_before_24px.svg" />
+    <Content Include="images\ic_navigate_next_24px.svg" />
+    <Content Include="images\ic_notifications_24px.svg" />
+    <Content Include="images\ic_replay_24px.svg" />
+    <Content Include="images\ic_report_24px.svg" />
+    <Content Include="images\ic_report_problem_24px.svg" />
+    <Content Include="images\ic_save_24px.svg" />
+    <Content Include="images\ic_search_24px.svg" />
+    <Content Include="images\ic_settings_backup_restore_24px.svg" />
+    <Content Include="Main.css" />
+    <Content Include="Main.min.css">
+      <DependentUpon>Main.css</DependentUpon>
+    </Content>
+    <Content Include="app\access\Access.controller.js" />
+    <Content Include="app\addtime\AddTimeView.controller.js" />
+    <Content Include="app\main\app.js" />
+    <Content Include="app\approval\Approval.controller.js" />
+    <Content Include="Scripts\angular-drag-and-drop-lists.js" />
+    <Content Include="Scripts\angular-drag-and-drop-lists.min.js" />
+    <Content Include="Scripts\angular-material.1.1.0.js" />
+    <Content Include="Scripts\angular-material.1.1.4.min.js" />
+    <Content Include="Scripts\angular-material.11.2.js" />
+    <Content Include="Scripts\bundle.js" />
+    <Content Include="Scripts\bundle.min.js">
+      <DependentUpon>bundle.js</DependentUpon>
+    </Content>
+    <Content Include="app\dailycheckoff\DailyCheckoff.controller.js" />
+    <Content Include="app\financetools\FinanceTools.controller.js" />
+    <Content Include="app\main\HeaderController.js" />
+    <Content Include="app\incentives\Incentive.controller.js" />
+    <Content Include="app\customreports\ReportController.js" />
+    <Content Include="app\access\Access.controller.tmpl.html" />
+    <Content Include="app\addtime\AddTime.directive.tmpl.html" />
+    <Content Include="app\addtime\AddTimeView.controller.tmpl.html" />
+    <Content Include="app\approval\Approval.controller.tmpl.html" />
+    <Content Include="app\dailycheckoff\DailyCheckoff.controller.tmpl.html" />
+    <Content Include="app\financetools\FinanceTools.controller.tmpl.html" />
+    <Content Include="app\incentives\Incentives.controller.tmpl.html" />
+    <Content Include="app\timecard\TimeApproval.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeCardDetail.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeCardHeader.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeCardNotes.directive.tmpl.html" />
+    <Content Include="app\signatureview\TimecardSignatures.controller.tmpl.html" />
+    <Content Include="app\timecard\TimeCardView.controller.tmpl.html" />
+    <Content Include="app\timecard\TimeCardWarnings.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeCardWeek.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeCardWeek-table.directive.tmpl.html" />
+    <Content Include="app\timecard\TimeList.directive.tmpl.html" />
+    <Content Include="app\signatureview\TimecardSignatures.controller.js" />
+    <Content Include="app\timecard\TimeCardView.controller.js" />
+    <Content Include="app\common\TimeStoreData.js" />
+    <Content Include="Scripts\lodash.min.js" />
+    <Content Include="Scripts\moment.min.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="App_Code\Extensions.vb" />
+    <Compile Include="App_Code\DataAccess.vb" />
+    <Compile Include="App_Start\RouteConfig.vb" />
+    <Compile Include="App_Start\WebApiConfig.vb" />
+    <Compile Include="Controllers\AdminController.vb" />
+    <Compile Include="Controllers\MainController.vb" />
+    <Compile Include="Controllers\PubWorksController.vb" />
+    <Compile Include="Controllers\ReportsController.vb" />
+    <Compile Include="Controllers\TCController.vb" />
+    <Compile Include="Global.asax.vb">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\AD_EmployeeData.vb" />
+    <Compile Include="Models\Approval_Data.vb" />
+    <Compile Include="Models\crosstab.vb" />
+    <Compile Include="Models\Employee.vb" />
+    <Compile Include="Models\Employee_Data.vb" />
+    <Compile Include="Models\Enums.vb" />
+    <Compile Include="Models\EPP.vb" />
+    <Compile Include="Models\ErrorLog.vb" />
+    <Compile Include="Models\FinanceData.vb" />
+    <Compile Include="Models\FinplusDepartment.vb" />
+    <Compile Include="Models\GenericTimecard.vb" />
+    <Compile Include="Models\GenericTimeData.vb" />
+    <Compile Include="Models\GroupedHours.vb" />
+    <Compile Include="Models\HolidayRequest.vb" />
+    <Compile Include="Models\Holiday_Choice.vb" />
+    <Compile Include="Models\Incentive.vb" />
+    <Compile Include="Models\JsonNetResult.vb" />
+    <Compile Include="Models\LeaveCalendarData.vb" />
+    <Compile Include="Models\myCache.vb" />
+    <Compile Include="Models\Namedday.vb" />
+    <Compile Include="Models\Note.vb" />
+    <Compile Include="Models\Out_Of_Class.vb" />
+    <Compile Include="Models\PayPeriodList.vb" />
+    <Compile Include="Models\Raw_Timecard_Access.vb" />
+    <Compile Include="Models\Saved_Timecard_Data.vb" />
+    <Compile Include="Models\Saved_Timestore_Comp_Time_Earned.vb" />
+    <Compile Include="Models\Saved_Timestore_Data.vb" />
+    <Compile Include="Models\Saved_Timestore_Data_To_Approve.vb" />
+    <Compile Include="Models\TC_EPP.vb" />
+    <Compile Include="Models\TelestaffTimeData.vb" />
+    <Compile Include="Models\EmployeeOutput.vb" />
+    <Compile Include="Models\Telestaff_Profile_Info.vb" />
+    <Compile Include="Models\ReportsTo.vb" />
+    <Compile Include="Models\TimecardTimeData.vb" />
+    <Compile Include="Models\TimecardTimeException.vb" />
+    <Compile Include="Models\Timecard_Access.vb" />
+    <Compile Include="Models\TimeExceptions.vb" />
+    <Compile Include="Models\MockEmployeePayPeriodData.vb" />
+    <Compile Include="App_Code\ModuleMain.vb" />
+    <Compile Include="Models\Timestore_Field.vb" />
+    <Compile Include="Models\Timestore_Field_With_Hours.vb" />
+    <Compile Include="Models\Timestore_Hours_Approve_Display.vb" />
+    <Compile Include="Models\Timestore_Hours_To_Approve.vb" />
+    <Compile Include="Models\Timestore_Work_Hours.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\MyExtensions\MyWebExtension.vb">
+      <VBMyExtensionTemplateID>Microsoft.VisualBasic.Web.MyExtension</VBMyExtensionTemplateID>
+      <VBMyExtensionTemplateVersion>1.0.0.0</VBMyExtensionTemplateVersion>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\PublishProfiles\ProductionApps.pubxml" />
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <Content Include="Views\web.config" />
+    <Content Include="packages.config" />
+    <Content Include="Views\Main\Index.vbhtml" />
+    <Content Include="Views\Main\Exceptions.vbhtml" />
+    <Content Include="Views\_TimestoreLayout.vbhtml" />
+    <Content Include="Views\_ViewStart.vbhtml" />
+    <Content Include="Views\TC\Index.vbhtml" />
+    <Content Include="Views\Main\Crosstab.vbhtml" />
+    <Content Include="Views\Reports\Index.vbhtml" />
+    <Content Include="Views\Shared\bundle.vbhtml" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Content\" />
+    <Folder Include="Scripts\templates\" />
+    <Folder Include="Views\Admin\" />
+    <Folder Include="Views\PW\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <SaveServerSettingsInUserFile>True</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\BuildBundlerMinifier.1.5.132\build\BuildBundlerMinifier.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\BuildBundlerMinifier.1.5.132\build\BuildBundlerMinifier.targets'))" />
+    <Error Condition="!Exists('..\packages\BuildWebCompiler.1.8.273\build\BuildWebCompiler.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\BuildWebCompiler.1.8.273\build\BuildWebCompiler.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <Import Project="..\packages\BuildBundlerMinifier.1.5.132\build\BuildBundlerMinifier.targets" Condition="Exists('..\packages\BuildBundlerMinifier.1.5.132\build\BuildBundlerMinifier.targets')" />
+  <Import Project="..\packages\BuildWebCompiler.1.8.273\build\BuildWebCompiler.targets" Condition="Exists('..\packages\BuildWebCompiler.1.8.273\build\BuildWebCompiler.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

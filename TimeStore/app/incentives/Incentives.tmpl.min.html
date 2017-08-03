@@ -1,0 +1,36 @@
+﻿<script type=text/ng-template id=Incentives.tmpl.html>
+
+    <form name="IncentiveForm">
+        <div flex="100" layout="row" layout-align="center start" layout-wrap layout-margin>
+
+            <md-list ng-if="incentives.length > 0"
+                     flex="50"
+                     layout="row"
+                     layout-align="center center"
+                     layout-wrap
+                     layout-padding>
+                <md-item ng-repeat="i in incentives"
+                         flex="100">
+                    <div flex="100"
+                         layout="row"
+                         layout-align="center center">
+                        <span flex="30">
+                            {{ i.Incentive_Name }}
+                        </span>
+                        <md-input-container class="short-padding">
+                            <label>Incentive Amount</label>
+                            <input required type="number" step="any" name="amount" min="0" ng-model="incentives[$index].Incentive_Amount" />
+                        </md-input-container>
+                    </div>
+                    <md-divider flex="100"></md-divider>
+                </md-item>
+            </md-list>
+            <div flex="30">
+                <md-button ng-click="SaveIncentives()"
+                           class="md-warn md-raised">
+                    Save Changes
+                </md-button>
+            </div>
+        </div>
+    </form>
+</script>

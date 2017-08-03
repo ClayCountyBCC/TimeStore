@@ -1,0 +1,27 @@
+﻿<md-dialog layout="column"
+           class="addTimeContainer"
+           flex="100"
+           aria-label="Add or Change Your Time, or Request Leave">
+
+    <md-dialog-content layout="column"
+                       class="sticky-container">
+
+    </md-dialog-content>
+
+    <div class="md-actions"
+         layout="row">
+
+        <span class="ErrorText"
+              flex="75">
+            {{ errorText }}
+        </span>
+        <span flex></span>
+
+
+        <md-button ng-click="cancelDialog()"
+                   class="md-raised md-primary md-whiteframe-z1">
+            Close
+        </md-button>
+
+    </div>
+</md-dialog>

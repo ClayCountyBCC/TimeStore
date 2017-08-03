@@ -1,0 +1,129 @@
+﻿<script type="text/ng-template" id="Exceptions.tmpl.html">
+
+    <div layout="row"
+         layout-align="center center"
+         layout-wrap
+         flex="100">
+
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>
+
+        <div style="margin-top: .5em; margin-bottom: .5em;"
+             class="md-whiteframe-z1 ExceptionsHeader"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             flex="90">
+
+            <div style="cursor: pointer;"
+                 ng-click="toggleShowOptions()"
+                 flex="100"
+                 class="short-toolbar my-accent"
+                 layout="row"
+                 layout-align="center center">
+                <h5>
+                    View / Hide Exception Options
+                </h5>
+            </div>
+
+            <div ng-show="showOptions === true"
+                 layout="row"
+                 layout-wrap
+                 layout-align="center center"
+                 flex="100">
+                
+                <date-selector title="Pay Period Ending:"
+                               label="Select Pay Period"
+                               datetype="ppd"
+                               flex="100">
+                </date-selector>
+
+                <md-select aria-label="View By Department"
+                           flex="50"
+                           placeholder="View By Department"
+                           ng-model="selectedDept">
+                    <md-select-label flex="100">
+                        <span style="text-align: center;"
+                              flex="100">
+                            View By Department {{ selectedDept }}
+                        </span>
+                    </md-select-label>
+                    <md-option value="">
+                        ALL DEPARTMENTS
+                    </md-option>
+                    <md-option ng-repeat="dept in deptData | orderBy:dept.deptName"
+                                ng-value="dept.deptId">
+                        {{ dept.deptName }}
+                    </md-option>
+                </md-select>
+
+                <md-button class="md-raised md-primary"
+                           ng-click="RefreshApprovalData()">
+                    Refresh Data
+                </md-button>
+
+                
+                <div flex="100">
+                    <md-radio-group layout="row"
+                                    layout-align="center center"
+                                    layout-wrap
+                                    flex="100"
+                                    ng-model="filterExceptions">
+                        <md-radio-button value="Warning">
+                            Warnings Only
+                        </md-radio-button>
+                        <md-radio-button value="Error">
+                            Errors Only
+                        </md-radio-button>
+                        <md-radio-button value="both">
+                            Both Errors and Warnings
+                        </md-radio-button>
+                    </md-radio-group>
+                </div>
+
+            </div>
+
+        </div>
+        <div ng-show="filterByType().length === 0 && viewData.length > 0"
+             layout="row"
+             layout-align="center center"
+             flex="90">
+            No records found matching that criteria.
+        </div>
+        <table ng-show="viewData.length > 0 && filterByType().length > 0"
+               class="myTable" border="1">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Employee Name</th>
+              <th>Department</th>
+              <th>Type</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+            <tr ng-repeat="v in filterByType() track by $index">
+                <td>
+                    <a href="#/e/{{v.employeeId}}/ppd/{{ppd}}">
+                        {{ v.employeeId }}
+                    </a>
+                </td>
+                <td>
+                    <a href="#/e/{{v.employeeId}}/ppd/{{ppd}}">
+                        {{ v.fullname }}
+                    </a>
+                </td>
+                <td>
+                    {{ v.departmentId }}
+                </td>
+                <td>
+                    {{ v.exceptionType }}
+                </td>
+                <td>
+                    {{ v.exception }}
+                </td>
+            </tr>
+        </table>
+    </div>
+</script>

@@ -1,0 +1,93 @@
+﻿<script type=text/ng-template id=TimeList.tmpl.html>
+
+    <md-list ng-if="getGroups().length > 1"
+             ng-repeat="group in getGroups()"
+             flex="100"
+             layout="row"
+             layout-align="end center"
+             layout-wrap>
+
+        <md-item flex="100">
+            <md-item-content>
+                <div flex="100"
+                     class="short-toolbar my-primary"
+                     layout="row"
+                     layout-align="center center">
+                    <h5>Your hours at base Payrate: {{group}}</h5>
+                </div>
+            </md-item-content>
+        </md-item>
+
+        <md-item ng-repeat="t in tl | groupPayrateBy:group"
+                 flex="33"
+                 flex-md="50"
+                 flex-sm="100">
+            <md-item-content>
+                <div flex="100"
+                     layout="row"
+                     layout-align="center center"
+                     layout-wrap
+                     ng-class="t.hours > 0 ? 'my-accent' : '' ">
+                    <span flex="70" layout="row" layout-align="end center">
+                        {{t.name}}
+                    </span>
+                    <span flex="20" layout="row" layout-align="center center">
+                        {{t.hours}}
+                    </span>
+                </div>
+            </md-item-content>
+        </md-item>
+    </md-list>
+
+
+    <md-list flex="100"
+             ng-if="getGroups().length == 1"
+             layout-wrap
+             layout="row"
+             layout-align="end center">
+        <md-item ng-repeat="t in tl"
+                 flex="33"
+                 flex-md="50"
+                 flex-sm="100"
+                 layout-wrap>
+            <md-item-content>
+                <div flex
+                     layout="row"
+                     layout-align="center center"
+                     ng-class="t.hours > 0 ? 'my-accent' : '' ">
+                    <span flex="70" layout="row" layout-align="end center">
+                        {{t.name}}
+                    </span>
+                    <span flex="20" layout="row" layout-align="center center">
+                        {{t.hours}}
+                    </span>
+
+                </div>
+            </md-item-content>
+        </md-item>
+
+    </md-list>
+
+    <md-list flex="100"
+             layout="row"
+             layout-align="end center">
+        <md-item flex="33"
+                 flex-md="50"
+                 flex-sm="100">
+            <md-item-content>
+                <div flex
+                     layout="row"
+                     layout-align="center center"
+                     ng-class="getTotalHours() > 0 ? 'my-primary' : '' ">
+                    <span flex="70" layout="row" layout-align="end center">
+                        Total Hours
+                    </span>
+                    <span flex="20" layout="row" layout-align="center center">
+                        {{getTotalHours()}}
+                    </span>
+                </div>
+            </md-item-content>
+        </md-item>
+
+    </md-list>
+</script>

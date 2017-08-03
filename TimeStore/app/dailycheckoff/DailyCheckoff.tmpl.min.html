@@ -1,0 +1,67 @@
+﻿<script type=text/ng-template id=DailyCheckoff.tmpl.html>
+
+    <div flex="100"
+         layout="row"
+         layout-align="center center"
+         layout-wrap>
+
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>
+
+        <h3 flex="100"
+            layout="row"
+            layout-align="center center">
+            {{ title }}.
+        </h3>
+        <md-button class="md-raised md-primary"
+                   ng-click="switchData()">
+            {{ swapButtonText }}
+        </md-button>
+        <md-button class="md-raised md-primary"
+                   ng-click="RefreshApprovalData()">
+            Refresh Data
+        </md-button>
+
+        <md-list ng-if="dataView.length > 0"
+                 layout="row"
+                 layout-align="center center"
+                 flex="100"
+                 layout-wrap>
+
+            <md-item ng-repeat="t in dataView | orderBy: ['group', 'name']"
+                     flex="100"
+                     layout="row"
+                     layout-align="center center"
+                     layout-wrap>
+
+                <md-item-content flex="100"
+                                 layout="row"
+                                 layout-align="center center">
+
+                    <div flex="100"
+                         layout="row"
+                         layout-align="start center"
+                         layout-wrap
+                         layout-padding>
+                        <span flex="20">
+                            {{ t.group }}
+                        </span>
+                        <span flex="20">
+                            <a href="/TimeStore/#/e/{{ t.eid }}/ppd/{{ ppe }}">
+                                {{ t.name }}
+                            </a>
+                        </span>
+                        <span flex="20">
+                            {{ t.time }}
+                        </span>
+                    </div>
+                </md-item-content>
+
+            </md-item>
+
+        </md-list>
+
+    </div>
+</script>

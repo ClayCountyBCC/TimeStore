@@ -1,0 +1,102 @@
+[
+    {
+        "outputFileName": "Views/Shared/bundle.vbhtml",
+        "inputFiles": [
+            "app/access/Access.controller.tmpl.html",
+            "app/addtime/AddTimeView.controller.tmpl.html",
+            "app/addtime/AddTime.directive.tmpl.html",
+            "app/addtime/AddCompTime.directive.tmpl.html",
+            "app/addtime/HoursDisplay.directive.tmpl.html",
+            "app/approval/Approval.controller.tmpl.html",
+            "app/common/DateSelect.directive.tmpl.html",
+            "app/leaverequest/existingLeaveRequest.directive.tmpl.html",
+            "app/leaverequest/LeaveRequestView.controller.tmpl.html",
+            "app/dailycheckoff/DailyCheckoff.controller.tmpl.html",
+            "app/exceptions/Exceptions.controller.tmpl.html",
+            "app/financetools/FinanceTools.controller.tmpl.html",
+            "app/incentives/Incentives.controller.tmpl.html",
+            "app/signatureview/TimeCardSignatures.controller.tmpl.html",
+            "app/leaveapproval/LeaveApproval.controller.tmpl.html",
+            "app/notapproved/TimecardNotApproved.controller.tmpl.html",
+            "app/timecard/TimeApproval.directive.tmpl.html",
+            "app/timecard/TimeCardDetail.directive.tmpl.html",
+            "app/timecard/TimeCardHeader.directive.tmpl.html",
+            "app/timecard/TimecardNotes.directive.tmpl.html",
+            "app/timecard/TimeCardView.controller.tmpl.html",
+            "app/timecard/TimecardWarnings.directive.tmpl.html",
+            "app/timecard/TimeCardWeek-table.directive.tmpl.html",
+            "app/timecard/TimeCardWeek.directive.tmpl.html",
+            "app/timecard/TimeList.directive.tmpl.html",
+            "app/calendar/CalendarView.controller.tmpl.html",
+            "app/calendar/LeaveCalendar.directive.tmpl.html"
+        ],
+        "minify": {
+            "enabled": true
+        },
+        "includeInProject": true,
+        "sourceMaps": false
+    },
+    {
+        "outputFileName": "CSS/bundle.css",
+      "inputFiles": [
+        "CSS/Main.css",        
+        "css/angular-material.1.1.4.css"
+      ],
+        "minify": {
+            "enabled": true
+        },
+        "includeInProject": true,
+        "sourceMaps": false
+    },
+    {
+        "outputFileName": "Scripts/bundle.js",
+        "inputFiles": [
+            "Scripts/angular-material.1.1.4.js",
+            "scripts/moment.min.js",
+            "scripts/lodash.js",
+            "app/main/app.js",
+            "app/common/TimeStoreData.js",
+            "app/common/viewOptions.factory.js",
+            "app/common/Navigation.factory.js",
+            "app/addtime/AddTimeFunctions.factory.js",
+            "app/common/commonFunc.factory.js",
+            "app/common/loadingIndicator.directive.js",
+            "app/common/DateList.factory.js",
+            "app/leaverequest/existingLeaveRequest.directive.js",
+            "app/leaverequest/LeaveRequestView.controller.js",
+            "app/common/DateSelect.directive.js",
+            "app/main/DefaultController.js",
+            "app/main/HeaderController.js",
+            "app/access/Access.controller.js",
+            "app/addtime/AddCompTime.directive.js",
+            "app/addtime/AddTime.directive.js",
+            "app/addtime/AddTimeView.controller.js",
+            "app/approval/Approval.controller.js",
+            "app/addtime/HoursDisplay.directive.js",
+            "app/customreports/ReportController.js",
+            "app/dailycheckoff/DailyCheckoff.controller.js",
+            "app/exceptions/Exceptions.controller.js",
+            "app/financetools/FinanceTools.controller.js",
+            "app/incentives/Incentive.controller.js",
+            "app/leaveapproval/LeaveApproval.controller.js",
+            "app/notapproved/TimecardNotApproved.controller.js",
+            "app/signatureview/TimecardSignatures.controller.js",
+            "app/timecard/TimeApproval.directive.js",
+            "app/timecard/TimeCardDetail.directive.js",
+            "app/timecard/TimeCardHeader.directive.js",
+            "app/timecard/TimeCardNotes.directive.js",
+            "app/timecard/TimeCardView.controller.js",
+            "app/timecard/TimeCardWarnings.directive.js",
+            "app/timecard/TimeCardWeek-table.directive.js",
+            "app/timecard/TimeCardWeek.directive.js",
+            "app/timecard/TimeList.directive.js",
+            "app/calendar/CalendarView.controller.js",
+            "app/calendar/LeaveCalendar.directive.js"
+        ],
+        "minify": {
+            "enabled": true
+        },
+        "includeInProject": true,
+        "sourceMaps": false
+    }
+]

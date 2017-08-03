@@ -1,0 +1,139 @@
+﻿<script type=text/ng-template id=TimeCardWeek.tmpl.html>
+
+    <md-list flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <span layout="row"
+                      layout-align="center center"
+                      flex="15">
+                    <md-button flex
+                               ng-if="showaddtime === true"
+                               ng-click="addTimeGo()"
+                               class="md-warn md-raised">
+                        Time Entry
+                        <md-icon aria-label="add time icon"
+                                 class="iconColor"
+                                 md-svg-src="/TimeStore/images/ic_alarm_add_24px.svg">
+                        </md-icon>
+                    </md-button>
+                    <span ng-if="showaddtime === false">
+                        Day / Date
+                    </span>
+                </span>
+                <div layout="row"
+                     layout-align="center center"
+                     flex>
+                    Work Times
+                </div>
+                <span layout="row"
+                      layout-align="center center"
+                      flex="15">
+                    Comment
+                </span>
+                <span class="centerme"
+                      layout="row"
+                      layout-align="center center"
+                      flex="10"
+                      ng-repeat="gtu in typelist">
+                    {{gtu}}
+                </span>
+                <span layout="row"
+                      layout-align="center center"
+                      flex="5">
+                    Total
+                </span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 ng-repeat="r in week"
+                 layout-wrap>
+
+            <div flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <span layout="row"
+                      layout-align="center center"
+                      flex="15">
+                    <a style="text-decoration: underline; cursor: pointer;"
+                       layout="row"
+                       layout-align="center center"
+                       ng-click="addTimeGo(r.workDateDisplay)"
+                       ng-if="showaddtime === true"
+                       flex>
+                        {{r.workDateDayOfWeek}} {{r.workDateDisplay}}
+                    </a>
+                    <span ng-if="showaddtime === false">
+                        {{r.workDateDayOfWeek}} {{r.workDateDisplay}}
+                    </span>
+                </span>
+                <div style="display: inline-block;"
+                     flex>
+                    <md-list flex="100">
+                        <md-item style="display: inline-block; padding-right: 1em;"
+                                 ng-repeat="work in r.workTimeList">
+                            {{work.WorkTime}}
+                            <md-tooltip md-direction="right"
+                                        ng-if="work.Description.length > 0">
+                                {{work.Description}}
+                            </md-tooltip>
+                        </md-item>
+                    </md-list>
+                </div>
+                <span layout="row"
+                      layout-align="center center"
+                      flex="15">
+                    {{r.comment}}
+                </span>
+                <span layout="row"
+                      layout-align="center center"
+                      flex="10"
+                      ng-repeat="gtu in typelist">
+                    {{ getHours(gtu, r.workHoursList) }}
+                </span>
+                <span layout="row"
+                      layout-align="center center"
+                      flex="5">
+                    {{ r.totalWorkHours}}
+                </span>
+            </div>
+            <md-divider flex="100"></md-divider>
+
+        </md-item>
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center">
+            <div flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5 layout="row"
+                    layout-align="center end"
+                    class="short" flex>
+                    Total for {{title}}
+                </h5>
+                <h5 layout="row"
+                    layout-align="center center"
+                    class="short"
+                    flex="10"
+                    ng-repeat="gtu in typelist">
+                    {{ getTotalHours(gtu)}}
+                </h5>
+                <h5 layout="row"
+                    layout-align="center center"
+                    class="short" flex="5">
+                    {{getTotalHours(null)}}
+                </h5>
+            </div>
+        </md-item>
+    </md-list>
+</script>

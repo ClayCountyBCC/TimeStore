@@ -1,0 +1,73 @@
+﻿<script type="text/ng-template" id="TimeCardNotApproved.tmpl.html">
+
+    <div flex="100"
+         layout="row"
+         layout-align="center center"
+         layout-wrap>
+
+        <md-progress-linear ng-if="showProgress === true"
+                            flex="100"
+                            md-mode="indeterminate">
+        </md-progress-linear>       
+
+        <div flex="90">
+            <date-selector title="Pay Period Ending:"
+                           label="Select Pay Period"
+                           datetype="ppd"
+                           flex="100">
+            </date-selector>
+
+            <md-input-container flex="50">
+                <label flex="100">
+                    <span style="text-align: center;"
+                          flex="100">
+                        View By Department {{ selectedDept.deptName }}
+                    </span>
+                </label>
+                <md-select aria-label="View By Department"
+                           md-on-close="filterByType()"
+                           flex="50"
+                           ng-model="selectedDept">
+                    <md-option ng-repeat="dept in deptData | orderBy: 'deptName'"
+                               ng-value="dept">
+                        {{ dept.deptName }}
+                    </md-option>
+                </md-select>
+            </md-input-container>
+
+            <table style="margin-top: 1em;"
+                   class="crosstab"
+                    ng-if="viewData.length > 0">
+                <thead>
+                    <tr>
+                        <th>
+                            Department #
+                        </th>
+                        <th>
+                            Employee name and Number
+                        </th>
+                        <th>
+                            Initial Approval Info
+                        </th>
+                    </tr>
+                </thead>
+                <tr ng-repeat="v in filteredData | orderBy: ['department', 'fullname'] track by v.fullname">
+                    <td flex="15">
+                        {{ v.department }}
+                    </td>
+                    <td flex="50">
+                        <a href="#/e/{{v.employeeId}}/ppd/{{ppd}}">
+                            {{ v.fullname }}
+                        </a>
+                    </td>
+                    <td flex="35">
+                        {{ v.approvalinfo}}
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+    </div>
+
+</script>

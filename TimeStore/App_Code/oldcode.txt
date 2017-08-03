@@ -1,0 +1,1002 @@
+' Old Telestaff query
+'.AppendLine("USE Telestaff;")
+'.AppendLine("SELECT Staffing_Tbl.Staffing_Calendar_Da, ")
+'.AppendLine("SUM(DATEDIFF(minute,Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt))/60.00 as StaffingHours, ")
+'.AppendLine("Resource_Master_Tbl.RscMaster_Name_Ch,Resource_Master_Tbl.RscMaster_EmployeeID_Ch, ")
+'.AppendLine("Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt,")
+''.AppendLine("Resource_Master_Tbl.RscMaster_PayrollID_Ch, ")
+'.AppendLine("Resource_Tbl.Rsc_Hourwage_db,Resource_Tbl.Rsc_Name_Ch, ")
+''.AppendLine("LEFT(Job_Title_Tbl.Job_Abrv_Ch + CASE WHEN dbo.GetRscSpecialties(Resource_Tbl.Rsc_No_In,1) IS NULL ")
+''.AppendLine("	THEN '' ELSE ' (' + dbo.GetRscSpecialties(Resource_Tbl.Rsc_No_In,1) + ')' END,254) as ProfileNameCh,")
+'.AppendLine("Job_Title_Tbl.Job_Abrv_Ch,Wstat_Type_Tbl.Wstat_Type_Desc_Ch,")
+'.AppendLine("(CASE WHEN LTRIM(RTRIM(Wstat_Cde_Tbl.Wstat_Abrv_Ch)) = '' THEN 'STRAIGHT' ELSE UPPER(LTRIM(RTRIM(Wstat_Cde_Tbl.Wstat_Abrv_Ch))) END) AS WstatAbrv,")
+'.AppendLine("Wstat_Cde_Tbl.Wstat_Name_Ch + (CASE WHEN Wstat_Cde_Tbl.Wstat_Abrv_Ch <> ' ' ")
+'.AppendLine("	THEN ' (' + Wstat_Cde_Tbl.Wstat_Abrv_Ch + ')' ELSE '' END)  as WstatName,Wstat_Payroll_ch,Pay_Information_Tbl.PayInfo_FlsaHours_In,")
+'.AppendLine("Shift_tbl.shift_abrv_ch, shift_tbl.Shift_TimeDuration_Ch, shift_tbl.shift_type_no_in")
+''.AppendLine("CASE Wstat_Cde_Tbl.Wstat_Payroll_Ch WHEN '131' THEN '231' ELSE Wstat_Cde_Tbl.Wstat_Payroll_Ch END AS Wstat_Payroll_ch,Pay_Information_Tbl.PayInfo_FlsaHours_In,")
+''.AppendLine("SUM(dbo.PayHoursDiff(Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt,Shift_Tbl.Shift_BreakHours_In,")
+''.AppendLine("	Shift_Tbl.Shift_BreakIfOverMultiple_In))as cPayHoursDiff,")
+''.AppendLine("SUM(CASE WHEN Wstat_Cde_Tbl.Wstat_Flsa_Si = 'Y' THEN ")
+''.AppendLine("	dbo.PayHoursDiff(Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt,Shift_Tbl.Shift_BreakHours_In,")
+''.AppendLine("	Shift_Tbl.Shift_BreakIfOverMultiple_In) ELSE 0 END)as FLSAPayHours, ")
+''.AppendLine("SUM(dbo.PayHoursDiff(Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt,Shift_Tbl.Shift_BreakHours_In, ")
+''.AppendLine("	Shift_Tbl.Shift_BreakIfOverMultiple_In)) as StaffingHoursWithBreaks, ")
+''.AppendLine("ISNULL(shift_tbl.Shift_breakhours_in, 0) AS BreakTime")
+''.AppendLine("SUM(CASE WHEN Pay_Information_Tbl.PayInfo_Flsa_DD IS NULL THEN 0 ELSE 1 END)as cPayInfo_Flsa_DD ")
+'.AppendLine("FROM Staffing_Tbl JOIN Resource_Tbl ON Resource_Tbl.Rsc_No_In=Staffing_Tbl.Rsc_No_In ")
+'.AppendLine("JOIN Wstat_Cde_Tbl ON Wstat_Cde_Tbl.Wstat_No_In=Staffing_Tbl.Wstat_No_In ")
+'.AppendLine("JOIN Shift_Tbl ON Shift_Tbl.Shift_No_In=Staffing_Tbl.Shift_No_In ")
+'.AppendLine("JOIN Wstat_Type_Tbl ON Wstat_Type_Tbl.Wstat_Type_No_In=Wstat_Cde_Tbl.Wstat_Type_No_In ")
+'.AppendLine("JOIN Job_Title_Tbl ON Job_Title_Tbl.Job_No_In=Resource_Tbl.Job_No_In ")
+'.AppendLine("LEFT OUTER JOIN Pay_Information_Tbl ON Pay_Information_Tbl.PayInfo_No_In=Resource_Tbl.PayInfo_No_In ")
+'.AppendLine("JOIN Resource_Master_Tbl ON Resource_Master_Tbl.RscMaster_No_In=Resource_Tbl.RscMaster_No_In ")
+'.AppendLine("JOIN Position_Tbl ON Position_Tbl.Pos_No_In=Staffing_Tbl.Pos_No_In ")
+'.AppendLine("JOIN Unit_Tbl ON Unit_Tbl.Unit_No_In=Position_Tbl.Unit_No_In ")
+'.AppendLine("JOIN Station_Tbl ON Station_Tbl.Station_No_In=Unit_Tbl.Station_No_In ")
+''.AppendLine("WHERE Staffing_Tbl.Staffing_Benign_Si<>'Y' ") '--AND Wstat_Cde_Tbl.Wstat_Payroll_Ch IS NOT NULL  ")
+'' Turning off the switch to restrict our query to benign_si, basically I think this removes users who are 
+'' not there anymore.  Because we're going to be looking at old data, some users are not goign to be there.
+'' We will have to do something similar to the finplus query so that all users for our departments are added, not just
+'' current users.  We will need to do a check before we finalize the data in the GetPublicSafetyEmployeeData function
+'' to remove any users with no time.
+'.Append("WHERE Staffing_Tbl.Staffing_Calendar_Da BETWEEN '").Append(StartDate.ToShortDateString)
+'.Append("' AND '").Append(StartDate.AddDays(13).ToShortDateString).AppendLine("' ")
+'.AppendLine("AND Station_Tbl.Region_No_In IN (4,2,5,6) ")
+'' Excluding the following work codes:
+'' OTR -  Overtime Reject, field personnel were offered OT by Telestaff and didn't take it.
+'' ORD - same as above but for Dispatch
+'' OTRR - reject for rapid hire.  Same as above
+'' DMWI - Dispatch shift trade, working.  This lets you know that the dispatcher traded shifts with someone and now they are working the shift in repayment.
+'' MWI - Same as above just for field personnel instead of dispatch
+'' SLOT - Sick leave on OT, person accepted OT but was sick.  Just used by Telestaff to fill the vacancy.
+'' BR - Break for staff employees, this is used to accurately calculate their schedules, rather than using the automatically calculated break.
+'' OJ - OJI on OT, these hours are not paid.
+'.AppendLine("AND Wstat_Cde_Tbl.Wstat_Abrv_Ch NOT IN ('OTR', 'OTRR', 'DMWI', 'MWI', 'ORD', 'SLOT', 'BR', 'OJ') ") '-- This is important because we have stopped limiting our query where wstat_payroll_ch IS NOT NULL ")
+'.AppendLine("GROUP BY Staffing_Tbl.Staffing_Calendar_Da,Shift_Tbl.Shift_Type_No_In,Staffing_Tbl.Rsc_No_In,Resource_Master_Tbl.RscMaster_No_In,")
+'.AppendLine("Resource_Master_Tbl.RscMaster_Name_Ch,Resource_Master_Tbl.RscMaster_EmployeeID_Ch,Resource_Master_Tbl.RscMaster_PayrollID_Ch,")
+'.AppendLine("Resource_Master_Tbl.RscMaster_Contact1_Ch,Resource_Master_Tbl.RscMaster_Contact2_Ch,Resource_Tbl.Rsc_Job_Level_Ch,")
+'.AppendLine("Resource_Tbl.Rsc_Hourwage_db,Resource_Tbl.Rsc_Name_Ch,Resource_Tbl.Rsc_No_In,Job_Title_Tbl.Job_Abrv_Ch,")
+'.AppendLine("Wstat_Type_Tbl.Wstat_Type_No_In,Wstat_Type_Tbl.Wstat_Type_desc_Ch,Wstat_Cde_Tbl.Wstat_No_In,Wstat_Cde_Tbl.Wstat_Name_Ch,")
+'.AppendLine("Wstat_Cde_Tbl.Wstat_Abrv_Ch,Wstat_Cde_Tbl.Wstat_Payroll_Ch,")
+'.AppendLine("Pay_Information_Tbl.PayInfo_FlsaHours_In,shift_tbl.shift_abrv_ch, shift_tbl.Shift_TimeDuration_Ch,")
+'.AppendLine("Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt")
+'.AppendLine("ORDER BY Resource_Master_Tbl.RscMaster_Name_Ch,staffing_tbl.staffing_calendar_da, ")
+'.AppendLine("Shift_Tbl.Shift_Type_No_In,Wstat_Cde_Tbl.Wstat_Name_Ch,Wstat_Cde_Tbl.Wstat_No_In")
+'' for testing
+' for batch starting 6/18/2014
+'If StartDate = CType("6/18/2014", Date) Then
+'    If .EmployeeId = 1471 Then
+'        .Banked_Vacation_Hours = 55.086
+'        .Banked_Sick_Hours = 267.196
+'        .Banked_Holiday_Hours = 24
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 2116 Then
+'        .Banked_Vacation_Hours = 90.7478
+'        .Banked_Sick_Hours = 176.3308
+'        .Banked_Holiday_Hours = 24
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1677 Then
+'        .Banked_Vacation_Hours = 130.4125
+'        .Banked_Sick_Hours = 83.9184
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1970 Then
+'        .Banked_Vacation_Hours = 217.024
+'        .Banked_Sick_Hours = 98.65
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 2485 Then
+'        .Banked_Vacation_Hours = 206.3932
+'        .Banked_Sick_Hours = 214.3932
+'        .Banked_Holiday_Hours = 24
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1994 Then
+'        .Banked_Vacation_Hours = 31.6045
+'        .Banked_Sick_Hours = 18.6287
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1131 Then
+'        .Banked_Vacation_Hours = 258.7445
+'        .Banked_Sick_Hours = 27.9834
+'        .Banked_Holiday_Hours = 48
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1883 Then
+'        .Banked_Vacation_Hours = 37.5034
+'        .Banked_Sick_Hours = 607.9504
+'        .Banked_Holiday_Hours = 24
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1996 Then
+'        .Banked_Vacation_Hours = 39.298
+'        .Banked_Sick_Hours = 52.8805
+'        .Banked_Holiday_Hours = 192
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1383 Then
+'        .Banked_Vacation_Hours = 38.8509
+'        .Banked_Sick_Hours = 22.4156
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 2509 Then
+'        .Banked_Vacation_Hours = 166.0648
+'        .Banked_Sick_Hours = 144.0648
+'        .Banked_Holiday_Hours = 24
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 1889 Then
+'        .Banked_Vacation_Hours = 79.2781
+'        .Banked_Sick_Hours = 24.1626
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 2533 Then
+'        .Banked_Vacation_Hours = 35.184
+'        .Banked_Sick_Hours = 44.184
+'        .Banked_Holiday_Hours = 0
+'        .Banked_Comp_Hours = 0
+'    End If
+'    If .EmployeeId = 2398 Then
+'        .Banked_Vacation_Hours = 26.1207
+'        .Banked_Sick_Hours = 270.6007
+'        .Banked_Holiday_Hours = 12
+'        .Banked_Comp_Hours = 0
+'    End If
+'End If
+'If .EmployeeId = 0 Then
+'    .Banked_Vacation_Hours = 0
+'    .Banked_Sick_Hours = 0
+'    .Banked_Holiday_Hours = 0
+'    .Banked_Comp_Hours = 0
+'End If
+' for batch starting 4/23/2014
+'If .EmployeeId = 1857 Then
+'    .Banked_Holiday_Hours = 120
+'    .Banked_Sick_Hours = 732.0313
+'    .Banked_Vacation_Hours = 133.34
+'End If
+'If .EmployeeId = 1584 Then
+'    .Banked_Holiday_Hours = 192
+'    .Banked_Vacation_Hours = 253.2903
+'    .Banked_Sick_Hours = 732.0313
+'End If
+'If .EmployeeId = 1280 Then
+'    .Banked_Holiday_Hours = 48
+'    .Banked_Vacation_Hours = 133.6387
+'    .Banked_Sick_Hours = 29.3077
+'End If
+'If .EmployeeId = 1091 Then
+'    .Banked_Holiday_Hours = 192
+'    .Banked_Vacation_Hours = 184.3811
+'    .Banked_Sick_Hours = 526.7203
+'End If
+'If .EmployeeId = 1733 Then
+'    .Banked_Holiday_Hours = 144
+'    .Banked_Vacation_Hours = 48.1081
+'    .Banked_Sick_Hours = 14.3605
+'End If
+'If .EmployeeId = 2495 Then
+'    .Banked_Holiday_Hours = 0
+'    .Banked_Comp_Hours = 0
+'    .Banked_Vacation_Hours = 51.6912
+'    .Banked_Sick_Hours = 5.4412
+'End If
+'If .EmployeeId = 1859 Then
+'    .Banked_Holiday_Hours = 0
+'    .Banked_Comp_Hours = 0
+'    .Banked_Vacation_Hours = 112.2457
+'    .Banked_Sick_Hours = 20.4801
+'End If
+' end 4/23 batch
+
+
+'.Banked_Holiday_Hours = 0
+'.Banked_Vacation_Hours = 0
+'.Banked_Sick_Hours = 0
+'If .EmployeeId = 1289 Then
+'    .Banked_Sick_Hours = 9.9914
+'    .Banked_Comp_Hours = 60
+'    .Banked_Vacation_Hours = 80.8884
+
+'End If
+'If .EmployeeId = 2495 Then
+'    .Banked_Vacation_Hours = 27.9368
+'    .Banked_Sick_Hours = 7.4368
+'    .Banked_Holiday_Hours = 12
+'End If
+'Public Function GetPublicSafetyEmployeeData(StartDate As Date) As List(Of EmployeePayPeriod)
+'    Dim Depts() As String = {"'2103'", "'2102'", "'1703'"}
+'    Dim fin As List(Of FinanceData) = GetEmployeeDataFromFinPlus(Depts, StartDate)
+'    Dim tl As List(Of TimeData) = GetEmployeeDataFromTelestaff(StartDate)
+'    Dim epp As New List(Of EmployeePayPeriod)
+'    Dim newepp As New List(Of EPP)
+'    For Each f In fin
+'        Dim e As New EmployeePayPeriod
+'        e.EmployeeId = f.EmployeeId
+'        e.Banked_Comp_Hours = f.Banked_Comp_Hours
+'        e.Banked_Holiday_Hours = f.Banked_Holiday_Hours
+'        e.Banked_Sick_Hours = f.Banked_Sick_Hours
+'        e.Banked_Vacation_Hours = f.Banked_Vacation_Hours
+'        e.Payrate = f.Base_Payrate
+'        e.Department = f.Department
+'        e.EmployeeName = f.EmployeeName
+'        e.EmployeeType = f.EmployeeType
+'        e.HoursNeededForOvertime = f.HoursNeededForOvertime
+'        'e.PayPeriodStart = StartDate
+'        e.JobTitle = f.JobTitle
+'        e.TimeList = (From t In tl Where t.EmployeeId = e.EmployeeId Select t).ToList
+'        If e.IsOvertime_Calculated_Weekly And Not e.IsExempt Then
+'            Dim jl = (From t In e.TimeList Where t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.WorkHours > 0 And t.WorkCode = "231" Select t)
+'            For Each j In jl
+'                j.WorkCode = "232"
+'            Next
+'        End If
+'        epp.Add(e)
+'        ' Testing Newepp
+'        'Dim newE As New EPP((From t In tl Where t.EmployeeId = f.EmployeeId Select t).ToList, f)
+'        'newepp.Add(newE)
+'        tl.RemoveAll(Function(x) x.EmployeeId = e.EmployeeId)
+'    Next
+'    epp.RemoveAll(Function(x) x.TimeList.Count = 0)
+'    Return epp.OrderBy(Function(x) x.Department).ToList
+'End Function
+
+'Public Function CompareData(RealData As List(Of MockEmployeePayPeriodData), TestData As List(Of EmployeePayPeriod)) As String
+'    ' so the "RealData" object contains what was actually on the greensheet for this payperiod, so that data is what we expect this system to output.
+'    Dim sbtext As New StringBuilder
+'    sbtext.Append("Employee Name").Append(vbTab).Append("EmployeeID").Append(vbTab).Append("Mismatch Desc").Append(vbTab).Append("Real Value").Append(vbTab).AppendLine("Telestaff Value EmployeePayPeriod")
+'    For Each r In RealData
+'        Dim e As EmployeePayPeriod = (From t In TestData Where t.EmployeeId = r.EmployeeID).First
+'        ' now let's test everything
+'        With sbtext
+'            If IsNothing(e) Then
+'                .AppendLine("Employee " & r.EmployeeID & " not found in testdata.")
+'            Else
+'                .Append(e.EmployeeName).Append(vbTab).AppendLine(e.EmployeeId)
+'                If r.Scheduled_Overtime <> e.Scheduled_Overtime Then .Append(vbTab).Append(vbTab).Append("Scheduled Overtime mismatch: ").Append(vbTab).Append(r.Scheduled_Overtime.ToString).Append(vbTab).AppendLine(e.Scheduled_Overtime)
+'                If r.Scheduled_Regular_Overtime <> e.Scheduled_Regular_Overtime Then .Append(vbTab).Append(vbTab).Append("Scheduled Regular Overtime mismatch: ").Append(vbTab).Append(r.Scheduled_Regular_Overtime.ToString).Append(vbTab).AppendLine(e.Scheduled_Regular_Overtime)
+'                If r.Unscheduled_Regular_Overtime <> e.Unscheduled_Regular_Overtime Then .Append(vbTab).Append(vbTab).Append("Unscheduled Regular Overtime mismatch: ").Append(vbTab).Append(r.Unscheduled_Regular_Overtime.ToString).Append(vbTab).AppendLine(e.Unscheduled_Regular_Overtime)
+'                If r.Regular <> e.Regular Then .Append(vbTab).Append(vbTab).Append("Regular time mismatch: ").Append(vbTab).Append(r.Regular.ToString).Append(vbTab).AppendLine(e.Regular)
+'                If r.Unscheduled_Overtime <> e.Unscheduled_Overtime Then .Append(vbTab).Append(vbTab).Append("Unscheduled Overtime mismatch: ").Append(vbTab).Append(r.Unscheduled_Overtime.ToString).Append(vbTab).AppendLine(e.Unscheduled_Overtime)
+'                If r.Vacation <> e.Vacation Then .Append(vbTab).Append(vbTab).Append("Vacation mismatch: ").Append(vbTab).Append(r.Vacation.ToString).Append(vbTab).AppendLine(e.Vacation).Append(vbTab).Append(vbTab).Append("vacation time requested:").Append(vbTab).AppendLine(e.Vacation_Hours_Requested)
+'                If r.Sick <> e.Sick Then .Append(vbTab).Append(vbTab).Append("Sick mismatch: ").Append(vbTab).Append(r.Sick.ToString).Append(vbTab).AppendLine(e.Sick).Append(vbTab).Append(vbTab).Append("Sick time requested:").Append(vbTab).AppendLine(e.Sick_Hours_Requested)
+'                If r.Comp_Time_Used <> e.Comp_Time_Used Then .Append(vbTab).Append(vbTab).Append("Comp time mismatch: ").Append(vbTab).Append(r.Comp_Time_Used.ToString).Append(vbTab).AppendLine(e.Comp_Time_Used)
+'                If r.Holiday_Time_Used <> e.Holiday_Time_Used Then .Append(vbTab).Append(vbTab).Append("Holiday mismatch: ").Append(vbTab).Append(r.Holiday_Time_Used.ToString).Append(vbTab).AppendLine(e.Holiday_Time_Used).Append(vbTab).Append(vbTab).Append("Holiday time requested:").Append(vbTab).AppendLine(e.Holiday_Hours_Requested)
+'            End If
+'        End With
+'    Next
+'    Return sbtext.ToString
+'End Function
+
+'    Public Class EmployeePayPeriod
+
+'#Region "     Properties                                       "
+'        Property EmployeeId As Integer = Integer.MinValue
+'        Property EmployeeName As String = ""
+'        Property EmployeeType As String = "" 'E for Exempt, N for NonExempt
+'        Property JobTitle As String = ""
+'        Property Department As String = ""
+'        Property PayPeriodStart As Date = Date.MinValue
+'        Property HoursNeededForOvertime As Double = Double.MinValue
+'        Property Payrate As Double
+'        Property Banked_Vacation_Hours As Double = Double.MinValue
+'        Property Banked_Sick_Hours As Double = Double.MinValue
+'        Property Banked_Comp_Hours As Double = Double.MinValue
+'        Property Banked_Holiday_Hours As Double = Double.MinValue
+'        Property TimeList As List(Of TimeData)
+
+'        ReadOnly Property PayPeriodMid As Date
+'            Get
+'                Return PayPeriodStart.AddDays(6)
+'            End Get
+'        End Property
+
+'        ReadOnly Property PayPeriodEnd As Date
+'            Get
+'                Return PayPeriodStart.AddDays(13)
+'            End Get
+'        End Property
+
+'        ReadOnly Property HoursNeededForOvertimeByWeek() As Double
+'            Get
+'                Return HoursNeededForOvertime / 2
+'            End Get
+'        End Property
+
+'        ReadOnly Property IsOvertime_Calculated_Weekly() As Boolean
+'            Get
+'                Return (Break_Time > 0)
+'            End Get
+'        End Property
+
+'        ReadOnly Property IsExempt() As Boolean
+'            Get
+'                Return (EmployeeType = "E")
+'            End Get
+'        End Property
+
+'        ReadOnly Property HasHoliday As Boolean
+'            Get
+'                Dim HL As List(Of Date) = getHolidayList(PayPeriodStart.Year)
+'                Return ((From h In HL Where h >= PayPeriodStart And h <= PayPeriodStart.AddDays(14) Select h).Count > 0)
+'            End Get
+'        End Property
+
+'        ReadOnly Property Scheduled_Hours()
+'            Get
+'                Return ((From t In TimeList Where t.WorkCode = "002" Select t.WorkHours).Sum) + Vacation + Holiday_Time_Used + Leave_Without_Pay + Sick
+'            End Get
+'        End Property
+
+'        ReadOnly Property Scheduled_Hours_Week1
+'            Get
+'                Return ((From t In TimeList Where t.WorkCode = "002" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid
+'                        Select t.WorkHours).Sum) + Vacation_Week1 + Leave_Without_Pay_Week1 + Sick_Week1
+'            End Get
+'        End Property
+
+'        ReadOnly Property Scheduled_Hours_Week2
+'            Get
+'                Return ((From t In TimeList Where t.WorkCode = "002" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd
+'                        Select t.WorkHours).Sum) + Vacation_Week2 + Leave_Without_Pay_Week2 + Sick_Week2
+'            End Get
+'        End Property
+
+'        ReadOnly Property Total_Hours()
+'            Get
+'                'Return (From t In TimeList Where t.WorkCode <> "002" Select t.WorkHoursWithBreaks).Sum() + (From t In TimeList Where t.WorkCode = "002" Select t.WorkHoursWithBreaks).Sum()
+'                Select Case Department
+'                    Case Else
+'                        Return (From t In TimeList Select t.WorkHours).Sum()
+'                End Select
+
+'            End Get
+'        End Property
+
+'        ReadOnly Property Total_Calculated_Hours()
+'            Get
+'                ' This is how we test to make sure that we are balancing our numbers across the board.
+'                Return Regular + Scheduled_Overtime + Leave_Without_Pay + Vacation + Sick + Scheduled_Regular_Overtime +
+'                    Holiday_Time_Used + Unscheduled_Regular_Overtime + Unscheduled_Overtime + Unscheduled_Double_Overtime +
+'                    Vacation_Without_Pay + Holiday_Without_Pay + Sick_Leave_Without_Pay + Comp_Time_Used
+'            End Get
+'        End Property
+
+'        ReadOnly Property Regular() As Double
+'            Get
+'                Return Calculate_RegularPay()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Non_Working_Regular_Hours()
+'            Get
+'                Return Calculate_Non_Working_Regular_Hours()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Non_Working_Regular_Hours_Week1()
+'            Get
+'                Return Calculate_Non_Working_Regular_Hours_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Non_Working_Regular_Hours_Week2()
+'            Get
+'                Return Calculate_Non_Working_Regular_Hours_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Overtime() As Double ' scheduled overtime
+'            Get
+'                Return Calculate_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Scheduled_Overtime() As Double
+'            Get
+'                Return Calculate_Scheduled_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Leave_Without_Pay() As Double ' scheduled overtime
+'            Get
+'                Return Calculate_LWOP()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Leave_Without_Pay_Week1 As Double ' scheduled overtime
+'            Get
+'                Return Calculate_LWOP_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Leave_Without_Pay_Week2 As Double ' scheduled overtime
+'            Get
+'                Return Calculate_LWOP_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation() As Double
+'            Get
+'                Return Calculate_Vacation()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Week1 As Double
+'            Get
+'                Return Calculate_Vacation_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Week2 As Double
+'            Get
+'                Return Calculate_Vacation_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick() As Double
+'            Get
+'                Return Calculate_Sick()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Week1 As Double
+'            Get
+'                Return Calculate_Sick_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Week2 As Double
+'            Get
+'                Return Calculate_Sick_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Scheduled_Regular_Overtime() As Double
+'            Get
+'                Return Calculate_Scheduled_Regular_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday() As Double
+'            Get
+'                Return Calculate_Holiday()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Week1 As Double
+'            Get
+'                Return Calculate_Holiday_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Week2 As Double
+'            Get
+'                Return Calculate_Holiday_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Regular_Overtime() As Double ' scheduled overtime
+'            Get
+'                Return Calculate_Unscheduled_Regular_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Overtime_Requested() As Double
+'            Get
+'                Return Calculate_Unscheduled_Overtime_Requested()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Overtime_Requested_Week1() As Double
+'            Get
+'                Return Calculate_Unscheduled_Overtime_Requested_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Overtime_Requested_Week2() As Double
+'            Get
+'                Return Calculate_Unscheduled_Overtime_Requested_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Overtime() As Double ' scheduled overtime
+'            Get
+'                Return Calculate_Unscheduled_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Unscheduled_Double_Overtime() As Double
+'            Get
+'                Return Calculate_Unscheduled_Double_Overtime()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Time_Bank() As Double
+'            Get
+'                Return Calculate_Holiday_Time_Bank()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Time_Used() As Double
+'            Get
+'                Return Calculate_Holiday_Time_Used()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Comp_Time_Bank() As Double
+'            Get
+'                Return Calculate_Comp_Time_Bank()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Comp_Time_Used() As Double
+'            Get
+'                Return Calculate_Comp_Time_Used()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Leave_Without_Pay() As Double
+'            ' The purpose of this function and the others like it are to identify where we are just subtracting
+'            ' hours from someone's leave bank and not paying them for them.  This happens rarely, but when it does
+'            ' happen we have to be able to tell it did.
+'            Get
+'                Return Calculate_Sick_Leave_Without_Pay()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Without_Pay() As Double
+'            ' The purpose of this function and the others like it are to identify where we are just subtracting
+'            ' hours from someone's leave bank and not paying them for them.  This happens rarely, but when it does
+'            ' happen we have to be able to tell it did.
+'            Get
+'                Return Calculate_Vacation_Without_Pay()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Without_Pay() As Double
+'            ' The purpose of this function and the others like it are to identify where we are just subtracting
+'            ' hours from someone's leave bank and not paying them for them.  This happens rarely, but when it does
+'            ' happen we have to be able to tell it did.
+'            Get
+'                Return Calculate_Holiday_Without_Pay()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Break_Time() As Double
+'            Get
+'                Return (From t In TimeList Where t.BreakTime > 0 Select t.BreakTime).FirstOrDefault()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Holiday_Hours_Requested() As Double
+'            Get
+'                Return Calculate_Holiday_Hours_Requested()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Hours_Requested() As Double
+'            Get
+'                Return Calculate_Sick_Hours_Requested()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Hours_Requested_Week1 As Double
+'            Get
+'                Return Calculate_Sick_Hours_Requested_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Sick_Hours_Requested_Week2 As Double
+'            Get
+'                Return Calculate_Sick_Hours_Requested_Week2()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Hours_Requested() As Double
+'            Get
+'                Return Calculate_Vacation_Hours_Requested()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Hours_Requested_Week1 As Double
+'            Get
+'                Return Calculate_Vacation_Hours_Requested_Week1()
+'            End Get
+'        End Property
+
+'        ReadOnly Property Vacation_Hours_Requested_Week2 As Double
+'            Get
+'                Return Calculate_Vacation_Hours_Requested_Week2()
+'            End Get
+'        End Property
+
+'#End Region
+
+'#Region "     Time Calculations                "
+
+'        Private Function Calculate_Non_Working_Regular_Hours() As Double
+'            Dim NonWorking() As String = {"ML", "ADM"}
+'            Return (From t In TimeList Where t.WorkCode = "002" And NonWorking.Contains(t.WorkTypeAbrv) Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Non_Working_Regular_Hours_Week1() As Double
+'            Dim NonWorking() As String = {"ML", "ADM"}
+'            Return (From t In TimeList Where t.WorkCode = "002" And NonWorking.Contains(t.WorkTypeAbrv) And
+'                   t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Non_Working_Regular_Hours_Week2() As Double
+'            Dim NonWorking() As String = {"ML", "ADM"}
+'            Return (From t In TimeList Where t.WorkCode = "002" And NonWorking.Contains(t.WorkTypeAbrv) And
+'                   t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_RegularPay() As Double
+'            Dim j As Double = (From t In TimeList Where t.WorkCode = "002" Select t.WorkHours).Sum() - Scheduled_Overtime - Scheduled_Regular_Overtime
+'            'If j > HoursNeededForOvertime Then j = HoursNeededForOvertime
+'            If j < 0 Then j = 0
+'            Return j
+'        End Function
+
+'        Private Function Calculate_LWOP() As Double ' leave without pay
+'            Dim LWOP As Double = (From t In TimeList Where t.WorkCode = "090" Select t.WorkHours).Sum()
+'            LWOP += (Vacation_Hours_Requested - Vacation)
+'            LWOP += (Sick_Hours_Requested - Sick)
+'            Return LWOP
+'        End Function
+
+'        Private Function Calculate_LWOP_Week1() As Double ' leave without pay
+'            Dim LWOP As Double = (From t In TimeList Where t.WorkCode = "090" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'            LWOP += (Vacation_Hours_Requested_Week1 - Vacation_Week1)
+'            LWOP += (Sick_Hours_Requested_Week1 - Sick_Week1)
+'            Return LWOP
+'        End Function
+
+'        Private Function Calculate_LWOP_Week2() As Double ' leave without pay
+'            Dim LWOP As Double = (From t In TimeList Where t.WorkCode = "090" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'            LWOP += (Vacation_Hours_Requested_Week2 - Vacation_Week2)
+'            LWOP += (Sick_Hours_Requested_Week2 - Sick_Week2)
+'            Return LWOP
+'        End Function
+
+'        Private Function Calculate_Vacation_Hours_Requested()
+'            Select Case Department
+'                Case "1703" ' Public Safety
+'                    ' Now let's check to make sure we don't need to change our numbers due to not having enough holiday hours banked.
+'                    Return (From t In TimeList Where t.WorkCode = "101" Or t.WorkCode = "100"
+'                        Select t.WorkHours).Sum() + (Holiday_Hours_Requested - Holiday_Time_Used)
+'                Case "2103"
+'                    Return (From t In TimeList Where t.WorkCode = "100"
+'                        Select t.WorkHours).Sum() - (Holiday_Hours_Requested - Holiday_Time_Used)
+'                Case "2102"
+'                    Return (From t In TimeList Where t.WorkCode = "100" Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue ' returning this instead of 0 so that we'll know we're missing a department calculation
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Vacation_Hours_Requested_Week1()
+'            Select Case Department
+'                Case "1703" ' Public Safety
+'                    'Return (From t In TimeList Where (t.WorkCode = "101" Or t.WorkCode = "100") And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.workhours).Sum()
+'                    Return 0
+'                Case "2103", "2102"
+'                    Return (From t In TimeList Where t.WorkCode = "100" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue ' returning this instead of 0 so that we'll know we're missing a department calculation
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Vacation_Hours_Requested_Week2()
+'            Select Case Department
+'                Case "1703" ' Public Safety
+'                    Return 0
+'                    'Return (From t In TimeList Where (t.WorkCode = "101" Or t.WorkCode = "100") And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.workhours).Sum()
+'                Case "2103", "2102"
+'                    Return (From t In TimeList Where t.WorkCode = "100" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue ' returning this instead of 0 so that we'll know we're missing a department calculation
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Vacation() As Double
+'            Select Case Department
+'                Case "1703", "2103" ' Public Safety
+'                    If (Vacation_Hours_Requested) > Banked_Vacation_Hours Then
+'                        Return Banked_Vacation_Hours
+'                    Else
+'                        Return Vacation_Hours_Requested
+'                    End If
+'                Case "2102"
+'                    If Vacation_Hours_Requested > Banked_Vacation_Hours Then
+'                        Return Banked_Vacation_Hours
+'                    Else
+'                        Return Vacation_Hours_Requested
+'                    End If
+'                Case Else
+'                    Return Double.MaxValue ' returning this instead of 0 so that we'll know we're missing a department calculation
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Vacation_Week1() As Double
+'            If Vacation_Hours_Requested_Week1 > Banked_Vacation_Hours Then
+'                Return Banked_Vacation_Hours
+'            Else
+'                Return Vacation_Hours_Requested_Week1
+'            End If
+'        End Function
+
+'        Private Function Calculate_Vacation_Week2() As Double
+'            If Vacation_Hours_Requested_Week2 > (Banked_Vacation_Hours - Vacation_Week1) Then
+'                Return Banked_Vacation_Hours - Vacation_Week1
+'            Else
+'                Return Vacation_Hours_Requested_Week2
+'            End If
+'        End Function
+
+'        Private Function Calculate_Holiday() As Double
+'            Return (From t In TimeList Where t.WorkCode = "134" Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Holiday_Week1() As Double
+'            Return (From t In TimeList Where t.WorkCode = "134" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Holiday_Week2() As Double
+'            Return (From t In TimeList Where t.WorkCode = "134" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Sick_Hours_Requested() As Double
+'            Select Case Department
+'                Case "2102", "2103", "1703"
+'                    Return (From t In TimeList Where (t.WorkCode = "111" Or t.WorkCode = "110") Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Sick_Hours_Requested_Week1() As Double ' Week 1 - Non contract hourly employees only.
+'            Select Case Department
+'                Case "1703" ' Public Safety
+'                    Return (From t In TimeList Where (t.WorkCode = "111" Or t.WorkCode = "110") And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'                Case "2102", "2103"
+'                    Return (From t In TimeList Where t.WorkCode = "110" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Sick_Hours_Requested_Week2() As Double ' Week 2 - Non contract hourly employees only.
+'            Select Case Department
+'                Case "1703" ' Public Safety
+'                    Return (From t In TimeList Where (t.WorkCode = "111" Or t.WorkCode = "110") And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'                Case "2102", "2103"
+'                    Return (From t In TimeList Where t.WorkCode = "110" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum()
+'                Case Else
+'                    Return Double.MaxValue
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Sick() As Double
+'            If Sick_Hours_Requested > Banked_Sick_Hours Then
+'                Return Banked_Sick_Hours
+'            Else
+'                Return Sick_Hours_Requested
+'            End If
+'        End Function
+
+'        Private Function Calculate_Sick_Week1() As Double ' Week 1 - Non contract hourly employees only.
+'            If Sick_Hours_Requested_Week1 > Banked_Sick_Hours Then
+'                Return Banked_Sick_Hours
+'            Else
+'                Return Sick_Hours_Requested_Week1
+'            End If
+'        End Function
+
+'        Private Function Calculate_Sick_Week2() As Double ' Week 2 - Non contract hourly employees only.
+'            If Sick_Hours_Requested_Week2 > (Banked_Sick_Hours - Sick_Week1) Then
+'                Return (Banked_Sick_Hours - Sick_Week1)
+'            Else
+'                Return Sick_Hours_Requested_Week2
+'            End If
+'        End Function
+
+'        Private Function Calculate_Overtime() As Double
+'            Return Unscheduled_Overtime + Scheduled_Overtime
+'        End Function
+
+'        Private Function Calculate_Scheduled_Overtime() As Double
+'            ' You'll only have scheduled overtime if your shift is guaranteed to go over your HoursNeededForOvertime
+'            ' For 1703 employees, this happens for 2 straight weeks, then you have one week where it doesn't happen.
+'            If Not IsExempt Then
+'                If Scheduled_Hours > HoursNeededForOvertime Then
+'                    If (Scheduled_Hours - HoursNeededForOvertime - Vacation - Holiday_Time_Used - Sick - Non_Working_Regular_Hours) < 0 Then
+'                        Return 0
+'                    Else
+'                        Return (Scheduled_Hours - HoursNeededForOvertime - Vacation - Holiday_Time_Used - Sick - Non_Working_Regular_Hours)
+'                    End If
+'                Else
+'                    Return 0
+'                End If
+'            Else
+'                Return 0
+'            End If
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Double_Overtime() As Double
+'            If Not IsExempt Then
+'                If IsOvertime_Calculated_Weekly Then
+'                    Dim week1 As Double = (From t In TimeList Where t.WorkCode = "232" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum
+'                    If (Scheduled_Hours_Week1 - Vacation_Week1 - Sick_Week1 - Leave_Without_Pay_Week1) < HoursNeededForOvertimeByWeek Then
+'                        week1 += ((Scheduled_Hours_Week1 - HoursNeededForOvertimeByWeek) - Vacation_Week1 -
+'                              Sick_Week1 - Leave_Without_Pay_Week1)
+'                        If week1 < 0 Then week1 = 0
+'                    End If
+'                    Dim week2 As Double = (From t In TimeList Where t.WorkCode = "232" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum
+'                    If (Scheduled_Hours_Week2 - Vacation_Week2 - Sick_Week2 -
+'                        Leave_Without_Pay_Week2) < HoursNeededForOvertimeByWeek Then
+'                        week2 += ((Scheduled_Hours_Week2 - HoursNeededForOvertimeByWeek) - Vacation_Week2 -
+'                              Sick_Week2 - Leave_Without_Pay_Week2)
+'                        If week2 < 0 Then week2 = 0
+'                    End If
+'                    Return week1 + week2
+'                Else
+'                    Dim j As Double = (From t In TimeList Where t.WorkCode = "232" Select t.WorkHours).Sum
+'                    If (Scheduled_Hours - Vacation - Sick - Leave_Without_Pay - Holiday_Time_Used) < HoursNeededForOvertime Then
+'                        j += ((Scheduled_Hours - HoursNeededForOvertime) - Vacation - Sick - Leave_Without_Pay - Holiday_Time_Used)
+'                        If j < 0 Then j = 0
+'                    End If
+'                    Return j
+'                End If
+'            Else
+'                Return 0
+'            End If
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Overtime_Requested() As Double
+'            Return (From t In TimeList Where t.WorkCode = "231" Select t.WorkHours).Sum
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Overtime_Requested_Week1() As Double
+'            Return (From t In TimeList Where t.WorkCode = "231" And t.WorkDate >= PayPeriodStart And t.WorkDate <= PayPeriodMid Select t.WorkHours).Sum
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Overtime_Requested_Week2() As Double
+'            Return (From t In TimeList Where t.WorkCode = "231" And t.WorkDate > PayPeriodMid And t.WorkDate <= PayPeriodEnd Select t.WorkHours).Sum
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Overtime() As Double
+'            If Not IsExempt Then
+'                If IsOvertime_Calculated_Weekly Then
+'                    Dim week1 As Double = Unscheduled_Overtime_Requested_Week1
+'                    If (Scheduled_Hours_Week1 - Vacation_Week1 - Sick_Week1 - Leave_Without_Pay_Week1 - Non_Working_Regular_Hours_Week1) < HoursNeededForOvertimeByWeek Then
+'                        week1 += ((Scheduled_Hours_Week1 - HoursNeededForOvertimeByWeek) - Vacation_Week1 -
+'                              Sick_Week1 - Leave_Without_Pay_Week1)
+'                        If week1 < 0 Then week1 = 0
+'                    End If
+'                    Dim week2 As Double = Unscheduled_Overtime_Requested_Week2
+'                    If (Scheduled_Hours_Week2 - Vacation_Week2 - Sick_Week2 -
+'                        Leave_Without_Pay_Week2 - Non_Working_Regular_Hours_Week2) < HoursNeededForOvertimeByWeek Then
+'                        week2 += ((Scheduled_Hours_Week2 - HoursNeededForOvertimeByWeek) - Vacation_Week2 -
+'                              Sick_Week2 - Leave_Without_Pay_Week2)
+'                        If week2 < 0 Then week2 = 0
+'                    End If
+'                    Return week1 + week2
+'                Else
+'                    Dim j As Double = Unscheduled_Overtime_Requested
+'                    If (Scheduled_Hours - Vacation - Sick - Leave_Without_Pay - Holiday_Time_Used - Non_Working_Regular_Hours) < HoursNeededForOvertime Then
+'                        j += ((Scheduled_Hours - HoursNeededForOvertime) - Vacation - Sick - Leave_Without_Pay - Holiday_Time_Used - Non_Working_Regular_Hours)
+'                        If j < 0 Then j = 0
+'                    End If
+'                    Return j
+'                End If
+'            Else
+'                Return 0
+'            End If
+'        End Function
+
+'        Private Function Calculate_Scheduled_Regular_Overtime() As Double
+'            ' Regular overtime is the number of hours worked past the Hoursneededforovertime that are scheduled to be worked
+'            ' minus any Vacation, Holiday, or Sick pay.
+'            If Not IsExempt Then
+'                If Scheduled_Hours > HoursNeededForOvertime Then
+'                    If (Scheduled_Hours - HoursNeededForOvertime - Scheduled_Overtime) < 0 Then
+'                        Return 0
+'                    Else
+'                        Return Scheduled_Hours - HoursNeededForOvertime - Scheduled_Overtime
+'                    End If
+'                Else
+'                    Return 0
+'                End If
+'            Else
+'                Return 0
+'            End If
+'        End Function
+
+'        Private Function Calculate_Unscheduled_Regular_Overtime() As Double
+'            ' if the have any hours coded as 230, we want them to have them at their regular rate.
+'            ' So if they have any 230 time, that will be their base time. 
+'            ' Otherwise, unscheduled regular overtime is the difference in their unscheduled_overtime_requested
+'            ' and their actual unscheduled overtime.
+'            Dim x As Double = (From t In TimeList Where t.WorkCode = "230" Select t.WorkHours).Sum
+'            Dim j As Double = (Unscheduled_Overtime_Requested + x) - Unscheduled_Overtime
+'            If j < 0 Then j = 0
+'            Return j
+'        End Function
+
+'        Private Function Calculate_Holiday_Time_Bank() As Double
+'            Return (From t In TimeList Where t.WorkCode = "122" Select t.WorkHours).Sum()
+'        End Function
+
+'        Private Function Calculate_Holiday_Hours_Requested() As Double
+'            Select Case Department
+'                Case "1703"
+'                    Return (From t In TimeList Where t.WorkCode = "123" Select t.WorkHours).Sum()
+'                Case "2103"
+'                    Return (From t In TimeList Where t.WorkCode = "430" Or t.WorkCode = "123" Select t.WorkHours).Sum()
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Holiday_Time_Used() As Double
+'            Select Case Department
+'                Case "1703", "2103"
+'                    ' The way this number is used if they don't have enough holiday hours banked, it
+'                    ' will try and use vacation time next, otherwise it'll make it leave without pay.
+'                    If Holiday_Hours_Requested > Banked_Holiday_Hours Then
+'                        Return Banked_Holiday_Hours
+'                    Else
+'                        Return Holiday_Hours_Requested
+'                    End If
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Comp_Time_Bank() As Double
+'            Select Case Department
+'                Case "2102", "2103"
+'                    Return (From t In TimeList Where t.WorkCode = "120" Select t.WorkHours).Sum
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Comp_Time_Used() As Double
+'            Return (From t In TimeList Where t.WorkCode = "121" Select t.WorkHours).Sum
+'        End Function
+
+'        Private Function Calculate_Sick_Leave_Without_Pay() As Double
+'            Select Case Department
+'                Case "1703"
+'                    Return (From t In TimeList Where t.WorkType.Contains("SLWP") Select t.WorkHours).Sum
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Holiday_Without_Pay() As Double
+'            Select Case Department
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'        Private Function Calculate_Vacation_Without_Pay() As Double
+'            Select Case Department
+'                Case Else
+'                    Return 0
+'            End Select
+'        End Function
+
+'#End Region
+'    End Class

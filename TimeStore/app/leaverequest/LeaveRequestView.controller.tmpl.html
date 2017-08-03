@@ -1,0 +1,90 @@
+﻿<script type="text/ng-template" id="LeaveRequestView.controller.tmpl.html">
+
+
+    <div style="margin-top: .75em;"
+         layout="row"
+         layout-align="center center"
+         layout-wrap
+         flex="100">
+        <div layout="row"
+             layout-align="center center"
+             layout-wrap
+             flex="90">
+
+            <md-toolbar flex="100">
+                <div class="md-toolbar-tools" layout="row" layout-align="center center" layout-margin>
+                    <span class="md-display-1"
+                          layout="row"
+                          layout-align="center center"
+                          flex>
+                        Your Leave Requests
+                    </span>
+
+                    <div layout="row"
+                         layout-align="end center"
+                         flex="15">
+                        <md-button ng-click="goHome()"
+                                   class="md-raised md-warn">
+                            TimeStore
+                            <md-icon aria-label="return home icon"
+                                     md-svg-src="/TimeStore/images/ic_replay_24px.svg">
+                            </md-icon>
+                        </md-button>
+                    </div>
+
+                </div>
+            </md-toolbar>
+
+            <div layout="row"
+                 layout-align="space-between center"
+                 layout-wrap
+                 flex="100">
+                <md-radio-group ng-change="switchData()"
+                                flex="50"
+                                layout="row"
+                                layout-align="space-around center"
+                                class="smaller"
+                                ng-model="leaveRequestListType">
+                    <md-radio-button value="short">
+                        Current And Future Requests
+                        <md-tooltip md-direction="bottom">
+                            This option shows your leave requests for this pay period and later.
+                        </md-tooltip>
+                    </md-radio-button>
+                    <md-radio-button value="full">
+                        All Leave Requests
+                        <md-tooltip md-direction="bottom">
+                            This option shows all of your leave requests, even those in the past.
+                        </md-tooltip>
+                    </md-radio-button>
+                </md-radio-group>
+                
+                <div>
+                    <label class="longerLabel"
+                           layout="row"
+                           layout-align="center center"
+                           flex="100">
+                        Pick a date to Request Leave
+                    </label>
+                    <div style="background-color: cornsilk;"
+                         class="md-whiteframe-z1">
+                        <md-datepicker style="background-color: cornsilk;"
+                                       md-min-date="minDate"
+                                       md-max-date="maxDate"
+                                       ng-change="leaveDateSelected()"
+                                       ng-model="selectedDate">
+
+                        </md-datepicker>
+                    </div>
+                </div>
+                
+                <md-button ng-click="refreshData()"
+                           class="md-primary md-raised">
+                    Refresh Leave Data
+                </md-button>
+            </div>
+        </div>
+        <existing-leave-request flex="100" requests="leaveRequests">
+        </existing-leave-request>
+    </div>
+</script>

@@ -1,0 +1,12 @@
+﻿[
+  {
+    "outputFile": "CSS/Main.css",
+    "inputFile": "CSS/Main.scss",
+    "minify": {
+      "enabled": true
+    },
+    "includeInProject": true,
+    "sourceMap": false,
+    "options": {}
+  }
+]

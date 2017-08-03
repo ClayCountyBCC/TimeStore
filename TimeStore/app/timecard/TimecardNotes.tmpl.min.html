@@ -1,0 +1,117 @@
+﻿<script type=text/ng-template id=TimecardNotes.tmpl.html>
+    <div style="padding-top: .5em;"
+         layout="row"
+         layout-align="center center"
+         layout-wrap
+         class=""
+         flex="100">
+        <div flex="75">
+            <md-input-container class="md-whiteframe-z1">
+                <label>{{ datatype === "timecard" ? "Add a note" : "Add your Manpower note" }}</label>
+                <input ng-model="noteText" />
+            </md-input-container>
+        </div>
+        <md-button ng-click="saveNote()"
+                   class="md-raised md-warn">
+            Save
+        </md-button>
+    </div>
+    <!-- If there are no notes found -->
+    <md-list ng-if="notes.length === 0"
+             flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             layout-padding>
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div class="short-toolbar my-accent"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5>Notes</h5>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+        <!-- Header row -->
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="start center">
+                <span flex="25">Note Date</span>
+                <span flex="25">Note By</span>
+                <span flex="45">Note</span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="start center">
+                <span flex="25">n/a</span>
+                <span flex="25">n/a</span>
+                <span flex="45">No notes have been added yet.</span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+    </md-list>
+    <!-- If there are notes found -->
+    <md-list ng-if="notes.length > 0"
+             flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             layout-padding>
+
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div class="short-toolbar my-accent"
+                 flex="100"
+                 layout="row"
+                 layout-align="center center">
+                <h5>Notes</h5>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+        <!-- Header row -->
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="start center">
+                <span flex="25">Note Date</span>
+                <span flex="25">Note By</span>
+                <span flex="45">Note</span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+
+        <md-item flex="100"
+                 layout="row"
+                 layout-align="center center"
+                 ng-repeat="note in notes track by $index"
+                 layout-wrap>
+            <div flex="100"
+                 layout="row"
+                 layout-align="start center">
+                <span flex="25">{{note.Date_Added_Display}}</span>
+                <span flex="25">{{note.Added_By}}</span>
+                <span flex="45">{{note.Note}}</span>
+            </div>
+            <md-divider flex="100"></md-divider>
+        </md-item>
+    </md-list>
+</script>
