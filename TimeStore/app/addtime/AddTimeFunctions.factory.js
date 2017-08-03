@@ -99,7 +99,7 @@
 
       function LoadLunchTime(tctd)
       {
-        console.log('loading lunch time', tctd);
+        console.log("LoadLunchTime");
         tctd.SelectedLunchTime = null;
         tctd.LastSelectedLunchTime = null;
         if (
@@ -116,9 +116,7 @@
           {
             tctd.SelectedLunchTime = tctd.selectedTimes[1];
             tctd.LastSelectedLunchTime = tctd.selectedTimes[1];
-            console.log('done loading lunch time', tctd);
           }
-          console.log('really done loading lunch time', tctd);
         }
       }
 
@@ -229,17 +227,12 @@
           tctd.OnCallWorkTimes = sT.join(" ");
           tctd.OnCallSelectedTimes = sT;
           tctd.OnCallSelectedTimesDisplay = OnCallWorkTime;
-        }        
-
+        }
       }
-
-
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
       {
-        console.log("work Date", workDate);
         var wd = moment(workDate, "M/D/YYYY");
-        console.log("work Date moment", wd);
         var hd = moment(hireDate);
         return wd.diff(hd, "days") > 90;
         // this function returns true if the person's hire date is more than
@@ -386,7 +379,6 @@
 
       function getDefaultHoursWithNinetyDayCheck(label, HireDateCheck)
       {
-        //console.log("days since hire check", HireDateCheck);
         return getHours(label, 0, HireDateCheck, !HireDateCheck);
       }
 
@@ -555,7 +547,6 @@
 
       function populateConstants(isExempt, classify)
       {
-        //console.log('populateConstants Called');
         var cache = $cacheFactory.get("addTimeConstants") === undefined
           ? $cacheFactory("addTimeConstants")
           : $cacheFactory.get("addTimeConstants");
@@ -663,49 +654,84 @@
 
       function handleLunchTime(tctd)
       {
+        if (tctd.selectedTimes.length > 4 ||
+          (tctd.LastSelectedLunchTime && tctd.selectedTimes.indexOf(parseInt(tctd.LastSelectedLunchTime)) === -1))
+        {
+          tctd.SelectedLunchTime = null;
+          tctd.LastSelectedLunchTime = null;
+          return;
+        }
         if (tctd.SelectedLunchTime)
         {
           var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
-          if (parseInt(tctd.SelectedLunchTime) === -1) // They selected "No lunch taken"
+
+          if (parseInt(tctd.SelectedLunchTime) === -1)
           {
+            // They selected "No lunch taken"
             // we need to look for a lunch and remove it
-            if (tctd.LastSelectedLunchTime && tctd.LastSelectedLunchTime !== -1)
+            if (
+              tctd.LastSelectedLunchTime &&
+              parseInt(tctd.LastSelectedLunchTime) !== -1
+            )
             {
               removeOldLunchTime(tctd, lunchDuration);
             }
             tctd.SelectedLunchTime = null;
             tctd.LastSelectedLunchTime = null;
-
-          }
-          else
+          } else
           {
-            if (tctd.LastSelectedLunchTime && tctd.LastSelectedLunchTime !== -1)
+            // A couple of things to keep in mind here
+            // First, we look at the last selected lunch time to remove the old time
+            // if they select a lunch and then change their mind and choose another.
+            // ie: They pick 3:00 PM, it auto saves, then they pick 3:30 PM
+            // we use the LastSelectedLunchTime field to remove the 3:00 PM times
+            // then add the 3:30 PM times
+            // We should probably only do that if the LastSelectedLunchtime
+            // and the SelectedLunchtime is different.
+
+            if (tctd.selectedTimes.length > 2 && parseInt(tctd.selectedTimes[2]) - parseInt(tctd.selectedTimes[1]) !== lunchDuration)
             {
-              removeOldLunchTime(tctd, lunchDuration);
+              tctd.SelectedLunchTime = null;
+              tctd.LastSelectedLunchTime = null;
+            } else
+            {
+              if (
+                tctd.LastSelectedLunchTime &&
+                tctd.LastSelectedLunchTime !== -1
+              )
+              {
+                removeOldLunchTime(tctd, lunchDuration);
+              }
+              if (tctd.selectedTimes.indexOf(parseInt(tctd.SelectedLunchTime)) === -1)
+              {
+                tctd.selectedTimes.push(parseInt(tctd.SelectedLunchTime));
+              }
+              if (tctd.selectedTimes.indexOf(parseInt(tctd.SelectedLunchTime) + lunchDuration) === -1)
+              {
+                tctd.selectedTimes.push(parseInt(tctd.SelectedLunchTime) + lunchDuration);
+              }
+              tctd.LastSelectedLunchTime = tctd.SelectedLunchTime;
+              tctd.selectedTimes.sort(function (a, b)
+              {
+                return a - b;
+              });
             }
-            tctd.selectedTimes.push(
-              parseInt(tctd.SelectedLunchTime),
-              parseInt(tctd.SelectedLunchTime) + lunchDuration
-            );
-            tctd.LastSelectedLunchTime = tctd.SelectedLunchTime;
-            tctd.selectedTimes.sort(function (a, b)
-            {
-              return a - b;
-            });
           }
         }
       }
 
       function removeOldLunchTime(tctd, lunchDuration)
       {
-
         var last = tctd.selectedTimes.indexOf(tctd.LastSelectedLunchTime);
         if (last > -1)
         {
           tctd.selectedTimes.splice(last, 1); // remove the original lunch start time
-          last = tctd.selectedTimes.indexOf(tctd.LastSelectedLunchTime + lunchDuration);
-          if (last > -1) // remove the end time
+          last = tctd.selectedTimes.indexOf(
+            tctd.LastSelectedLunchTime + lunchDuration
+          );
+          if (last > -1)
           {
+            // remove the end time
             tctd.selectedTimes.splice(last, 1);
           }
         }
@@ -836,4 +862,3 @@
     }
   ]);
 })();
-

@@ -21,10 +21,4 @@
         Property End_Date As Date = "1/1/2100"
     End Class
 
-  'Public Class Telestaff_Specialty
-  '    Property Specialty_Name As String
-  '    Property Specialty_Abrv As String
-  '    Property Specialty_Amount As Double = 0
-  'End Class
-
 End Namespace

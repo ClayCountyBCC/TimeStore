@@ -134,7 +134,15 @@
 
     </md-tab>
 
-    <md-tab label="Holiday" ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
+    <md-tab ng-if="timecard.isPubWorks"
+            label="Incentives">
+      <div flex="100">
+
+      </div>
+    </md-tab>
+
+    <md-tab label="Holiday" 
+            ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
            flex="100">
         <div ng-if="timecard.HolidaysInPPD.length > 0"

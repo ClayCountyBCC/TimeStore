@@ -422,6 +422,7 @@
     <Compile Include="Models\HolidayRequest.vb" />
     <Compile Include="Models\Holiday_Choice.vb" />
     <Compile Include="Models\Incentive.vb" />
+    <Compile Include="Models\IncentiveLog.vb" />
     <Compile Include="Models\JsonNetResult.vb" />
     <Compile Include="Models\LeaveCalendarData.vb" />
     <Compile Include="Models\myCache.vb" />

@@ -258,7 +258,7 @@
              layout-align-gt-md="space-around start"
              layout-wrap
              flex="55">
-          <md-input-container>
+          <md-input-container ng-if="timecard.isPubWorks">
             <label>Lunch Start {{ TCTD.DepartmentNumber === "3701" ? "(30 Mins)" : "(1 Hour)"}}</label>
             <md-select ng-disabled="lunchTimeList.length === 0"
                        md-on-close="calculateTotalHours()"                                              
@@ -2209,7 +2209,15 @@
 
     </md-tab>
 
-    <md-tab label="Holiday" ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
+    <md-tab ng-if="timecard.isPubWorks"
+            label="Incentives">
+      <div flex="100">
+
+      </div>
+    </md-tab>
+
+    <md-tab label="Holiday" 
+            ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
            flex="100">
         <div ng-if="timecard.HolidaysInPPD.length > 0"

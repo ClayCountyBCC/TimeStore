@@ -80,7 +80,7 @@
              layout-align-gt-md="space-around start"
              layout-wrap
              flex="55">
-          <md-input-container>
+          <md-input-container ng-if="timecard.isPubWorks">
             <label>Lunch Start {{ TCTD.DepartmentNumber === "3701" ? "(30 Mins)" : "(1 Hour)"}}</label>
             <md-select ng-disabled="lunchTimeList.length === 0"
                        md-on-close="calculateTotalHours()"                                              
