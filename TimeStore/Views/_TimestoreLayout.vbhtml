@@ -1,6 +1,6 @@
 ﻿@*@Modeltype TimeStore.Models.Timecard_Access*@
 @code
-  Dim LatestVer As String = "V20170801 1817"
+  Dim LatestVer As String = "V20170803 1506"
   Dim MaterialVer As String = "1.4" ' was 1.1
   Dim AngularVer As String = "1.5.11" ' was 1.4.2
 
@@ -14,7 +14,7 @@ end code
   <title>@ViewData("Title")</title>
   <link href="~/CSS/bundle.css?v=@LatestVer" rel="stylesheet" />
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/@AngularVer/angular.min.js"></script>
-  <base href="/TimeStore/">
+  <base href="~/">
 </head>
 <body ng-cloak>
 
@@ -26,7 +26,7 @@ end code
 
         <a style="cursor: pointer;"
            class="md-display-1"
-           href="/TimeStore/#/switchuser">
+           href="#/switchuser">
           Timestore
           <md-tooltip md-direction="bottom">
             click here to go to the home menu
@@ -38,7 +38,7 @@ end code
                    ng-click="viewLeaveRequests()"
                    class="md-fab md-mini md-hue-3">
           <md-icon aria-label="collection icon"
-                   md-svg-src="/TimeStore/images/ic_collections_bookmark_24px.svg">
+                   md-svg-src="images/ic_collections_bookmark_24px.svg">
           </md-icon>
           <md-tooltip md-direction="bottom">
             Your Leave Requests
@@ -106,12 +106,12 @@ end code
             </md-button>
           </md-list-item>
           <md-list-item>
-            <md-button ng-if="myAccess.Data_Type==='timecard'" href="/TimeStore/main/crosstab">
+            <md-button ng-if="myAccess.Data_Type==='timecard'" href="main/crosstab">
               View Crosstab
             </md-button>
           </md-list-item>
           <md-list-item>
-            <md-button href="/TimeStore/Reports/">
+            <md-button href="Reports/">
               View Custom Reports
             </md-button>
           </md-list-item>

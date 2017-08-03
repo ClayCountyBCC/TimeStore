@@ -55,22 +55,22 @@
 
             function goLeaveApprovals() {
                 go('/LeaveApproval/');
-                //$window.location.href = '/TimeStore/#/LeaveApproval';
+                //$window.location.href = '#/LeaveApproval';
             }
 
             function goTimecardApprovals() {
                 go('approval/ppd/' + timestoredata.getPayPeriodEnd());
-                //$window.location.href = '/TimeStore/#/approval/F';
+                //$window.location.href = '#/approval/F';
             }
 
             function goFinanceTools() {
                 go('/FinanceTools/')
-                //$window.location.href = '/TimeStore/#/FinanceTools';
+                //$window.location.href = '#/FinanceTools';
             }
 
             function goAccessChange() {
                 go('/a/')
-                //$window.location.href = '/TimeStore/#/a/';
+                //$window.location.href = '#/a/';
             }
 
             function goExceptions() {
@@ -86,8 +86,8 @@
             }
 
             function goHome() {
-                goWindow('/TimeStore/');
-                //$window.location.href = '/TimeStore/';
+                goWindow('/');
+                //$window.location.href = '';
             }
 
             function goDefaultEmployee(eid) {
@@ -103,12 +103,12 @@
 
             function goDailyCheckoff() {
                 go('/dailycheckoff/');
-                //$window.location.href = '/TimeStore/#/dailycheckoff/';
+                //$window.location.href = '#/dailycheckoff/';
             }
 
             function goIncentives(incentiveType) {
                 go('/incentives/' + incentiveType);
-                //$window.location.href = '/TimeStore/#/incentives/' + incentiveType;
+                //$window.location.href = '#/incentives/' + incentiveType;
             }
             
             function go(url) {
@@ -123,14 +123,14 @@
 
             function checkUrl() {
                 var url = $location.absUrl().toUpperCase();
-                return url.indexOf('/TIMESTORE#') > -1 || url.indexOf('TIMESTORE/#') > -1
+                return url.indexOf('#') > -1 || url.indexOf('#') > -1
             }
 
             function goLocation(url) {
                 $location.path(url);
             }
             function goWindow(url) {
-                $window.location.href = '/TimeStore/#' + url;
+                $window.location.href = '#' + url;
             }
 
         }]);

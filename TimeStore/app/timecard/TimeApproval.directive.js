@@ -5,7 +5,7 @@
         .directive('timeApproval', ['viewOptions', function (viewOptions) {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeApproval.tmpl.html', //'/TimeStore/app/timecard/TimeApproval.tmpl.html',
+                templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
                 scope: {
                     tc: '=',
                     tl: '=',

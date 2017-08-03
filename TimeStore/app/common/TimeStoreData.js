@@ -13,7 +13,7 @@
       function getBirthdays()
       {
         return $http
-          .post("/TimeStore/TC/GetBirthdays", {}, { cache: false })
+          .post("TC/GetBirthdays", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -23,7 +23,7 @@
       function getHolidays()
       {
         return $http
-          .post("/TimeStore/TC/GetHolidays", {}, { cache: false })
+          .post("TC/GetHolidays", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -34,7 +34,7 @@
       {
         return $http
           .post(
-          "/TimeStore/TC/Leave_Requests_By_Department",
+          "TC/Leave_Requests_By_Department",
           {},
           { cache: false }
           )
@@ -62,7 +62,7 @@
           workdate: workdate
         };
         return $http
-          .post("/TimeStore/TC/Update_Leave_Request", lr, {
+          .post("TC/Update_Leave_Request", lr, {
             cache: false,
             handleError: true
           })
@@ -76,7 +76,7 @@
       {
         return $http
           .post(
-          "/TimeStore/TC/Leave_Requests_By_Employee",
+          "TC/Leave_Requests_By_Employee",
           { employeeId: eId },
           { cache: false }
           )
@@ -90,7 +90,7 @@
       {
         return $http
           .post(
-          "/TimeStore/TC/All_Leave_Requests_By_Employee",
+          "TC/All_Leave_Requests_By_Employee",
           { employeeId: eId },
           { cache: false }
           )
@@ -103,7 +103,7 @@
       var getLeaveRequests = function ()
       {
         return $http
-          .post("/TimeStore/TC/Leave_Requests", { cache: false })
+          .post("TC/Leave_Requests", { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -114,7 +114,7 @@
       {
         return $http
           .post(
-          "/TimeStore/TC/SaveCompTimeChoices",
+          "TC/SaveCompTimeChoices",
           {
             EmployeeID: eId,
             Week1: Week1,
@@ -214,7 +214,7 @@
           Fields: fieldsToDisplay
         };
         return $http
-          .post("/TimeStore/Reports/GetGenericData", x)
+          .post("Reports/GetGenericData", x)
           .then(function (response)
           {
             return response.data;
@@ -229,7 +229,7 @@
           PPE: payPeriodEnding
         };
         return $http
-          .post("/TimeStore/TC/SaveNoteToPayPeriod", tmp)
+          .post("TC/SaveNoteToPayPeriod", tmp)
           .then(function (response)
           {
             return response.data;
@@ -239,7 +239,7 @@
       var saveTCTD = function (TCTD)
       {
         return $http
-          .post("/TimeStore/TC/SaveTimecardDay", TCTD)
+          .post("TC/SaveTimecardDay", TCTD)
           .then(function (response)
           {
             return response;
@@ -298,7 +298,7 @@
         var ppd = { ppdIndex: ppdIndex };
         console.log("post process pay period index", ppd);
         return $http
-          .post("/TimeStore/Main/UploadFinanceData", ppd)
+          .post("Main/UploadFinanceData", ppd)
           .then(function (response)
           {
             return response.data;
@@ -308,7 +308,7 @@
       var saveHoliday = function (HolidayRequest)
       {
         return $http
-          .post("/TimeStore/TC/SaveHolidays", HolidayRequest, { cache: false })
+          .post("TC/SaveHolidays", HolidayRequest, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -340,7 +340,7 @@
           }
         });
         // changed on 8/14/2015 removing backend call, doing on client side.
-        //return $http.get('/TimeStore/TC/SignatureRequired?ppdIndex=' + ppdIndex, { cache: false })
+        //return $http.get('TC/SignatureRequired?ppdIndex=' + ppdIndex, { cache: false })
         //.then(function (response) {
         //    return response.data;
         //});
@@ -363,7 +363,7 @@
       var saveIncentives = function (incentives)
       {
         return $http
-          .post("/TimeStore/TC/Incentives", incentives, { cache: false })
+          .post("TC/Incentives", incentives, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -373,7 +373,7 @@
       var getIncentives = function (incentiveType)
       {
         return $http
-          .get("/TimeStore/TC/Incentives?incentiveType=" + incentiveType, {
+          .get("TC/Incentives?incentiveType=" + incentiveType, {
             cache: false
           })
           .then(function (response)
@@ -386,7 +386,7 @@
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/UnApproved", p, { cache: false })
+          .post("TC/UnApproved", p, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -397,7 +397,7 @@
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/UnrestrictedInitiallyApproved", p, {
+          .post("TC/UnrestrictedInitiallyApproved", p, {
             cache: false
           })
           .then(function (response)
@@ -410,7 +410,7 @@
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/InitiallyApproved", p, { cache: false })
+          .post("TC/InitiallyApproved", p, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -420,7 +420,7 @@
       var approveInitial = function (ad)
       {
         return $http
-          .post("/TimeStore/TC/ApproveInitial", ad, { cache: false })
+          .post("TC/ApproveInitial", ad, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -430,7 +430,7 @@
       var approveFinal = function (ad)
       {
         return $http
-          .post("/TimeStore/TC/ApproveFinal", ad, { cache: false })
+          .post("TC/ApproveFinal", ad, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -440,7 +440,7 @@
       var getReportsTo = function ()
       {
         return $http
-          .get("/TimeStore/TC/ReportsToList", { cache: true })
+          .get("TC/ReportsToList", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -450,7 +450,7 @@
       var getMyAccess = function ()
       {
         return $http
-          .get("/TimeStore/TC/Access", { cache: true })
+          .get("TC/Access", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -460,7 +460,7 @@
       var getAccess = function (employeeid)
       {
         return $http
-          .post("/TimeStore/TC/Access", { EmployeeId: employeeid })
+          .post("TC/Access", { EmployeeId: employeeid })
           .then(function (response)
           {
             return response.data;
@@ -469,7 +469,7 @@
       var saveAccess = function (rawTCA)
       {
         return $http
-          .post("/TimeStore/TC/SaveAccess", rawTCA)
+          .post("TC/SaveAccess", rawTCA)
           .then(function (response)
           {
             return response.data;
@@ -479,7 +479,7 @@
       var getDepartments = function ()
       {
         return $http
-          .get("/TimeStore/TC/DepartmentList", { cache: true })
+          .get("TC/DepartmentList", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -487,15 +487,16 @@
       };
       var getEmployees = function ()
       {
+        console.log('get employee list called');
         return $http
-          .get("/TimeStore/TC/EmployeeList", { cache: true })
+          .get("./TC/EmployeeList", { cache: true })
           .then(function (response)
           {
             return response.data;
           });
       };
       //var getPayPeriods = function () {
-      //    return $http.get('/TimeStore/TC/PayPeriodList', { cache: true })
+      //    return $http.get('TC/PayPeriodList', { cache: true })
       //                .then(function (response) {
       //                    return response.data;
       //                });
@@ -509,7 +510,7 @@
         }
         return $http
           .post(
-          "/TimeStore/TC/Employee",
+          "TC/Employee",
           { EmployeeId: employeeid, PayPeriod: payperiod },
           { cache: false }
           )
@@ -521,7 +522,7 @@
       var getDefaultEmployee = function ()
       {
         return $http
-          .post("/TimeStore/TC/CurrentEmployee", { cache: false })
+          .post("TC/CurrentEmployee", { cache: false })
           .then(function (response)
           {
             return response.data;

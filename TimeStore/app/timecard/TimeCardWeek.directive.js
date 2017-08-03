@@ -5,7 +5,7 @@
         .directive('timecardWeek', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeCardWeek.tmpl.html', //'/TimeStore/app/timecard/TimeCardWeek.tmpl.html',
+                templateUrl: 'TimeCardWeek.tmpl.html', //'app/timecard/TimeCardWeek.tmpl.html',
                 scope: {
                     employeeid: '=',
                     showaddtime: '=',

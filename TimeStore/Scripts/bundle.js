@@ -48415,11 +48415,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               })
               .when('/signature/ppd/:payPeriod', {
                 controller: 'SignatureViewController',
-                templateUrl: 'TimeCardSignatureView.tmpl.html' //'/TimeStore/app/signatureview/TimeCardSignatureView.tmpl.html',
+                templateUrl: 'TimeCardSignatureView.tmpl.html' //'app/signatureview/TimeCardSignatureView.tmpl.html',
               })
               .when('/signature/e/:employeeId/ppd/:payPeriod', {
                 controller: 'SignatureViewController',
-                templateUrl: 'TimeCardSignatureView.tmpl.html' //'/TimeStore/app/signatureview/TimeCardSignatureView.tmpl.html',
+                templateUrl: 'TimeCardSignatureView.tmpl.html' //'app/signatureview/TimeCardSignatureView.tmpl.html',
               })
               .when('/LeaveApproval/', {
                 controller: 'leaveApprovalController',
@@ -48431,27 +48431,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               })
               .when('/a/', {
                 controller: 'AccessController',
-                templateUrl: 'Access.tmpl.html' // '/TimeStore/app/access/Access.tmpl.html',
+                templateUrl: 'Access.tmpl.html' // 'app/access/Access.tmpl.html',
               })
               .when('/incentives/:incentiveType', {
                 controller: 'IncentiveController',
-                templateUrl: 'Incentives.tmpl.html' // '/TimeStore/app/incentives/Incentives.tmpl.html',
+                templateUrl: 'Incentives.tmpl.html' // 'app/incentives/Incentives.tmpl.html',
               })
               .when('/approval/ppd/:payPeriod', {
                 controller: 'ApprovalController',
-                templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+                templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               })
               //.when('/approval/:approvalType', {
               //    controller: 'ApprovalController',
-              //    templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+              //    templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               //})
               .when('/approval/:approvalType/:ppdIndex', {
                 controller: 'ApprovalController',
-                templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+                templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               })
               .when('/dailycheckoff', {
                 controller: 'DailyCheckoffController',
-                templateUrl: 'DailyCheckoff.tmpl.html' // '/TimeStore/app/dailycheckoff/DailyCheckoff.tmpl.html',
+                templateUrl: 'DailyCheckoff.tmpl.html' // 'app/dailycheckoff/DailyCheckoff.tmpl.html',
               })
               .when('/exceptions/ppd/:payPeriod', {
                 controller: 'ExceptionsController',
@@ -48463,7 +48463,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               })
               .when('/FinanceTools', {
                 controller: 'FinanceToolsController',
-                templateUrl: 'FinanceTools.tmpl.html' //'/TimeStore/app/financetools/FinanceTools.tmpl.html',
+                templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
               })
               .when('/LeaveCalendar/', {
                 controller: 'CalendarViewController',
@@ -48532,7 +48532,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function getBirthdays()
       {
         return $http
-          .post("/TimeStore/TC/GetBirthdays", {}, { cache: false })
+          .post("TC/GetBirthdays", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48542,7 +48542,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function getHolidays()
       {
         return $http
-          .post("/TimeStore/TC/GetHolidays", {}, { cache: false })
+          .post("TC/GetHolidays", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48553,7 +48553,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         return $http
           .post(
-          "/TimeStore/TC/Leave_Requests_By_Department",
+          "TC/Leave_Requests_By_Department",
           {},
           { cache: false }
           )
@@ -48581,7 +48581,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           workdate: workdate
         };
         return $http
-          .post("/TimeStore/TC/Update_Leave_Request", lr, {
+          .post("TC/Update_Leave_Request", lr, {
             cache: false,
             handleError: true
           })
@@ -48595,7 +48595,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         return $http
           .post(
-          "/TimeStore/TC/Leave_Requests_By_Employee",
+          "TC/Leave_Requests_By_Employee",
           { employeeId: eId },
           { cache: false }
           )
@@ -48609,7 +48609,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         return $http
           .post(
-          "/TimeStore/TC/All_Leave_Requests_By_Employee",
+          "TC/All_Leave_Requests_By_Employee",
           { employeeId: eId },
           { cache: false }
           )
@@ -48622,7 +48622,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getLeaveRequests = function ()
       {
         return $http
-          .post("/TimeStore/TC/Leave_Requests", { cache: false })
+          .post("TC/Leave_Requests", { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48633,7 +48633,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         return $http
           .post(
-          "/TimeStore/TC/SaveCompTimeChoices",
+          "TC/SaveCompTimeChoices",
           {
             EmployeeID: eId,
             Week1: Week1,
@@ -48733,7 +48733,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           Fields: fieldsToDisplay
         };
         return $http
-          .post("/TimeStore/Reports/GetGenericData", x)
+          .post("Reports/GetGenericData", x)
           .then(function (response)
           {
             return response.data;
@@ -48748,7 +48748,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           PPE: payPeriodEnding
         };
         return $http
-          .post("/TimeStore/TC/SaveNoteToPayPeriod", tmp)
+          .post("TC/SaveNoteToPayPeriod", tmp)
           .then(function (response)
           {
             return response.data;
@@ -48758,7 +48758,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var saveTCTD = function (TCTD)
       {
         return $http
-          .post("/TimeStore/TC/SaveTimecardDay", TCTD)
+          .post("TC/SaveTimecardDay", TCTD)
           .then(function (response)
           {
             return response;
@@ -48817,7 +48817,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var ppd = { ppdIndex: ppdIndex };
         console.log("post process pay period index", ppd);
         return $http
-          .post("/TimeStore/Main/UploadFinanceData", ppd)
+          .post("Main/UploadFinanceData", ppd)
           .then(function (response)
           {
             return response.data;
@@ -48827,7 +48827,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var saveHoliday = function (HolidayRequest)
       {
         return $http
-          .post("/TimeStore/TC/SaveHolidays", HolidayRequest, { cache: false })
+          .post("TC/SaveHolidays", HolidayRequest, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48859,7 +48859,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         });
         // changed on 8/14/2015 removing backend call, doing on client side.
-        //return $http.get('/TimeStore/TC/SignatureRequired?ppdIndex=' + ppdIndex, { cache: false })
+        //return $http.get('TC/SignatureRequired?ppdIndex=' + ppdIndex, { cache: false })
         //.then(function (response) {
         //    return response.data;
         //});
@@ -48882,7 +48882,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var saveIncentives = function (incentives)
       {
         return $http
-          .post("/TimeStore/TC/Incentives", incentives, { cache: false })
+          .post("TC/Incentives", incentives, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48892,7 +48892,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getIncentives = function (incentiveType)
       {
         return $http
-          .get("/TimeStore/TC/Incentives?incentiveType=" + incentiveType, {
+          .get("TC/Incentives?incentiveType=" + incentiveType, {
             cache: false
           })
           .then(function (response)
@@ -48905,7 +48905,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/UnApproved", p, { cache: false })
+          .post("TC/UnApproved", p, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48916,7 +48916,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/UnrestrictedInitiallyApproved", p, {
+          .post("TC/UnrestrictedInitiallyApproved", p, {
             cache: false
           })
           .then(function (response)
@@ -48929,7 +48929,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         var p = { ppdIndex: ppdIndex };
         return $http
-          .post("/TimeStore/TC/InitiallyApproved", p, { cache: false })
+          .post("TC/InitiallyApproved", p, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48939,7 +48939,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var approveInitial = function (ad)
       {
         return $http
-          .post("/TimeStore/TC/ApproveInitial", ad, { cache: false })
+          .post("TC/ApproveInitial", ad, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48949,7 +48949,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var approveFinal = function (ad)
       {
         return $http
-          .post("/TimeStore/TC/ApproveFinal", ad, { cache: false })
+          .post("TC/ApproveFinal", ad, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48959,7 +48959,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getReportsTo = function ()
       {
         return $http
-          .get("/TimeStore/TC/ReportsToList", { cache: true })
+          .get("TC/ReportsToList", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -48969,7 +48969,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getMyAccess = function ()
       {
         return $http
-          .get("/TimeStore/TC/Access", { cache: true })
+          .get("TC/Access", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -48979,7 +48979,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getAccess = function (employeeid)
       {
         return $http
-          .post("/TimeStore/TC/Access", { EmployeeId: employeeid })
+          .post("TC/Access", { EmployeeId: employeeid })
           .then(function (response)
           {
             return response.data;
@@ -48988,7 +48988,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var saveAccess = function (rawTCA)
       {
         return $http
-          .post("/TimeStore/TC/SaveAccess", rawTCA)
+          .post("TC/SaveAccess", rawTCA)
           .then(function (response)
           {
             return response.data;
@@ -48998,7 +48998,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getDepartments = function ()
       {
         return $http
-          .get("/TimeStore/TC/DepartmentList", { cache: true })
+          .get("TC/DepartmentList", { cache: true })
           .then(function (response)
           {
             return response.data;
@@ -49006,15 +49006,16 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       };
       var getEmployees = function ()
       {
+        console.log('get employee list called');
         return $http
-          .get("/TimeStore/TC/EmployeeList", { cache: true })
+          .get("./TC/EmployeeList", { cache: true })
           .then(function (response)
           {
             return response.data;
           });
       };
       //var getPayPeriods = function () {
-      //    return $http.get('/TimeStore/TC/PayPeriodList', { cache: true })
+      //    return $http.get('TC/PayPeriodList', { cache: true })
       //                .then(function (response) {
       //                    return response.data;
       //                });
@@ -49028,7 +49029,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         }
         return $http
           .post(
-          "/TimeStore/TC/Employee",
+          "TC/Employee",
           { EmployeeId: employeeid, PayPeriod: payperiod },
           { cache: false }
           )
@@ -49040,7 +49041,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getDefaultEmployee = function ()
       {
         return $http
-          .post("/TimeStore/TC/CurrentEmployee", { cache: false })
+          .post("TC/CurrentEmployee", { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -49196,22 +49197,22 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             function goLeaveApprovals() {
                 go('/LeaveApproval/');
-                //$window.location.href = '/TimeStore/#/LeaveApproval';
+                //$window.location.href = '#/LeaveApproval';
             }
 
             function goTimecardApprovals() {
                 go('approval/ppd/' + timestoredata.getPayPeriodEnd());
-                //$window.location.href = '/TimeStore/#/approval/F';
+                //$window.location.href = '#/approval/F';
             }
 
             function goFinanceTools() {
                 go('/FinanceTools/')
-                //$window.location.href = '/TimeStore/#/FinanceTools';
+                //$window.location.href = '#/FinanceTools';
             }
 
             function goAccessChange() {
                 go('/a/')
-                //$window.location.href = '/TimeStore/#/a/';
+                //$window.location.href = '#/a/';
             }
 
             function goExceptions() {
@@ -49227,8 +49228,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             }
 
             function goHome() {
-                goWindow('/TimeStore/');
-                //$window.location.href = '/TimeStore/';
+                goWindow('/');
+                //$window.location.href = '';
             }
 
             function goDefaultEmployee(eid) {
@@ -49244,12 +49245,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             function goDailyCheckoff() {
                 go('/dailycheckoff/');
-                //$window.location.href = '/TimeStore/#/dailycheckoff/';
+                //$window.location.href = '#/dailycheckoff/';
             }
 
             function goIncentives(incentiveType) {
                 go('/incentives/' + incentiveType);
-                //$window.location.href = '/TimeStore/#/incentives/' + incentiveType;
+                //$window.location.href = '#/incentives/' + incentiveType;
             }
             
             function go(url) {
@@ -49264,14 +49265,14 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             function checkUrl() {
                 var url = $location.absUrl().toUpperCase();
-                return url.indexOf('/TIMESTORE#') > -1 || url.indexOf('TIMESTORE/#') > -1
+                return url.indexOf('#') > -1 || url.indexOf('#') > -1
             }
 
             function goLocation(url) {
                 $location.path(url);
             }
             function goWindow(url) {
-                $window.location.href = '/TimeStore/#' + url;
+                $window.location.href = '#' + url;
             }
 
         }]);
@@ -52707,7 +52708,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .directive('timeApproval', ['viewOptions', function (viewOptions) {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeApproval.tmpl.html', //'/TimeStore/app/timecard/TimeApproval.tmpl.html',
+                templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
                 scope: {
                     tc: '=',
                     tl: '=',
@@ -52834,7 +52835,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       return {
         restrict: "E",
-        templateUrl: "TimeCardDetail.tmpl.html", //'/TimeStore/app/timecard/TimeCardDetail.tmpl.html',
+        templateUrl: "TimeCardDetail.tmpl.html", //'app/timecard/TimeCardDetail.tmpl.html',
         controller: "TimeCardDetailController",
         scope: {
           timecard: "="
@@ -52984,7 +52985,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .directive('timecardHeader', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeCardHeader.tmpl.html', //'/TimeStore/app/timecard/TimeCardHeader.tmpl.html',
+                templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
                 scope: {
                     timecard: '=',
                     shortheader: '='
@@ -53001,7 +53002,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       .directive('timecardNotes', function () {
         return {
           restrict: 'E',
-          templateUrl: 'TimecardNotes.tmpl.html',//'/TimeStore/app/timecard/TimecardNotes.tmpl.html',
+          templateUrl: 'TimecardNotes.tmpl.html',//'app/timecard/TimecardNotes.tmpl.html',
           scope: {
             notes: '=',
             employeeid: '=',
@@ -53089,7 +53090,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .directive('timecardWarnings', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimecardWarnings.tmpl.html', //'/TimeStore/app/timecard/TimecardWarnings.tmpl.html',
+                templateUrl: 'TimecardWarnings.tmpl.html', //'app/timecard/TimecardWarnings.tmpl.html',
                 scope: {
                     dl: '=',
                     title: '@',
@@ -53106,7 +53107,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .directive('timecardWeekTable', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeCardWeek-table.tmpl.html', //'/TimeStore/app/timecard/TimeCardWeek-table.tmpl.html',
+                templateUrl: 'TimeCardWeek-table.tmpl.html', //'app/timecard/TimeCardWeek-table.tmpl.html',
                 scope: {
                     week: '=',
                     title: '@',
@@ -53148,7 +53149,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .directive('timecardWeek', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeCardWeek.tmpl.html', //'/TimeStore/app/timecard/TimeCardWeek.tmpl.html',
+                templateUrl: 'TimeCardWeek.tmpl.html', //'app/timecard/TimeCardWeek.tmpl.html',
                 scope: {
                     employeeid: '=',
                     showaddtime: '=',

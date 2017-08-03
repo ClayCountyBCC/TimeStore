@@ -456,7 +456,7 @@
                           flex="50">
         <label>
           <md-icon aria-label="comment icon"
-                   md-svg-src="/TimeStore/images/ic_insert_comment_24px.svg">
+                   md-svg-src="images/ic_insert_comment_24px.svg">
           </md-icon>
           Add a Comment for this day
         </label>
@@ -846,7 +846,7 @@
             View Previous {{ datetypeDisplay }}
           </md-tooltip>
           <md-icon aria-label="previous day icon"
-                   md-svg-src="/Timestore/images/ic_navigate_before_24px.svg"></md-icon>
+                   md-svg-src="images/ic_navigate_before_24px.svg"></md-icon>
         </md-button>
         <h4 style="margin-left: .5em; margin-right: .5em; margin-top: 0; margin-bottom: 0;"
               ng-if="showDayOfWeek">
@@ -881,7 +881,7 @@
             View Next {{ datetypeDisplay }}
           </md-tooltip>
           <md-icon aria-label="next day icon"
-                   md-svg-src="/Timestore/images/ic_navigate_next_24px.svg"></md-icon>
+                   md-svg-src="images/ic_navigate_next_24px.svg"></md-icon>
         </md-button>
 
 
@@ -950,7 +950,7 @@
                     <span class="approvedLeave">
                         Approved
                         <md-icon aria-label="approved icon"
-                                 md-svg-src="/TimeStore/images/ic_done_24px.svg">
+                                 md-svg-src="images/ic_done_24px.svg">
                         </md-icon>
                     </span>
                 </span>
@@ -960,7 +960,7 @@
                     <span class="deniedLeave">
                         Denied
                         <md-icon aria-label="denied icon"
-                                 md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+                                 md-svg-src="images/ic_clear_24px.svg">
                         </md-icon>
                     </span>
                 </span>
@@ -1068,7 +1068,7 @@
                                    class="md-raised md-warn">
                             TimeStore
                             <md-icon aria-label="return home icon"
-                                     md-svg-src="/TimeStore/images/ic_replay_24px.svg">
+                                     md-svg-src="images/ic_replay_24px.svg">
                             </md-icon>
                         </md-button>
                     </div>
@@ -1182,7 +1182,7 @@
                             {{ t.group }}
                         </span>
                         <span flex="20">
-                            <a href="/TimeStore/#/e/{{ t.eid }}/ppd/{{ ppe }}">
+                            <a href="#/e/{{ t.eid }}/ppd/{{ ppe }}">
                                 {{ t.name }}
                             </a>
                         </span>
@@ -1621,7 +1621,7 @@
             <span class="approvedLeave">
               Approved
               <md-icon aria-label="approved icon"
-                       md-svg-src="/TimeStore/images/ic_done_24px.svg">
+                       md-svg-src="images/ic_done_24px.svg">
               </md-icon>
             </span>
           </span>
@@ -1631,7 +1631,7 @@
             <span class="deniedLeave">
               Denied
               <md-icon aria-label="denied icon"
-                       md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+                       md-svg-src="images/ic_clear_24px.svg">
               </md-icon>
             </span>
           </span>
@@ -1743,7 +1743,7 @@
                 <label style="color: black;">
                   Reason for Denial - Required for Denials
                   <md-icon aria-label="denial reason icon"
-                           md-svg-src="/Timestore/images/ic_mode_edit_24px.svg"></md-icon>
+                           md-svg-src="images/ic_mode_edit_24px.svg"></md-icon>
                 </label>
                 <input ng-model="d.note"
                        type="text"
@@ -1810,7 +1810,7 @@
                   <span class="approvedLeave">
                     Approved
                     <md-icon aria-label="approved icon"
-                             md-svg-src="/TimeStore/images/ic_done_24px.svg">
+                             md-svg-src="images/ic_done_24px.svg">
                     </md-icon>
                   </span>
                 </span>
@@ -1819,7 +1819,7 @@
                   <span class="deniedLeave">
                     Denied
                     <md-icon aria-label="denied icon"
-                             md-svg-src="/TimeStore/images/ic_clear_24px.svg">
+                             md-svg-src="images/ic_clear_24px.svg">
                     </md-icon>
                   </span>
                 </span>
@@ -2674,7 +2674,7 @@
             Time Entry
             <md-icon aria-label="add time icon"
                      class="iconColor"
-                     md-svg-src="/TimeStore/images/ic_alarm_add_24px.svg">
+                     md-svg-src="images/ic_alarm_add_24px.svg">
             </md-icon>
           </md-button>
           <span ng-if="showaddtime === false">
@@ -2901,13 +2901,13 @@
                                ng-click="previousMonth()"
                                class="md-fab md-mini">
                         <md-icon aria-label="previous month icon"
-                                 md-svg-src="/Timestore/images/ic_navigate_before_24px.svg"></md-icon>
+                                 md-svg-src="images/ic_navigate_before_24px.svg"></md-icon>
                     </md-button>
                     <md-button aria-label="view Calendar"
                                ng-click="nextMonth()"
                                class="md-fab md-mini">
                         <md-icon aria-label="next month icon"
-                                 md-svg-src="/Timestore/images/ic_navigate_next_24px.svg"></md-icon>
+                                 md-svg-src="images/ic_navigate_next_24px.svg"></md-icon>
                     </md-button>
                 </div>
                 <span class="md-display-1"
@@ -2941,7 +2941,7 @@
                                class="md-raised md-warn">
                         TimeStore
                         <md-icon aria-label="return home icon"
-                                 md-svg-src="/TimeStore/images/ic_replay_24px.svg">
+                                 md-svg-src="images/ic_replay_24px.svg">
                         </md-icon>
                     </md-button>
                 </div>
@@ -2982,7 +2982,7 @@
                         <md-icon aria-label="birthday cake icon"
                                  ng-if="c.birthdayList.length > 0"
                                  class="md-icon-button" 
-                                 md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                                 md-svg-src="images/ic_cake_24px.svg">
                         </md-icon>
                         {{ c.isHoliday ? 'Holiday' : '' }}
                         {{ c.dayOfWeek }}
@@ -3020,7 +3020,7 @@
                                       layout-align="center center"
                                       flex="25">
                                     <md-icon aria-label="birthday cake icon"
-                                             class="md-icon-button" md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                                             class="md-icon-button" md-svg-src="images/ic_cake_24px.svg">
                                     </md-icon>
                                 </span>
                             </div>
@@ -3057,7 +3057,7 @@
                                   layout-align="center center"
                                   flex="25">
                                 <md-icon aria-label="birthday cake icon"
-                                         class="md-icon-button" md-svg-src="/TimeStore/images/ic_cake_24px.svg">
+                                         class="md-icon-button" md-svg-src="images/ic_cake_24px.svg">
                                 </md-icon>
                             </span>
                         </div>

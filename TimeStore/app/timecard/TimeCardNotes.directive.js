@@ -5,7 +5,7 @@
       .directive('timecardNotes', function () {
         return {
           restrict: 'E',
-          templateUrl: 'TimecardNotes.tmpl.html',//'/TimeStore/app/timecard/TimecardNotes.tmpl.html',
+          templateUrl: 'TimecardNotes.tmpl.html',//'app/timecard/TimecardNotes.tmpl.html',
           scope: {
             notes: '=',
             employeeid: '=',

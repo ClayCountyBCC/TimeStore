@@ -5,7 +5,7 @@
         .directive('timecardWeekTable', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimeCardWeek-table.tmpl.html', //'/TimeStore/app/timecard/TimeCardWeek-table.tmpl.html',
+                templateUrl: 'TimeCardWeek-table.tmpl.html', //'app/timecard/TimeCardWeek-table.tmpl.html',
                 scope: {
                     week: '=',
                     title: '@',

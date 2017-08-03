@@ -5,7 +5,7 @@
         .directive('timecardWarnings', function () {
             return {
                 restrict: 'E',
-                templateUrl: 'TimecardWarnings.tmpl.html', //'/TimeStore/app/timecard/TimecardWarnings.tmpl.html',
+                templateUrl: 'TimecardWarnings.tmpl.html', //'app/timecard/TimecardWarnings.tmpl.html',
                 scope: {
                     dl: '=',
                     title: '@',

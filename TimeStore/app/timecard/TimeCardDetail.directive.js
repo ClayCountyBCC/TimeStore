@@ -8,7 +8,7 @@
     {
       return {
         restrict: "E",
-        templateUrl: "TimeCardDetail.tmpl.html", //'/TimeStore/app/timecard/TimeCardDetail.tmpl.html',
+        templateUrl: "TimeCardDetail.tmpl.html", //'app/timecard/TimeCardDetail.tmpl.html',
         controller: "TimeCardDetailController",
         scope: {
           timecard: "="

@@ -50,11 +50,11 @@
               })
               .when('/signature/ppd/:payPeriod', {
                 controller: 'SignatureViewController',
-                templateUrl: 'TimeCardSignatureView.tmpl.html' //'/TimeStore/app/signatureview/TimeCardSignatureView.tmpl.html',
+                templateUrl: 'TimeCardSignatureView.tmpl.html' //'app/signatureview/TimeCardSignatureView.tmpl.html',
               })
               .when('/signature/e/:employeeId/ppd/:payPeriod', {
                 controller: 'SignatureViewController',
-                templateUrl: 'TimeCardSignatureView.tmpl.html' //'/TimeStore/app/signatureview/TimeCardSignatureView.tmpl.html',
+                templateUrl: 'TimeCardSignatureView.tmpl.html' //'app/signatureview/TimeCardSignatureView.tmpl.html',
               })
               .when('/LeaveApproval/', {
                 controller: 'leaveApprovalController',
@@ -66,27 +66,27 @@
               })
               .when('/a/', {
                 controller: 'AccessController',
-                templateUrl: 'Access.tmpl.html' // '/TimeStore/app/access/Access.tmpl.html',
+                templateUrl: 'Access.tmpl.html' // 'app/access/Access.tmpl.html',
               })
               .when('/incentives/:incentiveType', {
                 controller: 'IncentiveController',
-                templateUrl: 'Incentives.tmpl.html' // '/TimeStore/app/incentives/Incentives.tmpl.html',
+                templateUrl: 'Incentives.tmpl.html' // 'app/incentives/Incentives.tmpl.html',
               })
               .when('/approval/ppd/:payPeriod', {
                 controller: 'ApprovalController',
-                templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+                templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               })
               //.when('/approval/:approvalType', {
               //    controller: 'ApprovalController',
-              //    templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+              //    templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               //})
               .when('/approval/:approvalType/:ppdIndex', {
                 controller: 'ApprovalController',
-                templateUrl: 'Approval.tmpl.html' //'/TimeStore/app/approval/Approval.tmpl.html',
+                templateUrl: 'Approval.tmpl.html' //'app/approval/Approval.tmpl.html',
               })
               .when('/dailycheckoff', {
                 controller: 'DailyCheckoffController',
-                templateUrl: 'DailyCheckoff.tmpl.html' // '/TimeStore/app/dailycheckoff/DailyCheckoff.tmpl.html',
+                templateUrl: 'DailyCheckoff.tmpl.html' // 'app/dailycheckoff/DailyCheckoff.tmpl.html',
               })
               .when('/exceptions/ppd/:payPeriod', {
                 controller: 'ExceptionsController',
@@ -98,7 +98,7 @@
               })
               .when('/FinanceTools', {
                 controller: 'FinanceToolsController',
-                templateUrl: 'FinanceTools.tmpl.html' //'/TimeStore/app/financetools/FinanceTools.tmpl.html',
+                templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
               })
               .when('/LeaveCalendar/', {
                 controller: 'CalendarViewController',
