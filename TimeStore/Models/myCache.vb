@@ -48,7 +48,7 @@ Namespace Models
         Case "reportsto"
           Return Get_All_ReportsTo()
         Case "incentive"
-          Return Get_All_Incentive_Data()
+          Return Incentive.Get_All_Incentive_Data()
         Case "employee_ad_data"
           Return GetEmployeeDataFromAD()
         Case "employeedata"

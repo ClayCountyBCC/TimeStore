@@ -5,11 +5,15 @@
       TimeStore = 1
     End Enum
     Property DataSource As TimeCardDataSource = TimeCardDataSource.Timecard
-    Property EmployeeID As Integer
+    Property WorkHoursID As Long = 0
+    Property EmployeeID As Integer = 0
     Property DepartmentNumber As String = ""
     Property WorkDate As Date
     Property WorkTimes As String = ""
     Property WorkHours As Double = 0
+    Property DisasterName As String = ""
+    Property DisasterWorkTimes As String = ""
+    Property DisasterWorkHours As Double = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
     Property VacationHours As Double = 0
@@ -41,6 +45,14 @@
     Property IsApproved As Boolean = True
     Property OutOfClass As New Out_Of_Class
 
+    Public Function To_Saved_TimeStore_Data() As Saved_TimeStore_Data
+      If EmployeeID = 0 Then
+        Return New Saved_TimeStore_Data
+      Else
+        Return Saved_TimeStore_Data.GetByEmployeeAndWorkday(Me.WorkDate, Me.EmployeeID)
+      End If
+    End Function
+
     Public Sub New()
 
     End Sub
@@ -66,12 +78,16 @@
       WorkDate = STD.work_date
       WorkHours = STD.work_hours
       WorkTimes = STD.work_times
+      DisasterName = STD.disaster_name
+      DisasterWorkHours = STD.disaster_work_hours
+      DisasterWorkTimes = STD.disaster_work_times
     End Sub
 
     Private Sub Load_Hours_To_Approve(STDTA As List(Of Saved_TimeStore_Data_To_Approve))
       Dim ignoreList() As Integer = {10, 11}
-      IsApproved = ((From std In STDTA Where Not ignoreList.Contains(std.field_id) And
-                                                 Not std.is_approved Select std).Count = 0)
+      IsApproved = ((From std In STDTA
+                     Where Not ignoreList.Contains(std.field_id) And
+                       Not std.is_approved Select std).Count = 0)
       For Each s In STDTA
         Select Case s.field_id
           Case 1
@@ -178,6 +194,102 @@
       Next
       If EmployeeID = 0 Then Return False
       Return True
+    End Function
+
+    Public Function Save(tca As Timecard_Access) As Boolean
+
+
+      ' here's what this process is going to do:
+      'User chooses to save record
+      'check If work record exists
+      Dim existing = To_Saved_TimeStore_Data()
+      'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+      'Dim existing = Get_Saved_Timestore_Data_by_Date(T.EmployeeID, T.WorkDate)
+
+      If existing.employee_id = 0 Then ' record does Not exist
+
+        Dim workID As Long = Save_Timestore_Data(Me, tca) '   Insert New work record, return work record ID
+        If Save_Hours_To_Approve(Me, workID, tca) Then
+          ' If this user's leave doesn't require approval, let's go ahead and approve everything.
+          If Not tca.RequiresApproval Then
+            existing = To_Saved_TimeStore_Data()
+            'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+            For Each hta In existing.HoursToApprove
+              Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
+            Next
+          Else
+            'let's remove any current approvals.
+            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed.")
+            End If
+          End If
+          Return True
+        Else
+          Return False
+        End If
+
+
+        ' 8/26/2015 Going to skip the auto approving.
+        '   check person saving rows' approval level (Check Authority)
+        '       If they Then have the authority To "pre-approve" the time
+        '		    insert the hours into the hours To approve table Using the work record id, capturing the ID inserted.
+        '           Use the returned ID to save the approval data for each hours to add the rows to approve record.
+
+        '       If they do not have the authority to pre-approve
+        '           insert the hours into the hours to approve table using the work record id
+
+      Else ' record exists
+
+        If Not Update_Timestore_Work_Data(T, tca, existing) Then Return False
+
+        Select Case Update_Hours_To_Approve(T, tca, existing)
+          Case 5 ' data was updated and everything was good.
+            'let's remove any current approvals.
+            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. **")
+            End If
+          Case 2 ' data wasn't updated but it completed normally
+            If Not Compare_Existing_To_Current(existing, T) Then
+              Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+              If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+                Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. *")
+              End If
+            End If
+          Case 1 ' data was updated but there was an error
+            Return False
+          Case -1 ' error
+            Return False
+        End Select
+        If Not tca.RequiresApproval Then
+          existing = T.To_Saved_TimeStore_Data
+          'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+          For Each hta In existing.HoursToApprove
+            If Not hta.is_approved Then Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
+          Next
+        End If
+        Return True
+
+        '   Return ID Of existing data
+        '       get list of hours to approve rows with that ID
+        '       get list of approvals that match those IDs
+        '       if the hours to approve are already approved and the new hours are greater than the hours approved
+        '           then remove the approval.
+        '       update work record with New data (ID stays the same), update date_last_updated with current date/time
+        '       Loop through each Hours to approve row And update the used_hours And worktimes field to match the current saved value, unless it Is denied, then enforce it to zero.
+
+        '       insert any New hours to approve that were Not present
+
+      End If
+
+
+
+
+    End Function
+
+    Private Function SaveWorkData(tca As Timecard_Access)
+
     End Function
   End Class
 End Namespace

@@ -418,6 +418,10 @@ Namespace Controllers
     End Function
 
     Private Function GetApprovalData(type As String, ppdIndex As Integer, Optional unRestricted As Boolean = False) As JsonNetResult
+      ' Unrestricted is used when we want to allow someone to view their staff's
+      ' data regardless of who approved it.
+      ' this is important for the Signature Required report and the Fema report,
+      ' as well as the unapproved report.
       Dim payperiodstart As Date
       If ppdIndex = 0 Then
         payperiodstart = GetPayPeriodStart(Today)
@@ -434,26 +438,39 @@ Namespace Controllers
       Dim approvalLevel As Integer = 5
       Dim adl As List(Of GenericTimecard)
       If tca.Raw_Access_Type = Timecard_Access.Access_Types.All_Access Then
-        adl = (From t In tmpTC Order By t.departmentNumber, t.employeeID
-               Where t.employeeID <> tca.EmployeeID Select t).ToList
+        If unRestricted Then
+          'Order By t.departmentNumber, t.employeeID
+          adl = (From t In tmpTC
+                 Order By t.employeeID Descending
+                 Select t).ToList
+        Else
+            adl = (From t In tmpTC
+                   Order By t.departmentNumber, t.employeeID
+                   Where t.employeeID <> tca.EmployeeID
+                   Select t).ToList
+        End If
+
       Else
         If unRestricted Then
-          ' Unrestricted is used when we want to allow someone to view their staff's
-          ' data regardless of who approved it.
-          ' this is important for the Signature Required report,
-          ' as well as the unapproved report.
-          adl = (From t In tmpTC Order By t.departmentNumber, t.employeeID
+          adl = (From t In tmpTC
+                 Order By t.departmentNumber, t.employeeID
                  Where t.Approval_Level < approvalLevel And
                    t.Access_Type < tca.Raw_Access_Type Select t).ToList
         Else
-          adl = (From t In tmpTC Order By t.departmentNumber, t.employeeID
+          adl = (From t In tmpTC
+                 Order By t.departmentNumber, t.employeeID
                  Where t.Approval_Level < approvalLevel And
                    t.Initial_Approval_EmployeeID_Access_Type < tca.Raw_Access_Type And
                    t.Initial_Approval_EmployeeID <> tca.EmployeeID And
-                   t.Access_Type < tca.Raw_Access_Type Select t).ToList
+                   t.Access_Type < tca.Raw_Access_Type
+                 Select t).ToList
         End If
 
       End If
+      'Order By a.department, a.lastName
+      adl = (From a In adl
+             Order By a.employeeID Descending
+             Select a).ToList
 
       Dim jnr As New JsonNetResult
       jnr.Data = New List(Of String)
@@ -520,8 +537,10 @@ Namespace Controllers
       Dim myAccess As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
 
       If myAccess.Backend_Reports_Access Then
-        jnr.Data = (From d In Get_All_Incentive_Data() Order By d.Incentive_Amount Descending
-                    Where d.Incentive_Type = incentiveType Select d).ToList
+        jnr.Data = (From d In Incentive.Get_All_Incentive_Data()
+                    Order By d.Incentive_Amount Descending
+                    Where d.Incentive_Type = incentiveType
+                    Select d).ToList
       Else
         jnr.Data = "Error, Not Authorized"
       End If
@@ -536,7 +555,7 @@ Namespace Controllers
       Dim myAccess As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
 
       If myAccess.Backend_Reports_Access Then
-        If Save_Incentive_Data(I) Then
+        If Incentive.Save_Incentive_Data(I) Then
           jnr.Data = "Success"
         Else
           jnr.Data = "Error, There was an error saving the data.  Please try again and check with MIS if the problem persists."

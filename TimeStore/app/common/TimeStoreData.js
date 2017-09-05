@@ -296,7 +296,6 @@
       var financePostProcess = function (ppdIndex)
       {
         var ppd = { ppdIndex: ppdIndex };
-        console.log("post process pay period index", ppd);
         return $http
           .post("Main/UploadFinanceData", ppd)
           .then(function (response)
@@ -317,13 +316,10 @@
 
       var getSignatureRequired = function (ppdIndex, eid)
       {
-        console.log("signature required eid", eid);
         return getUnrestrictedInitiallyApproved(ppdIndex).then(function (data)
         {
-          console.log("signature data", data);
           if (eid !== undefined)
           {
-            console.log("signature data by employeeid", eid.toString());
             return _.filter(data, function (x)
             {
               return x.employeeID === eid.toString();
@@ -345,6 +341,15 @@
         //    return response.data;
         //});
       };
+
+      var getFemaData = function (ppdIndex)
+      {
+        return getUnrestrictedInitiallyApproved(ppdIndex).then(function (data)
+        {
+          return data;
+        });
+      };
+
 
       var getUncompletedApprovals = function (ppdIndex)
       {
@@ -487,7 +492,6 @@
       };
       var getEmployees = function ()
       {
-        console.log('get employee list called');
         return $http
           .get("./TC/EmployeeList", { cache: true })
           .then(function (response)
@@ -544,6 +548,7 @@
         financePostProcess: financePostProcess,
         saveHoliday: saveHoliday,
         getSignatureRequired: getSignatureRequired,
+        getFemaData: getFemaData,
         saveIncentives: saveIncentives,
         getIncentives: getIncentives,
         getUnapproved: getUnapproved,

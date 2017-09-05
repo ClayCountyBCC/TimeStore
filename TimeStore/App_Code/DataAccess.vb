@@ -21,7 +21,27 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
+  Public Function Get_Data(Of T)(query As String, cst As ConnectionStringType) As List(Of T)
+    Try
+      Using db As IDbConnection = New SqlConnection(GetCS(cst))
+        Return db.Query(Of T)(query)
+      End Using
+    Catch ex As Exception
+      Dim e As New ErrorLog(ex, query)
+      Return Nothing
+    End Try
+  End Function
 
+  Public Function Get_Data(Of T)(query As String, dbA As DynamicParameters, cst As ConnectionStringType) As List(Of T)
+    Try
+      Using db As IDbConnection = New SqlConnection(GetCS(cst))
+        Return db.Query(Of T)(query, dbA)
+      End Using
+    Catch ex As Exception
+      Dim e As New ErrorLog(ex, query)
+      Return Nothing
+    End Try
+  End Function
 
   Public Function GetCS(cst As ConnectionStringType) As String
     ' This function will return a specific connectionstring based on the machine it's currently running on
@@ -144,8 +164,7 @@ Public Module ModuleDataAccess
       WHERE 
         PR.pay_cd IN ('001', '002') 
         AND (PR.rate_no = 1) 
-      ORDER BY E.l_name ASC, E.f_name ASC
-"
+      ORDER BY E.l_name ASC, E.f_name ASC"
     'With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
     '  .AppendLine("USE finplus50;")
     '  .AppendLine("SELECT E.hire_date, E.empl_no, LTRIM(RTRIM(E.l_name)) AS l_name, LTRIM(RTRIM(E.f_name)) AS f_name, ")
@@ -198,7 +217,8 @@ Public Module ModuleDataAccess
     If EmployeeID = 0 Then
       Return New List(Of TimecardTimeData)
     End If
-    Dim tctdl As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(Startdate, EmployeeID)
+    Dim tctdl As List(Of TimecardTimeData) = 
+      GetEmployeeDataFromTimeStore(Startdate, Startdate.AddDays(13), EmployeeID)
     If tctdl.Count = 0 Then
       Return GetEmployeeDataFromTimecard(Startdate, EmployeeID)
     Else
@@ -247,8 +267,13 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  Public Function GetEmployeeDataFromTimeStore(Startdate As Date, Optional EmployeeID As Integer = 0, Optional EndDate? As Date = Nothing) As List(Of TimecardTimeData)
-    Dim STDL As List(Of Saved_TimeStore_Data) = GetWorkHoursDataFromTimeStore(Startdate, EmployeeID, EndDate)
+  Public Function GetEmployeeDataFromTimeStore(StartDate As Date, EndDate As Date, Optional EmployeeID As Integer = 0) As List(Of TimecardTimeData)
+    Dim STDL As List(Of Saved_TimeStore_Data)
+    If EmployeeID = 0 Then
+      STDL = Saved_TimeStore_Data.GetAllByDateRange(StartDate, EndDate)
+    Else
+      STDL = Saved_TimeStore_Data.GetByEmployeeAndDateRange(StartDate, EndDate, EmployeeID)
+    End If
     Return (From s In STDL Select New TimecardTimeData(s)).ToList
   End Function
 
@@ -283,84 +308,49 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  Private Function GetWorkHoursDataFromTimeStore(Startdate As Date, Optional EmployeeID As Integer = 0, Optional EndDate? As Date = Nothing) As List(Of Saved_TimeStore_Data)
-    'If Username.Length > 0 Then EmployeeID = GetEmployeeIDFromAD(Username)
-    ' This gets the current pay period start for the start date passed.  So you can pass today's date and it'll get the 
-    ' current pay period, or if you want to be specific you can pass a specific pay period start date.
-    Startdate = GetPayPeriodStart(Startdate)
-    Dim sbQueryWorkHours As New StringBuilder
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    With sbQueryWorkHours
-      .AppendLine("USE TimeStore;")
-      .Append("DECLARE @Start DATETIME = '").Append(Startdate.ToShortDateString).Append("';")
-      If EndDate.HasValue Then
-        .Append("DECLARE @End DATETIME = '").Append(EndDate.Value.ToShortDateString).Append("';")
-      Else
-        .AppendLine("DECLARE @End DATETIME = DATEADD(dd, 13, @Start);")
-      End If
-      .Append("SELECT work_hours_id,employee_id,dept_id,pay_period_ending,work_date,")
-      .Append("work_times,break_credit,work_hours,holiday,leave_without_pay,total_hours,")
-      .Append("vehicle,comment,date_added,date_last_updated,by_employeeid,by_username")
-      .Append(",by_machinename,by_ip_address,doubletime_hours ")
-      .Append("FROM Work_Hours ")
-      .AppendLine("WHERE work_date BETWEEN @Start AND @End ")
-      If EmployeeID > 0 Then .Append("AND employee_id='").Append(EmployeeID).AppendLine("'")
-      .AppendLine("ORDER BY work_date ASC, employee_id ASC")
-    End With
-    Try
-      Dim stdtaList As List(Of Saved_TimeStore_Data_To_Approve) = GetHoursToApproveDataFromTimeStore(Startdate, EmployeeID, EndDate)
-      Dim STDL As New List(Of Saved_TimeStore_Data)
-      Dim ds As DataSet = dbc.Get_Dataset(sbQueryWorkHours.ToString)
-      For Each d In ds.Tables(0).Rows
-        Dim std As New Saved_TimeStore_Data(d)
-        std.HoursToApprove.AddRange((From s In stdtaList Where s.work_hours_id = std.work_hours_id).ToList)
-        STDL.Add(std)
-      Next
-      Return STDL
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
+  'Private Function GetWorkHoursDataFromTimeStore(Startdate As Date, Optional EmployeeID As Integer = 0, Optional EndDate? As Date = Nothing) As List(Of Saved_TimeStore_Data)
+  '  'If Username.Length > 0 Then EmployeeID = GetEmployeeIDFromAD(Username)
+  '  ' This gets the current pay period start for the start date passed.  So you can pass today's date and it'll get the 
+  '  ' current pay period, or if you want to be specific you can pass a specific pay period start date.
+  '  Startdate = GetPayPeriodStart(Startdate)
+  '  Dim sbQueryWorkHours As New StringBuilder
+  '  Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
+  '  With sbQueryWorkHours
+  '    .AppendLine("USE TimeStore;")
+  '    .Append("DECLARE @Start DATETIME = '").Append(Startdate.ToShortDateString).Append("';")
+  '    If EndDate.HasValue Then
+  '      .Append("DECLARE @End DATETIME = '").Append(EndDate.Value.ToShortDateString).Append("';")
+  '    Else
+  '      .AppendLine("DECLARE @End DATETIME = DATEADD(dd, 13, @Start);")
+  '    End If
+  '    .Append("SELECT work_hours_id,employee_id,dept_id,pay_period_ending,work_date,")
+  '    .Append("work_times,break_credit,work_hours,holiday,leave_without_pay,total_hours,")
+  '    .Append("vehicle,comment,date_added,date_last_updated,by_employeeid,by_username")
+  '    .Append(",by_machinename,by_ip_address,doubletime_hours ")
+  '    .Append("FROM Work_Hours ")
+  '    .AppendLine("WHERE work_date BETWEEN @Start AND @End ")
+  '    If EmployeeID > 0 Then .Append("AND employee_id='").Append(EmployeeID).AppendLine("'")
+  '    .AppendLine("ORDER BY work_date ASC, employee_id ASC")
+  '  End With
+  '  Try
+  '    'GetHoursToApproveDataFromTimeStore(Startdate, EmployeeID, EndDate)
+  '    Dim stdtaList As List(Of Saved_TimeStore_Data_To_Approve) =
+  '      Saved_TimeStore_Data_To_Approve.GetAllPayPeriodData(Startdate)
+  '    Dim STDL As New List(Of Saved_TimeStore_Data)
+  '    Dim ds As DataSet = dbc.Get_Dataset(sbQueryWorkHours.ToString)
+  '    For Each d In ds.Tables(0).Rows
+  '      Dim std As New Saved_TimeStore_Data(d)
+  '      std.HoursToApprove.AddRange((From s In stdtaList Where s.work_hours_id = std.work_hours_id).ToList)
+  '      STDL.Add(std)
+  '    Next
+  '    Return STDL
+  '  Catch ex As Exception
+  '    Log(ex)
+  '    Return Nothing
+  '  End Try
+  'End Function
 
-  Private Function GetHoursToApproveDataFromTimeStore(Startdate As Date, Optional EmployeeID As Integer = 0, Optional EndDate? As Date = Nothing) As List(Of Saved_TimeStore_Data_To_Approve)
-    'If Username.Length > 0 Then EmployeeID = GetEmployeeIDFromAD(Username)
-    ' This gets the current pay period start for the start date passed.  So you can pass today's date and it'll get the 
-    ' current pay period, or if you want to be specific you can pass a specific pay period start date.
-    Startdate = GetPayPeriodStart(Startdate)
-    Dim sbQuery As New StringBuilder
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    With sbQuery
-      .AppendLine("USE TimeStore;")
-      .Append("DECLARE @Start DATETIME = '").Append(Startdate.ToShortDateString).Append("';")
-      If EndDate.HasValue Then
-        .Append("DECLARE @End DATETIME = '").Append(EndDate.Value.ToShortDateString).Append("';")
-      Else
-        .AppendLine("DECLARE @End DATETIME = DATEADD(dd, 13, @Start);")
-      End If
-      .AppendLine("SELECT H.approval_hours_id,H.work_hours_id,H.field_id,H.worktimes,H.hours_used, ")
-      .AppendLine("H.payrate,H.date_added,A.approval_id,A.hours_approved,A.is_approved,A.by_employeeid, ")
-      .AppendLine("A.by_username,A.by_machinename,A.by_ip_address,A.note,A.date_approval_added ")
-      .AppendLine("FROM Hours_To_Approve H ")
-      .AppendLine("INNER JOIN Work_Hours W ON W.work_hours_id = H.work_hours_id")
-      .AppendLine("LEFT OUTER JOIN Approval_Data A ON H.approval_hours_id = A.approval_hours_id ")
-      .AppendLine("WHERE (A.is_approved IS NULL OR A.is_approved = 1) ")
-      .AppendLine("AND H.hours_used > 0 ")
-      .AppendLine("AND W.work_date BETWEEN @Start AND @End ")
-      If EmployeeID > 0 Then .Append("AND W.employee_id='").Append(EmployeeID).AppendLine("' ")
-      .AppendLine("ORDER BY W.work_date ASC, W.employee_id ASC")
-    End With
-    Try
-      Dim ds As DataSet = dbc.Get_Dataset(sbQuery.ToString)
-      'Dim htal As List(Of Saved_TimeStore_Data_To_Approve) = (From d In ds.Tables(0).AsEnumerable
-      '                                                        Select New Saved_TimeStore_Data_To_Approve(d)).ToList
-      Return (From d In ds.Tables(0).AsEnumerable Select New Saved_TimeStore_Data_To_Approve(d)).ToList
 
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
 
   Public Function GetTimeStoreAccess(EmployeeID As Integer) As DataSet
     ' This function gets the Employee's Access from the Timestore database - Access table.  The data is converted into 
@@ -568,25 +558,6 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  Public Function GetTelestaffSpecialties() As List(Of Incentive)
-    Dim sbQuery As New StringBuilder, dbc As New Tools.DB(GetCS(ConnectionStringType.Telestaff), toolsAppId, toolsDBError)
-    With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
-      .AppendLine("USE Telestaff;")
-      .AppendLine("SELECT Spec_Name_Ch AS Specialty_Name, Spec_Abrv_Ch AS Specialty_Abrv ")
-      .AppendLine("FROM Specialty_Tbl WHERE spec_disable_si='N' ORDER BY Spec_Name_Ch ASC")
-    End With
-    Try
-      Dim ds As DataSet = dbc.Get_Dataset(sbQuery.ToString)
-      Dim tmp As List(Of Incentive) = (From d In ds.Tables(0).AsEnumerable Select New Incentive With {
-                                      .Incentive_Abrv = d("Specialty_Abrv"), .Incentive_Name = d("Specialty_Name"),
-                                      .Incentive_Amount = 0, .Incentive_Type = 1}).ToList
-      Return tmp
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
-
   Public Function Get_All_Saved_Timecard_Data(PayPeriodEnding As Date) As List(Of Saved_Timecard_Data)
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
 
@@ -658,81 +629,6 @@ Public Module ModuleDataAccess
     Catch ex As Exception
       Log(ex)
       Return New List(Of Note)
-    End Try
-  End Function
-
-  Public Function Get_All_Incentive_Data() As List(Of Incentive)
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim sbQ As New StringBuilder
-    With sbQ
-      .AppendLine("USE TimeStore;")
-      .AppendLine("SELECT incentive_type, incentive_abrv, incentive, amount, start_date, end_date ")
-      .AppendLine("FROM Incentives ORDER BY incentive_type ASC, incentive_abrv ASC")
-    End With
-    Try
-      Dim ds As DataSet = dbc.Get_Dataset(sbQ.ToString)
-      Dim TTD As List(Of Incentive) = (From d In ds.Tables(0).AsEnumerable Select New Incentive With {
-                                      .Incentive_Type = d("incentive_type"), .Start_Date = d("start_date"),
-                                      .Incentive_Name = d("incentive"), .Incentive_Amount = d("amount"),
-                                      .Incentive_Abrv = d("incentive_abrv"), .End_Date = d("end_date")}).ToList
-
-      Dim TS As List(Of Incentive) = GetTelestaffSpecialties()
-      For Each t In TS
-        If (From i In TTD Where i.Incentive_Abrv = t.Incentive_Abrv Select i).Count = 0 Then
-          TTD.Add(t)
-        End If
-      Next
-
-      Return TTD
-    Catch ex As Exception
-      Log(ex)
-      Return New List(Of Incentive)
-    End Try
-  End Function
-
-  Public Function Save_Incentive_Data(Incentives As List(Of Incentive)) As Boolean
-    If Incentives.Count = 0 Then Return True
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim incentiveType As Integer = (From i In Incentives Select i.Incentive_Type).First
-    Dim incentiveAbrv() As String = (From i In Incentives Select i.Incentive_Abrv).ToArray
-    Dim sbQ As New StringBuilder
-    With sbQ
-      .AppendLine("USE TimeStore;")
-      .AppendLine("DELETE FROM Incentives WHERE incentive_type=")
-      .Append(incentiveType).Append(" AND incentive_abrv IN (")
-      For a As Integer = incentiveAbrv.GetLowerBound(0) To incentiveAbrv.GetUpperBound(0)
-        .Append("'").Append(incentiveAbrv(a)).Append("'")
-        If a < incentiveAbrv.GetUpperBound(0) Then .Append(",")
-      Next
-      .AppendLine(");")
-    End With
-    Dim x As Integer = 0
-    Try
-      x = dbc.ExecuteNonQuery(sbQ.ToString)
-    Catch ex As Exception
-      Log(ex)
-      Return False
-    End Try
-    With sbQ
-      .Clear()
-      .AppendLine("INSERT INTO Incentives (incentive_type, incentive_abrv, incentive, amount) ")
-      .AppendLine("VALUES (@IncentiveType, @IncentiveAbrv, @Incentive, @Amount);")
-    End With
-    Try
-      For Each i In Incentives
-
-        Dim p(3) As SqlParameter
-        p(0) = New SqlParameter("@IncentiveType", Data.SqlDbType.Int) With {.Value = i.Incentive_Type}
-        p(1) = New SqlParameter("@IncentiveAbrv", Data.SqlDbType.VarChar, 10) With {.Value = i.Incentive_Abrv}
-        p(2) = New SqlParameter("@Incentive", Data.SqlDbType.VarChar, 50) With {.Value = i.Incentive_Name}
-        p(3) = New SqlParameter("@Amount", Data.SqlDbType.Decimal) With {.Value = i.Incentive_Amount}
-
-        x = dbc.ExecuteNonQuery(sbQ.ToString, p)
-      Next
-      Return True
-    Catch ex As Exception
-      Log(ex)
-      Return False
     End Try
   End Function
 
@@ -843,8 +739,6 @@ Public Module ModuleDataAccess
       Return Nothing
     End Try
   End Function
-
-
 
   'Public Function GetPublicSafetyEmployeeData_EPP(StartDate As Date) As List(Of EPP)
   '    Dim Depts As New List(Of String)
@@ -1084,7 +978,7 @@ Public Module ModuleDataAccess
     Dim std As List(Of Saved_Timecard_Data) = Get_All_Saved_Timecard_Data(PayPeriodEnding)
     Dim teledata As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(PayPeriodStart)
     Dim tcdata As List(Of TimecardTimeData) = GetEmployeeDataFromTimecard(PayPeriodStart)
-    Dim tsdata As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(PayPeriodStart)
+    Dim tsdata As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(PayPeriodStart, PayPeriodEnding)
     Dim tsctedata As List(Of Saved_TimeStore_Comp_Time_Earned) = GetCompTimeEarnedDataFromTimeStore(PayPeriodStart)
     Dim notes As List(Of Note) = Get_All_Notes(PayPeriodEnding)
 
@@ -1092,8 +986,8 @@ Public Module ModuleDataAccess
     ' or those that were terminated in the pay period.
     Dim employeeList As List(Of FinanceData) = (From el In GetEmployeeDataFromFinPlus()
                                                 Order By el.Department, el.EmployeeLastName
-                                                Where Not el.IsTerminated And
-                                                Not PublicWorks.Contains(el.Department)
+                                                Where el.TerminationDate > PayPeriodStart And
+                                                  Not PublicWorks.Contains(el.Department)
                                                 Select el).ToList
 
     '(el.TerminationDate = Date.MaxValue Or
@@ -1225,6 +1119,7 @@ Public Module ModuleDataAccess
     ' If the paycode and pay rate match, we update the hours
     ' then we loop through the saved_time data and insert everything else.
     ' If the paycode and payrate exists in the Finplus Timecard data, we update.  Otherwise we insert.
+    Dim employeeData As List(Of FinanceData) = GetEmployeeDataFromFinPlus()
     Dim fds As DataSet = GetRawFinplusTimecardData(UseProduction)
     If fds.Tables(0).Rows.Count > 0 Then
       Dim payrun As String = (From f In fds.Tables(0).AsEnumerable Where Not IsDBNull(f("pay_run")) Select f("pay_run")).FirstOrDefault
@@ -1237,43 +1132,52 @@ Public Module ModuleDataAccess
         End If
         For Each ts In tsds.Tables(0).Rows
           Dim eid As Integer = ts("employee_id")
+          Dim employee As FinanceData = (From e In employeeData
+                                         Where e.EmployeeId = eid
+                                         Select e).First
+
           Dim paycode As String = ts("paycode")
           Dim payrate As Decimal = ts("payrate")
           Dim rndPayrate As Decimal = Math.Round(payrate, 5)
           Dim hours As Double = ts("hours")
-          Dim tmp = (From f In fds.Tables(0).AsEnumerable Where f("empl_no") = eid And
-                     f("pay_code") = paycode And Math.Round(f("payrate"), 5) = rndPayrate Select f)
-          If tmp.Count = 0 Then
-            ' We need to insert this row.
-            .Append("INSERT INTO timecard (empl_no,pay_code,hours,")
-            .Append("payrate,amount,pay_run,") ' Removed orgn from insert statement.
-            .Append("classify,pay_cycle,reported,")
-            .Append("user_chg,date_chg,flsa_cycle,")
-            .Append("flsa_flg,flsa_carry_ovr) VALUES ('")
-            .Append(eid).Append("', '").Append(paycode).Append("', ").Append(hours).Append(", ")
-            .Append(payrate).Append(", ").Append(GetAmount(paycode, payrate, hours)).Append(", '")
-            .Append(payrun).Append("', '")
-            '.Append(ts("orgn").ToString.Trim).Append("', '") ' Removed orgn from insert statement.
-            .Append(ts("classify")).Append("', '1', 'N', ")
-            .Append("'TimeStore', GETDATE(), 0, ")
-            .Append("'N', 'N');").Append(vbCrLf)
+          Dim tmp = (From f In fds.Tables(0).AsEnumerable
+                     Where f("empl_no") = eid And
+                       f("pay_code") = paycode And
+                       Math.Round(f("payrate"), 5) = rndPayrate
+                     Select f)
+          If Not employee.IsTerminated Then
+            If tmp.Count = 0 Then
+              ' We need to insert this row.
+              .Append("INSERT INTO timecard (empl_no,pay_code,hours,")
+              .Append("payrate,amount,pay_run,") ' Removed orgn from insert statement.
+              .Append("classify,pay_cycle,reported,")
+              .Append("user_chg,date_chg,flsa_cycle,")
+              .Append("flsa_flg,flsa_carry_ovr) VALUES ('")
+              .Append(eid).Append("', '").Append(paycode).Append("', ").Append(hours).Append(", ")
+              .Append(payrate).Append(", ").Append(GetAmount(paycode, payrate, hours)).Append(", '")
+              .Append(payrun).Append("', '")
+              '.Append(ts("orgn").ToString.Trim).Append("', '") ' Removed orgn from insert statement.
+              .Append(ts("classify")).Append("', '1', 'N', ")
+              .Append("'TimeStore', GETDATE(), 0, ")
+              .Append("'N', 'N');").Append(vbCrLf)
 
-          ElseIf tmp.Count = 1 Then
-            ' we need to compare the hours and update it if it doesn't match what we've got.
-            Dim st As DataRow = tmp.First
-            Dim newHours As Double = st("hours")
-            If newHours <> hours Then
-              Dim newAmount As Decimal = GetAmount(paycode, payrate, hours)
-              .Append("UPDATE timecard SET hours=").Append(hours)
-              .Append(", amount=").Append(newAmount)
-              .Append(", user_chg='TimeStore', date_chg=GETDATE()")
-              .Append(" WHERE empl_no='").Append(eid)
-              .Append("' AND pay_code='").Append(paycode)
-              .Append("' AND payrate=").Append(payrate).AppendLine(";")
+            ElseIf tmp.Count = 1 Then
+              ' we need to compare the hours and update it if it doesn't match what we've got.
+              Dim st As DataRow = tmp.First
+              Dim newHours As Double = st("hours")
+              If newHours <> hours Then
+                Dim newAmount As Decimal = GetAmount(paycode, payrate, hours)
+                .Append("UPDATE timecard SET hours=").Append(hours)
+                .Append(", amount=").Append(newAmount)
+                .Append(", user_chg='TimeStore', date_chg=GETDATE()")
+                .Append(" WHERE empl_no='").Append(eid)
+                .Append("' AND pay_code='").Append(paycode)
+                .Append("' AND payrate=").Append(payrate).AppendLine(";")
+              End If
+            Else
+              ' we've got an error
+              Log("Too many rows in upload process", eid.ToString, payrate.ToString, paycode)
             End If
-          Else
-            ' we've got an error
-            Log("Too many rows in upload process", eid.ToString, payrate.ToString, paycode)
           End If
         Next
       End With
@@ -1361,7 +1265,7 @@ Public Module ModuleDataAccess
             '.Append("' AND payrate=").Append(payrate).AppendLine(";")
             .Append("DELETE FROM timecard WHERE empl_no='")
             .Append(eid).Append("' AND pay_code='").Append(paycode)
-            .Append("' AND payrate=").Append(payrate).AppendLine(";")
+            .Append("' AND payrate=").Append(rndPayrate).AppendLine(";")
           Else
             nomatch += 1
           End If
@@ -1493,30 +1397,30 @@ Public Module ModuleDataAccess
 
   End Function
 
-  Public Function Delete_Hours(EmployeeId As Integer,
-                               PayPeriodEnding As Date,
-                               PayCode As String,
-                               PayRate As Double) As Boolean
+  'Public Function Delete_Hours(EmployeeId As Integer,
+  '                             PayPeriodEnding As Date,
+  '                             PayCode As String,
+  '                             PayRate As Double) As Boolean
 
-    Dim dp = New DynamicParameters()
-    dp.Add("@EmployeeId", EmployeeId)
-    dp.Add("@PayPeriodEnding", PayPeriodEnding)
-    dp.Add("@PayCode", PayCode)
-    dp.Add("@PayRate", Math.Round(PayRate))
+  '  Dim dp = New DynamicParameters()
+  '  dp.Add("@EmployeeId", EmployeeId)
+  '  dp.Add("@PayPeriodEnding", PayPeriodEnding)
+  '  dp.Add("@PayCode", PayCode)
+  '  dp.Add("@PayRate", Math.Round(PayRate))
 
-    Dim sql As String = "
-      SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-      BEGIN TRANSACTION DeleteData;
-        USE TimeStore;
-        DELETE FROM Saved_Time 
-        WHERE 
-          employee_id=@EmployeeId AND
-          pay_period_ending = @PayPeriodEnding AND 
-          paycode = @PayCode AND 
-          Payrate = @PayRate;
-      COMMIT TRANSACTION DeleteData;"
-    Return Exec_Query(sql, dp, ConnectionStringType.Timestore) > 0
-  End Function
+  '  Dim sql As String = "
+  '    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+  '    BEGIN TRANSACTION DeleteData;
+  '      USE TimeStore;
+  '      DELETE FROM Saved_Time 
+  '      WHERE 
+  '        employee_id=@EmployeeId AND
+  '        pay_period_ending = @PayPeriodEnding AND 
+  '        paycode = @PayCode AND 
+  '        Payrate = @PayRate;
+  '    COMMIT TRANSACTION DeleteData;"
+  '  Return Exec_Query(sql, dp, ConnectionStringType.Timestore) > 0
+  'End Function
 
   Public Function Save_Hours(EmployeeID As Integer,
                              PayPeriodEnding As Date,
@@ -1526,7 +1430,7 @@ Public Module ModuleDataAccess
                              Department As String,
                              Classify As String) As Boolean
 
-    Dim deleted As Boolean = Delete_Hours(EmployeeID, PayPeriodEnding, PayCode, Payrate)
+    'Dim deleted As Boolean = Delete_Hours(EmployeeID, PayPeriodEnding, PayCode, Payrate)
     ' Here we're going to insert their time data into the database.
     Dim dp = New DynamicParameters()
     dp.Add("@EmployeeId", EmployeeID)
@@ -1542,9 +1446,18 @@ Public Module ModuleDataAccess
       SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
       BEGIN TRANSACTION UpdateData;
         USE TimeStore;
+
+        DELETE FROM Saved_Time 
+        WHERE 
+          employee_id=@EmployeeId AND
+          pay_period_ending = @PayPeriodEnding AND 
+          paycode = @PayCode AND 
+          Payrate = @PayRate;
+
         INSERT INTO Saved_Time (employee_id, pay_period_ending, PayCode, Hours,
-        Payrate, amount, orgn, Classify) VALUES 
+          Payrate, amount, orgn, Classify) VALUES 
         (@EmployeeId, @PayPeriodEnding, @PayCode, @Hours, @PayRate, @Amount, @Orgn, @Classify);
+
       COMMIT TRANSACTION UpdateData;"
     Return Exec_Query(sql, dp, ConnectionStringType.Timestore) > 0
     ' old version of this function is below.
@@ -1665,8 +1578,6 @@ Public Module ModuleDataAccess
       Return Nothing
     End Try
   End Function
-
-
 
   Public Function Update_Holiday_Data(HolidayChoice() As String, HolidayBankHoursPaid As Double,
                                       ByRef tc As GenericTimecard, UpdateBy As String) As Boolean
@@ -1813,13 +1724,15 @@ Public Module ModuleDataAccess
     Dim fdl As List(Of FinanceData) = (From fd In GetAllEmployeeDataFromFinPlus() Where (fd.TerminationDate = Date.MaxValue Or (fd.TerminationDate >= StartDate And fd.TerminationDate <= EndDate)) Select fd).ToList
     Dim teledl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(StartDate, "", EndDate)
     Dim tcl As List(Of TimecardTimeData) = GetEmployeeDataFromTimecard(StartDate, 0, EndDate)
-    Dim tsl As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(StartDate, 0, EndDate)
+    Dim tsl As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(StartDate, EndDate)
 
     Dim gtdl As New List(Of GenericTimeData)
     For Each f In fdl
       Select Case f.Department
         Case "1703", "2103", "2102" ' public safety
-          For Each t In (From tele In teledl Where tele.EmployeeId = f.EmployeeId Select tele).ToList
+          For Each t In (From tele In teledl
+                         Where tele.EmployeeId = f.EmployeeId
+                         Select tele).ToList
             gtdl.Add(New GenericTimeData(t, f))
           Next
         Case "3701", "3709", "3711", "3712" ' public works
@@ -1867,7 +1780,8 @@ Public Module ModuleDataAccess
     ' here's what this process is going to do:
     'User chooses to save record
     'check If work record exists
-    Dim existing As New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+    Dim existing = T.To_Saved_TimeStore_Data
+    'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
     'Dim existing = Get_Saved_Timestore_Data_by_Date(T.EmployeeID, T.WorkDate)
 
     If existing.employee_id = 0 Then ' record does Not exist
@@ -1876,7 +1790,8 @@ Public Module ModuleDataAccess
       If Save_Hours_To_Approve(T, workID, SavingEmployee) Then
         ' If this user's leave doesn't require approval, let's go ahead and approve everything.
         If Not SavingEmployee.RequiresApproval Then
-          existing = New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+          existing = T.To_Saved_TimeStore_Data
+          'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
           For Each hta In existing.HoursToApprove
             Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", SavingEmployee)
           Next
@@ -1926,7 +1841,8 @@ Public Module ModuleDataAccess
           Return False
       End Select
       If Not SavingEmployee.RequiresApproval Then
-        existing = New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+        existing = T.To_Saved_TimeStore_Data
+        'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
         For Each hta In existing.HoursToApprove
           If Not hta.is_approved Then Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", SavingEmployee)
         Next
@@ -1967,6 +1883,7 @@ Public Module ModuleDataAccess
       .AppendLine("USE TimeStore;")
       For Each kvp As KeyValuePair(Of String, Timestore_Field_With_Hours) In t.CreateHoursOutput
         If kvp.Value.Field_Hours > 0 Then
+          .Append("DELETE FROM Approval_Data WHERE approval_hours_id IN (SELECT approval_hours_id FROM Hours_To_Approve WHERE work_hours_id=@WorkID AND field_id=").Append(kvp.Value.Field_ID).Append(");")
           .Append("DELETE FROM Hours_To_Approve WHERE work_hours_id=@WorkID AND field_id=")
           .Append(kvp.Value.Field_ID).AppendLine(";")
           .AppendLine("INSERT INTO Hours_To_Approve (work_hours_id, field_id, hours_used, worktimes)")
@@ -2199,7 +2116,7 @@ Public Module ModuleDataAccess
       .AppendLine(", @ByEmployeeID, @ByUsername, @ByMachinename, @ByIpAddress, @DoubleTimeHours);")
       .AppendLine("END")
     End With
-
+    'MERGE dbo.Foo2 WITH (HOLDLOCK) AS f 
     Dim i As Long = 0
     Try
       i = dbc.ExecuteScalar(sbQ.ToString, P)

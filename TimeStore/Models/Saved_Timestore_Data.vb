@@ -8,6 +8,9 @@
     Property pay_period_ending As Date = Date.MaxValue
     Property work_date As Date = Date.MaxValue
     Property work_times As String = ""
+    Property disaster_work_times As String = ""
+    Property disaster_work_hours As Double = 0
+    Property disaster_name As String = ""
     Property break_credit As Double = 0
     Property work_hours As Double = 0
     Property holiday As Double = 0
@@ -23,96 +26,117 @@
     Property date_updated As Date = Date.MaxValue
     Property HoursToApprove As New List(Of Saved_TimeStore_Data_To_Approve)
 
-    Public Sub New(dr As DataRow)
-      Load(dr)
+    Public Sub New()
+
     End Sub
 
-    Public Sub New(EmployeeID As Integer, WorkDate As Date)
-      PopulateWorkHoursData(EmployeeID, WorkDate)
-      If employee_id = 0 Then Exit Sub
-      PopulateHoursToApproveData()
-    End Sub
+    Private Shared Function GetWorkHoursQuery() As String
+      Dim query As String = "
+        USE TimeStore;
+        SELECT 
+          work_hours_id,
+          employee_id,
+          dept_id,
+          pay_period_ending,
+          work_date,
+          work_times,
+          disaster_work_times,
+          disaster_work_hours,
+          ISNULL(D.Name, '') disaster_name,
+          break_credit,
+          work_hours,
+          holiday,
+          leave_without_pay,
+          total_hours,
+          vehicle,
+          comment,
+          date_added,
+          date_last_updated date_updated,
+          by_employeeid,
+          by_username,
+          by_machinename,
+          by_ip_address,
+          doubletime_hours 
+        FROM Work_Hours
+        LEFT OUTER JOIN Disaster_Data D ON Work_Hours.work_date BETWEEN D.Disaster_Start AND D.Disaster_End"
+      Return query
+    End Function
 
-    Private Sub PopulateWorkHoursData(EmployeeID As Integer, WorkDate As Date)
-      Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-      Dim sbQ As New StringBuilder
-      With sbQ
-        .Append("SELECT work_hours_id,employee_id,dept_id,pay_period_ending,work_date,")
-        .Append("work_times,break_credit,work_hours,holiday,leave_without_pay,total_hours,")
-        .Append("vehicle,comment,date_added,date_last_updated,by_employeeid,by_username")
-        .Append(",by_machinename,by_ip_address,doubletime_hours ")
-        .Append("FROM Work_Hours WHERE employee_id=")
-        .Append(EmployeeID.ToString)
-        .Append(" AND work_date='").Append(WorkDate.ToShortDateString)
-        .Append("';")
-      End With
-      Dim dsTmp As DataSet
+    Public Shared Function GetByEmployeeAndWorkday(WorkDate As Date, EmployeeID As Integer) As Saved_TimeStore_Data
+      Dim dp As New DynamicParameters()
+      dp.Add("@WorkDate", WorkDate)
+      dp.Add("@EmployeeID", EmployeeID)
+      Dim query As String = GetWorkHoursQuery() + "
+        WHERE 
+          employee_id = @EmployeeID
+          AND work_date = @WorkDate
+        ORDER BY work_date ASC, employee_id ASC"
       Try
-        dsTmp = dbc.Get_Dataset(sbQ.ToString)
-        If dsTmp.Tables(0).Rows.Count = 0 Then
-          Exit Sub
+        Dim l = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
+        If l.Count = 0 Then
+          Return New Saved_TimeStore_Data
         Else
-          Load(dsTmp.Tables(0).Rows(0))
+          Dim st = l.First
+          st.HoursToApprove.Add(Saved_TimeStore_Data_To_Approve.GetByEmployeeAndWorkday(st.work_date, st.employee_id))
+          Return st
         End If
-
       Catch ex As Exception
-        Log(ex)
+        Dim e As New ErrorLog(ex, query)
+        Return Nothing
       End Try
-    End Sub
+    End Function
 
-    Private Sub PopulateHoursToApproveData()
-      Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-      Dim sbQ As New StringBuilder
-      With sbQ
-        .Append("SELECT H.approval_hours_id,H.work_hours_id,H.field_id,H.worktimes,H.hours_used, ")
-        .Append("H.payrate,H.date_added,A.approval_id,A.hours_approved,A.is_approved,A.by_employeeid, ")
-        .Append("A.by_username,A.by_machinename,A.by_ip_address,A.note,A.date_approval_added ")
-        .Append("FROM Hours_To_Approve H ")
-        .Append("LEFT OUTER JOIN Approval_Data A ON H.approval_hours_id = A.approval_hours_id ")
-        .Append("WHERE (A.is_approved IS NULL OR A.is_approved = 1) AND H.work_hours_id=")
-        .Append(work_hours_id.ToString).Append(";")
-      End With
-      Dim dsTmp As DataSet
+    Public Shared Function GetAllByDateRange(Start As Date, EndDate As Date) As List(Of Saved_TimeStore_Data)
+      Dim dp As New DynamicParameters()
+      Start = GetPayPeriodStart(Start)
+      dp.Add("@Start", Start)
+      dp.Add("@End", EndDate)
+      Dim query As String = GetWorkHoursQuery() + "
+        WHERE 
+          work_date BETWEEN @Start AND @End 
+        ORDER BY work_date ASC, employee_id ASC"
       Try
-        dsTmp = dbc.Get_Dataset(sbQ.ToString)
-        If dsTmp.Tables(0).Rows.Count = 0 Then
-          Exit Sub
-        Else
-          For Each dr In dsTmp.Tables(0).Rows
-            HoursToApprove.Add(New Saved_TimeStore_Data_To_Approve(dr))
-          Next
-        End If
-
+        Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
+        Dim stlApp = Saved_TimeStore_Data_To_Approve.GetAllByDateRange(Start, EndDate)
+        For Each s In stl
+          s.HoursToApprove.AddRange((From sA In stlApp
+                                     Where sA.work_hours_id = s.work_hours_id
+                                     Select sA).ToList)
+        Next
+        Return stl
       Catch ex As Exception
-        Log(ex)
+        Dim e As New ErrorLog(ex, query)
+        Return Nothing
       End Try
-    End Sub
+    End Function
 
-    Private Sub Load(dr As DataRow)
+    Public Shared Function GetByEmployeeAndDateRange(Start As Date, EndDate As Date, EmployeeID As Integer) As List(Of Saved_TimeStore_Data)
+      Dim dp As New DynamicParameters()
+      dp.Add("@Start", Start)
+      dp.Add("@End", EndDate)
+      dp.Add("@EmployeeID", EmployeeID)
+      Dim query As String = GetWorkHoursQuery() + "
+        WHERE 
+          employee_id = @EmployeeID
+          AND work_date BETWEEN @Start AND @End 
+        ORDER BY work_date ASC, employee_id ASC"
       Try
-        work_hours_id = dr("work_hours_id")
-        employee_id = dr("employee_id")
-        dept_id = dr("dept_id")
-        pay_period_ending = dr("pay_period_ending")
-        work_date = dr("work_date")
-        work_times = dr("work_times")
-        break_credit = dr("break_credit")
-        work_hours = dr("work_hours")
-        holiday = dr("holiday")
-        leave_without_pay = dr("leave_without_pay")
-        total_hours = dr("total_hours")
-        doubletime_hours = dr("doubletime_hours")
-        vehicle = dr("vehicle")
-        comment = dr("comment")
-        by_employeeid = dr("by_employeeid")
-        by_username = dr("by_username")
-        by_machinename = dr("by_machinename")
-        by_ip_address = dr("by_ip_address")
-        date_updated = dr("date_last_updated")
+        'Return Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
+        Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
+        Dim stlApp = Saved_TimeStore_Data_To_Approve.GetByEmployeeAndDateRange(Start, EndDate, EmployeeID)
+        For Each s In stl
+          s.HoursToApprove.AddRange((From sA In stlApp
+                                     Where sA.work_hours_id = s.work_hours_id
+                                     Select sA).ToList)
+        Next
+        Return stl
       Catch ex As Exception
-        Log(ex)
+        Dim e As New ErrorLog(ex, query)
+        Return Nothing
       End Try
-    End Sub
+
+    End Function
+
   End Class
 
 End Namespace

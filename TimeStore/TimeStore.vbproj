@@ -186,6 +186,8 @@
     <Content Include="app\calendar\CalendarView.controller.tmpl.html" />
     <Content Include="app\calendar\LeaveCalendar.directive.tmpl.html" />
     <Content Include="app\common\commonFunc.factory.js" />
+    <Content Include="app\fema\FemaView.controller.js" />
+    <Content Include="app\fema\FemaView.controller.tmpl.html" />
     <Content Include="app\leaverequest\existingLeaveRequest.directive.js" />
     <Content Include="app\leaverequest\existingLeaveRequest.directive.tmpl.html" />
     <Content Include="app\common\loadingIndicator.directive.js" />

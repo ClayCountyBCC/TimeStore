@@ -1,6 +1,6 @@
 ﻿@*@Modeltype TimeStore.Models.Timecard_Access*@
 @code
-  Dim LatestVer As String = "V20170803 1738"
+  Dim LatestVer As String = "V20170829 0939"
   Dim MaterialVer As String = "1.4" ' was 1.1
   Dim AngularVer As String = "1.5.11" ' was 1.4.2
 
@@ -120,6 +120,11 @@ end code
               View Unapproved
             </md-button>
           </md-list-item>
+          <md-list-item>
+            <md-button ng-click="viewFema()">
+              View Fema Report
+            </md-button>
+          </md-list-item>
         </md-list>
         <md-toolbar class="md-accent">
           <div class="md-toolbar-tools">
@@ -186,7 +191,7 @@ end code
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/@AngularVer/angular-aria.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/@AngularVer/angular-animate.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/@AngularVer/angular-route.min.js"></script>
-  <script src="~/Scripts/bundle.min.js?v=@LatestVer"></script>
+  <script src="~/Scripts/bundle.js?v=@LatestVer"></script>
 
   @Html.Partial("~/Views/Shared/bundle.vbhtml")
 </body>

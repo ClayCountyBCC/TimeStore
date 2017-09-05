@@ -189,7 +189,9 @@ table .crosstab, .crosstab th, .crosstab td {
   date-selector {
     display: none; }
   .ExceptionsHeader {
-    display: none !important; } }
+    display: none !important; }
+  #femaGroupSelection {
+    display: none; } }
 
 /*.addTimeContainer .md-subheader {
     background-color: #7986cb;

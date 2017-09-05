@@ -308,6 +308,8 @@ Public Module ModuleMain
     Select Case Job 'EMT/*L/PM/*SF/*SPOPS
       Case "E", "FF"
       Case Else
+        ' Certain job types have the paramedic incentive baked in to the base rate and it is not subject to those calculations, 
+        ' so we need to make sure we remove it from our calculations for those job types.
         If s.Contains("PM") Then
           TotalIncentive = TotalIncentive - (From i In Incentives Where i.Incentive_Abrv = "PM" Select i.Incentive_Amount).Sum
         End If
