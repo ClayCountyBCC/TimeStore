@@ -61,10 +61,15 @@
       $scope.workDate
     ); 
     $scope.isCurrentPPD = isCurrentPayPeriod();
-
+    $scope.disasterChoiceError = "";
+    $scope.disasterTimeError = "";
+    //$scope.disasterHours = $scope.TCTD.DisasterWorkHours.value > 0 ? 'true' : null;
+    
     populateTimeLists();
     updateBanksUsed();
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
+    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;
+    $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
     checkForErrors();
 
     function populateTimeLists()
@@ -159,6 +164,66 @@
       }
     }
 
+    $scope.DisasterHoursChoice = function ()
+    {
+      $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
+      if ($scope.DisasterHoursRelated === false)
+      {
+        $scope.calculateTotalHours();
+      }
+    }
+
+    function validateDisasterHours()
+    {
+      console.log("tctd", $scope.TCTD);
+      $scope.disasterChoiceError = "";
+      $scope.disasterTimeError = "";
+      // we need to compare the times in DisasterWorkTimes and WorkTimes
+      // to ensure that they always overlap
+      if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
+      {
+        if ($scope.DisasterHoursRelated === null)
+        {
+          $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated.";
+          $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+          return;
+        }
+        var dst = $scope.TCTD.disasterSelectedTimes;
+        var wst = $scope.TCTD.selectedTimes;
+        var dLength = dst.length - dst.length % 2;
+        var wLength = wst.length - wst.length % 2;
+        for (var i = 0; i < dLength; i += 2)
+        {
+          var dStart = dst[i];
+          var dEnd = dst[i + 1];
+          var found = false;
+          for (var j = 0; j < wLength; j += 2)
+          {
+            var wStart = wst[j];
+            var wEnd = wst[j + 1];
+            var dStartGood = dStart >= wStart && dStart <= wEnd;
+            var dEndGood = dEnd >= wStart && dEnd <= wEnd;
+            found = (dStartGood && dEndGood);
+            if (dStartGood || dEndGood)
+            {
+              break;
+            }
+          }
+          if (!found)
+          {
+            $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
+            $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
+            return;
+          }
+        }
+        if ($scope.TCTD.DisasterWorkHours.value > 0 && $scope.TCTD.Comment.length === 0)
+        {
+          $scope.disasterTimeError = "You must enter a comment indicating your duties relating to the disaster.";
+          $scope.errorList.push("You must enter a comment indicating your duties relating to the disaster.");
+        }
+      }
+    }
+
     function checkForErrors()
     {
       $scope.errorList = [];
@@ -168,6 +233,7 @@
       checkHourValues();
       checkOnCallHours();
       updateBanksUsed();
+      validateDisasterHours();
       $scope.isCurrentPPD = isCurrentPayPeriod();
 
       // here we're going to do as much error handling as possible.
@@ -177,7 +243,7 @@
 
       // Let's make sure they aren't using more hours than they have banked.
       // These should be errors.
-      console.log("tctd", $scope.TCTD);
+      
       var hireDateCheck = addtimeFunctions.calculateWithinFirstNinetyDays(
         $scope.timecard.hireDate,
         $scope.TCTD.workDate
@@ -364,19 +430,6 @@
       }
     }
 
-    //function checkHourValues() {
-    //    var hourTypes = addtimeFunctions.getHourTypesList();
-    //    for (var i = 0; i < hourTypes.length; i++) {
-    //        var v = $scope.TCTD[hourTypes[i]].value;
-    //        if (v % .25 > 0) {
-    //            $scope.errorList.push('Invalid number of hours entered for ' + hourTypes[i] + '.  The hours must be rounded to the quarter hour.');
-    //        }
-    //        if (v !== '' && !angular.isNumber(v)) {
-    //            $scope.errorList.push('Invalid number of hours entered for ' + hourTypes[i] + '.');
-    //        }
-    //    }
-    //}
-
     function checkHourValues()
     {
       var hourTypes = addtimeFunctions.getHourTypesList();
@@ -485,7 +538,8 @@
     $scope.saveTCTD = function ()
     {
       var basetctd = addtimeFunctions.getBaseTCTD($scope.TCTD, $scope.timecard);
-      _.times(10, timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError));
+      console.log('basetctd', basetctd);
+      timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError);
     };
 
     function onTCTDSave(response)
@@ -508,6 +562,13 @@
       $scope.TCTD.showAdminHours = !$scope.TCTD.showAdminHours;
     };
 
+    $scope.Toggle_DisasterHours = function ()
+    {
+      console.log('showDisaster', $scope.showDisaster);
+      $scope.showDisaster = !$scope.showDisaster;
+      
+    };
+
     $scope.Toggle_OnCallHours = function ()
     {
       $scope.toggleOnCall = !$scope.toggleOnCall;
@@ -522,6 +583,7 @@
         $scope.timecard.exemptStatus === "Exempt"
       );
       checkForErrors();
+      console.log('lastcheck tctd', $scope.TCTD);
       if ($scope.errorList.length === 0)
       {
         $scope.saveTCTD();

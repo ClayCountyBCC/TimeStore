@@ -94,6 +94,7 @@
           }
         }
         LoadLunchTime(tctd);
+        console.log('tctd', tctd);
         return tctd;
       }
 
@@ -124,6 +125,7 @@
       {
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
+        tctd.DisasterName = rawtctd.DisasterName;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -133,7 +135,8 @@
         processTimecardWorkTimes(
           tctd,
           rawtctd.WorkTimes,
-          rawtctd.OnCallWorkTimes
+          rawtctd.OnCallWorkTimes,
+          rawtctd.DisasterWorkTimes
         );
       }
 
@@ -141,6 +144,7 @@
       {
         var hours = [
           "WorkHours",
+          "DisasterWorkHours",
           "BreakCreditHours",
           "HolidayHours",
           "VacationHours",
@@ -188,7 +192,7 @@
         );
       }
 
-      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime)
+      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime, disasterWorkTime)
       {
         var sT = [];
         var t = [];
@@ -228,6 +232,27 @@
           tctd.OnCallSelectedTimes = sT;
           tctd.OnCallSelectedTimesDisplay = OnCallWorkTime;
         }
+
+
+        if (disasterWorkTime.length === 0)
+        {
+          tctd.disasterWorkTimes = "";
+          tctd.disasterSelectedTimes = [];
+          tctd.disasterSelectedTimesDisplay = "";
+        } else
+        {
+          t = disasterWorkTime.split("-");
+          sT = [];
+          for (var ii = 0; ii < t.length; ii++)
+          {
+            sT.push(tl.indexOf(t[ii].trim()));
+          }
+          tctd.disasterWorkTimes = sT.join(" ");
+          tctd.disasterSelectedTimes = sT;
+          tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
+        }
+
+       
       }
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
@@ -256,6 +281,8 @@
           WorkDate: workDate,
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
+          DisasterWorkTimes: "",
+          DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
           OnCallWorkHours: getDefaultHoursNoMax("On Call Hours Worked"),
@@ -301,7 +328,9 @@
           Vehicle: 0,
           errorText: "",
           selectedTimesDisplay: "",
-          selectedTimes: []
+          selectedTimes: [],
+          disasterSelectedTimesDisplay: "",
+          disasterSelectedTimes: []
         };
         return tctd;
       }
@@ -314,6 +343,8 @@
           WorkDate: tctd.WorkDate,
           WorkTimes: tctd.selectedTimesDisplay,
           WorkHours: getValue(tctd.WorkHours.value),
+          DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
+          DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
           VacationHours: getValue(tctd.VacationHours.value),
@@ -353,6 +384,7 @@
       {
         calcWorkHours(tctd, isExempt);
         calcOnCallHours(tctd);
+        calcDisasterWorkHours(tctd);
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminJuryDuty.value);
@@ -799,6 +831,58 @@
           //    }
           //}
         }
+      }
+
+      function calcDisasterWorkHours(tctd)
+      {
+        tctd.DisasterWorkHours.value = 0;
+        tctd.disasterSelectedTimesDisplay = "";
+        tctd.DisasterWorkTimes = "";        
+        if (tctd.disasterSelectedTimes === undefined)
+        {
+          return;
+        }
+        var times = tctd.disasterSelectedTimes;
+        tctd.disasterSelectedTimesDisplay = "";
+
+        var timeList = getTimeList();
+        if (times.length === 0)
+        {
+          return;
+        }
+        var timeDisplay = "";
+        var workHours = 0;
+        var st = times.sort(function (a, b)
+        {
+          return a - b;
+        });
+        var length = st.length - st.length % 2;
+        if (length > 1)
+        {
+          for (var i = 0; i < length; i += 2)
+          {
+            workHours += (st[i + 1] - st[i]) / 4;
+            if (timeDisplay.length > 0)
+            {
+              timeDisplay += " - ";
+            }
+            timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+          }
+        }
+        if (st.length % 2 === 1)
+        {
+          if (timeDisplay.length > 0)
+          {
+            timeDisplay += " - ";
+          }
+          timeDisplay += timeList[st[st.length - 1]];
+        }
+        tctd.DisasterWorkTimes = times.join(" ");
+        tctd.DisasterWorkHours.value = workHours;
+        console.log('d wt', tctd.DisasterWorkTimes);
+        console.log('d wh', tctd.DisasterWorkHours);
+        tctd.disasterSelectedTimesDisplay = timeDisplay;
+        
       }
 
       function handleBreakCredit(tctd)

@@ -102,13 +102,18 @@ Namespace Controllers
       'If Today = GetPayPeriodStart(Today) And Now.Hour < 10 And PayPeriod = 0 Then
       '  ppd = GetPayPeriodStart(Today.AddDays(-1 * 14))
       'End If
-
-      Dim eidToUse As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
-      If Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
-      Dim x As New GenericTimecard(ppd, eidToUse)
       Dim jnr As New JsonNetResult
-      jnr.Data = x
-      jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
+      Try
+        Dim eidToUse As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        If Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        Dim x As New GenericTimecard(ppd, eidToUse)
+
+        jnr.Data = x
+        jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, EmployeeId.ToString & " " & PayPeriod.ToString)
+      End Try
+
       Return jnr
     End Function
 
@@ -132,7 +137,8 @@ Namespace Controllers
                       Where il.Contains(e.EmployeeID) Or
                         e.EmployeeID = tca.EmployeeID Or
                         (tca.DepartmentsToApprove.Contains(e.DepartmentID) And
-                        Not higheraccesslevelusers.Contains(e.EmployeeID))).ToList
+                        Not higheraccesslevelusers.Contains(e.EmployeeID))
+                      Select e).ToList
 
         Case Else
           jnr.Data = New List(Of String)
@@ -155,11 +161,13 @@ Namespace Controllers
 
         jnr.Data = (From e In edl
                     Where e.DepartmentID = Department Or
-                      tca.ReportsToList.Contains(e.EmployeeID)).ToList
+                      tca.ReportsToList.Contains(e.EmployeeID)
+                    Select e).ToList
       ElseIf tca.DepartmentsToApprove.Contains(Department) Then
         jnr.Data = (From e In edl
                     Where e.DepartmentID = Department Or
-                      tca.ReportsToList.Contains(e.EmployeeID)).ToList
+                      tca.ReportsToList.Contains(e.EmployeeID)
+                    Select e).ToList
       Else
         jnr.Data = (From e In edl
                     Where tca.ReportsToList.Contains(e.EmployeeID)
@@ -176,7 +184,10 @@ Namespace Controllers
       jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
       Dim il As List(Of Integer) = Get_Valid_Reports_To_Users()
       If tca.CanChangeAccess Then
-        jnr.Data = (From e In edl Where il.Contains(e.EmployeeID) Or e.EmployeeID = tca.EmployeeID).ToList
+        jnr.Data = (From e In edl
+                    Where il.Contains(e.EmployeeID) Or
+                      e.EmployeeID = tca.EmployeeID
+                    Select e).ToList
       Else
         jnr.Data = New List(Of String)
       End If
@@ -343,58 +354,6 @@ Namespace Controllers
 
         End Select
 
-        'If myEID = AD.EmployeeID Then ' They are trying to initial approve their own timecard
-        '    If Compare_WorkTypeLists(AD.EmployeeID, AD.ViewPayPeriodEnding, AD.WorkTypeList) Then
-        '        Dim Approval As Integer = 1
-        '        If Not myTca.RequiresApproval Then Approval = 3
-        '        ' Add Approval
-        '        If Not Check_if_Already_Approved(AD.EmployeeID, AD.ViewPayPeriodEnding, Approval) Then
-        '            If Approve_Payperiod(Request, AD.EmployeeID, AD.ViewPayPeriodEnding, Approval) Then
-        '                AD.Save_Note(AD.EmployeeID, AD.ViewPayPeriodEnding, Approval, Request.LogonUserIdentity.Name)
-
-        '                jnr.Data = "Success"
-        '            Else
-        '                jnr.Data = "Error: An unknown error occurred.  Please try again and submit a helpdesk ticket if this error persists."
-        '            End If
-        '        Else
-        '            jnr.Data = "Error: Already approved."
-        '        End If
-
-        '    Else
-        '        jnr.Data = "Error: Hours have changed, please refresh and try again."
-        '    End If
-        'Else
-        '    If approvalType = 2 And (myEID = AD.EmployeeID Or myEID = AD.Initial_Approval_By_EmployeeID) Then
-        '        ' You can't approve your own final approval
-        '        jnr.Data = "Error: You can't approve your own time or time you have initially approved in this manner."
-
-        '    ElseIf Not Check_Access_To_EmployeeId(myEID, AD.EmployeeID) Then
-        '        jnr.Data = "Error: Unauthorized"
-
-        '    Else
-        '        ' All of the fields I'll need for the approval
-        '        If Compare_WorkTypeLists(AD.EmployeeID, AD.ViewPayPeriodEnding, AD.WorkTypeList) Then
-
-        '            ' Add Approval 
-        '            If Not Check_if_Already_Approved(AD.EmployeeID, AD.ViewPayPeriodEnding, approvalType) Then
-        '                If Approve_Payperiod(Request, AD.EmployeeID, AD.ViewPayPeriodEnding, approvalType) Then
-        '                    AD.Save_Note(AD.EmployeeID, AD.ViewPayPeriodEnding, approvalType, Request.LogonUserIdentity.Name)
-
-        '                    jnr.Data = "Success"
-        '                Else
-        '                    jnr.Data = "Error: An unknown error occurred.  Please try again and submit a helpdesk ticket if this error persists."
-        '                End If
-        '            Else
-        '                jnr.Data = "Error: Already approved."
-        '            End If
-
-        '        Else
-        '            jnr.Data = "Error: Hours have changed, please refresh and try again."
-        '        End If
-
-        '    End If
-
-        'End If
       End If
       Return jnr
     End Function

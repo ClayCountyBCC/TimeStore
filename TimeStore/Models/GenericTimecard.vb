@@ -100,7 +100,7 @@
     End Property
     Public ReadOnly Property isPubWorks As Boolean
       Get
-        Return department = "3701" Or employeeID = "2605"
+        Return department = "3701"
       End Get
     End Property
     Property employeeID As String
@@ -195,6 +195,30 @@
     Public ReadOnly Property IsLeaveApproved As Boolean
       Get
         Return ((From t In RawTCTD Where t.IsApproved = False Select t).Count = 0)
+      End Get
+    End Property
+
+    Public ReadOnly Property DisasterName_Display As String
+      Get
+        Try
+          If RawTCTD.Count > 0 Then
+            Return (From t In RawTCTD
+                    Where t.DisasterName.Length > 0
+                    Select t.DisasterName).First
+          Else
+            Dim disasters As List(Of Disaster) = myCache.GetItem("disasterdates")
+            Dim foundList As List(Of String) = (From d In disasters
+                                                Where payPeriodStart >= d.Disaster_Start And
+                                              payPeriodStart <= d.Disaster_End
+                                                Select d.Name).ToList
+            If foundList.Count > 0 Then Return foundList.First
+            Return ""
+          End If
+        Catch ex As Exception
+          Dim e As New ErrorLog(ex, "ruh roh")
+          Return ""
+        End Try
+
       End Get
     End Property
 

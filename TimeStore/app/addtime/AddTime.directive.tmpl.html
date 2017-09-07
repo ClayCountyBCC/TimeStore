@@ -93,9 +93,99 @@
             </md-select>
           </md-input-container>
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
-          <hours-display ng-hide="timecard.isPubWorks" tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
+          <div ng-if="timecard.DisasterName_Display.length > 0 && TCTD.WorkHours.value > 0 && isCurrentPPD"
+               layout="row"
+               layout-wrap
+               layout-padding
+               flex="100">
+            <md-input-container class="md-input-has-value"
+                                flex="100">
+              <label>Are any of the hours worked related to {{ timecard.DisasterName_Display }}?</label>
+              <md-radio-group ng-change="DisasterHoursChoice()"
+                              flex="100"
+                              layout="row"
+                              layout-align="space-around center"
+                              ng-model="$parent.DisasterHoursRelated"
+                              class="smaller">
+                <md-radio-button ng-value="true" aria-label="Yes">
+                  Yes
+                </md-radio-button>
+                <md-radio-button ng-value="false" aria-label="No">
+                  No
+                </md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+            <p ng-if="disasterChoiceError.length > 0"
+               flex="100"
+               layout="row"               
+               class="warn">
+              {{ disasterChoiceError }}
+            </p>
+          </div>
+        </div>
 
+      </div>
+    </div>
+
+    <div ng-show="isCurrentPPD">
+      <div ng-click="Toggle_DisasterHours()"
+           style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
+           flex="100"
+           class="short-toolbar my-primary"
+           layout="row"
+           layout-align="start center">
+        <span flex="5"></span>
+        <h5>
+          Show / Hide -- Disaster hours worked related to {{ timecard.DisasterName_Display }}
+        </h5>
+      </div>
+
+      <div ng-show="showDisaster"
+           style="margin-top: .5em;"
+           layout="row"
+           layout-align="center center"
+           layout-wrap
+           flex="100">
+
+        <md-input-container flex="40">
+          <label>Disaster Hours Worked</label>
+          <md-select md-on-close="calculateTotalHours()"
+                     flex="100"
+                     multiple
+                     ng-model="TCTD.disasterSelectedTimes"
+                     placeholder="Disaster Hours Worked"
+                     class="bigpaddingbottom">
+            <md-option ng-repeat="t in fullTimeList track by t.index"
+                       ng-value="t.index">
+              <span class="md-text">
+                {{t.display}}
+              </span>
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <div layout="column"
+             layout-align="center center"
+             layout-gt-md="row"
+             layout-align-gt-md="space-around center"
+             layout-wrap
+             flex="55">
+
+          <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
+        </div>
+        <div layout-padding
+             layout="row"
+             layout-wrap
+             flex="100">
+          <p ng-if="disasterTimeError.length > 0"
+             flex="100"
+             layout="row"
+             class="warn">
+            {{ disasterTimeError }}
+          </p>
+          <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
+          <p>You must enter a comment indicating your duties relating to the disaster.</p>
         </div>
       </div>
     </div>
@@ -122,7 +212,6 @@
         </md-checkbox>
       </span>
     </div>
-
 
 
       <div ng-show="TCTD.showOnCall"
@@ -307,7 +396,7 @@
             </md-icon>
             Add a Comment for this day
           </label>
-          <input ng-model-options="{ debounce: 750 }"
+          <input ng-model-options="{ debounce: 1500 }"
                  ng-model="TCTD.Comment"
                  name="comment"
                  ng-change="calculateTotalHours()"

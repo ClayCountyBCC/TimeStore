@@ -89,6 +89,8 @@ Namespace Models
           Return PopulatePayCodes()
         Case "ltrorder"
           Return PopulateltrOrder()
+        Case "disasterdates"
+          Return Disaster.GetDisasters()
         Case Else
           Return Nothing
       End Select

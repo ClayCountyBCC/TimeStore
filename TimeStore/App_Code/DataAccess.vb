@@ -308,50 +308,6 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  'Private Function GetWorkHoursDataFromTimeStore(Startdate As Date, Optional EmployeeID As Integer = 0, Optional EndDate? As Date = Nothing) As List(Of Saved_TimeStore_Data)
-  '  'If Username.Length > 0 Then EmployeeID = GetEmployeeIDFromAD(Username)
-  '  ' This gets the current pay period start for the start date passed.  So you can pass today's date and it'll get the 
-  '  ' current pay period, or if you want to be specific you can pass a specific pay period start date.
-  '  Startdate = GetPayPeriodStart(Startdate)
-  '  Dim sbQueryWorkHours As New StringBuilder
-  '  Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-  '  With sbQueryWorkHours
-  '    .AppendLine("USE TimeStore;")
-  '    .Append("DECLARE @Start DATETIME = '").Append(Startdate.ToShortDateString).Append("';")
-  '    If EndDate.HasValue Then
-  '      .Append("DECLARE @End DATETIME = '").Append(EndDate.Value.ToShortDateString).Append("';")
-  '    Else
-  '      .AppendLine("DECLARE @End DATETIME = DATEADD(dd, 13, @Start);")
-  '    End If
-  '    .Append("SELECT work_hours_id,employee_id,dept_id,pay_period_ending,work_date,")
-  '    .Append("work_times,break_credit,work_hours,holiday,leave_without_pay,total_hours,")
-  '    .Append("vehicle,comment,date_added,date_last_updated,by_employeeid,by_username")
-  '    .Append(",by_machinename,by_ip_address,doubletime_hours ")
-  '    .Append("FROM Work_Hours ")
-  '    .AppendLine("WHERE work_date BETWEEN @Start AND @End ")
-  '    If EmployeeID > 0 Then .Append("AND employee_id='").Append(EmployeeID).AppendLine("'")
-  '    .AppendLine("ORDER BY work_date ASC, employee_id ASC")
-  '  End With
-  '  Try
-  '    'GetHoursToApproveDataFromTimeStore(Startdate, EmployeeID, EndDate)
-  '    Dim stdtaList As List(Of Saved_TimeStore_Data_To_Approve) =
-  '      Saved_TimeStore_Data_To_Approve.GetAllPayPeriodData(Startdate)
-  '    Dim STDL As New List(Of Saved_TimeStore_Data)
-  '    Dim ds As DataSet = dbc.Get_Dataset(sbQueryWorkHours.ToString)
-  '    For Each d In ds.Tables(0).Rows
-  '      Dim std As New Saved_TimeStore_Data(d)
-  '      std.HoursToApprove.AddRange((From s In stdtaList Where s.work_hours_id = std.work_hours_id).ToList)
-  '      STDL.Add(std)
-  '    Next
-  '    Return STDL
-  '  Catch ex As Exception
-  '    Log(ex)
-  '    Return Nothing
-  '  End Try
-  'End Function
-
-
-
   Public Function GetTimeStoreAccess(EmployeeID As Integer) As DataSet
     ' This function gets the Employee's Access from the Timestore database - Access table.  The data is converted into 
     ' a TCA object.
@@ -739,126 +695,6 @@ Public Module ModuleDataAccess
       Return Nothing
     End Try
   End Function
-
-  'Public Function GetPublicSafetyEmployeeData_EPP(StartDate As Date) As List(Of EPP)
-  '    Dim Depts As New List(Of String)
-  '    Depts.Add("2103")
-  '    Depts.Add("2102")
-  '    Depts.Add("1703")
-  '    Dim fin As List(Of FinanceData) = GetEmployeeDataFromFinPlus(StartDate, Depts)
-  '    Dim tl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(StartDate)
-  '    'Dim tlgroups = (From t In tl Group By t.EmployeeId, t.ProfileType, t.PayRate, t.FLSAHoursRequirement Into g = Group)
-  '    Dim newepp As New List(Of EPP)
-  '    For Each f In fin
-  '        'Dim fd = (From f In fin Where f.EmployeeId = t.EmployeeId Select f).First
-  '        Dim ttd = (From t In tl Where t.EmployeeId = f.EmployeeId Select t).ToList
-  '        If ttd.Count > 0 Then
-  '            Dim e As New EPP(ttd, f, StartDate) ', t.ProfileID, t.ProfileDesc)
-  '            newepp.Add(e)
-  '        End If
-  '    Next
-  '    newepp.RemoveAll(Function(x) x.Timelist.Count = 0)
-  '    Return newepp.OrderBy(Function(x) x.EmployeeData.Department).ToList
-  'End Function
-
-  'Private Function GetEmployeePayPeriodByDataRow(dr As DataRow) As FinanceData
-  '    Dim x As New FinanceData
-  '    Try
-  '        With x
-  '            .EmployeeId = dr("empl_no")
-  '            .EmployeeLastName = dr("l_name").ToString.Trim
-  '            .EmployeeFirstName = dr("f_name").ToString.Trim
-  '            .EmployeeName = .EmployeeFirstName & " " & .EmployeeLastName
-  '            .EmployeeType = IsNull(dr("empl_type"), "")
-  '            .HireDate = dr("hire_date")
-  '            .JobTitle = dr("title").ToString.Trim
-  '            .Department = dr("department").ToString.Trim
-  '            .HoursNeededForOvertime = dr("pay_hours")
-  '            .Base_Payrate = dr("rate")
-  '            .Banked_Holiday_Hours = 0
-  '            .Banked_Comp_Hours = 0
-  '            .Classify = dr("classify").ToString.Trim
-  '            .DepartmentName = dr("department_name").ToString.Trim
-  '            .isFulltime = (dr("part_time").ToString.Trim = "F")
-  '            If Not IsDBNull(dr("term_date")) Then
-  '                .TerminationDate = dr("term_date")
-  '            End If
-  '            Select Case IsNull(dr("lv5_cd"), "").ToString.Trim
-  '                Case "500" ' Comp time bank
-  '                    .Banked_Comp_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
-  '                Case "510" ' Holiday Bank
-  '                    .Banked_Holiday_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
-  '                Case Else
-  '            End Select
-  '            .Banked_Vacation_Hours = IsNull(dr("lv2_bal"), Double.MinValue)
-  '            .Banked_Sick_Hours = IsNull(dr("lv1_bal"), Double.MinValue)
-  '        End With
-  '        Return x
-  '    Catch ex As Exception
-  '        Log(ex)
-  '        Return Nothing
-  '    End Try
-  'End Function
-
-  'Private Function GetEmployeePayPeriodByDataRow(dr As DataRow, StartDate As Date, TimeBank As DataSet) As FinanceData
-  '    Dim x As New FinanceData
-  '    Try
-  '        With x
-  '            ' Basically this version of the function is for older data when we know that the data that's in pentamation is out of date
-  '            ' we try and load the data from the Timestore database. 
-  '            .EmployeeId = dr("empl_no")
-  '            Dim t As DataRow = Nothing
-  '            If (From tb In TimeBank.Tables(0).AsEnumerable() Where tb("employee_number") = .EmployeeId Select tb).Count > 0 Then
-  '                t = (From tb In TimeBank.Tables(0).AsEnumerable() Where tb("employee_number") = .EmployeeId Select tb).First
-  '            Else
-  '                t = Nothing
-  '            End If
-  '            .EmployeeLastName = dr("l_name").ToString.Trim
-  '            .EmployeeFirstName = dr("f_name").ToString.Trim
-  '            .EmployeeName = .EmployeeFirstName & " " & .EmployeeLastName
-  '            .EmployeeType = IsNull(dr("empl_type"), "")
-  '            .HireDate = dr("hire_date")
-  '            .JobTitle = dr("title").ToString.Trim
-  '            .Department = dr("department").ToString.Trim
-  '            .HoursNeededForOvertime = dr("pay_hours")
-  '            '.PayPeriodStart = StartDate
-  '            .Base_Payrate = dr("rate")
-  '            .Banked_Holiday_Hours = 0
-  '            .Banked_Comp_Hours = 0
-  '            .Classify = dr("classify").ToString.Trim
-  '            .DepartmentName = dr("department_name").ToString.Trim
-  '            .isFulltime = (dr("part_time").ToString.Trim = "F")
-  '            If Not IsDBNull(dr("term_date")) Then
-  '                .TerminationDate = dr("term_date")
-  '            End If
-  '            If Not t Is Nothing Then ' If we find it, use it.
-  '                Select Case IsNull(t("lv5_code"), "").ToString.Trim
-  '                    Case "500" ' Comp time bank
-  '                        .Banked_Comp_Hours = IsNull(t("lv5_balance"), Double.MinValue)
-  '                    Case "510" ' Holiday Bank
-  '                        .Banked_Holiday_Hours = IsNull(t("lv5_balance"), Double.MinValue)
-  '                    Case Else
-  '                End Select
-  '                .Banked_Vacation_Hours = IsNull(t("lv2_balance"), Double.MinValue)
-  '                .Banked_Sick_Hours = IsNull(t("lv1_balance"), Double.MinValue)
-  '            Else
-  '                Select Case IsNull(dr("lv5_cd"), "").ToString.Trim
-  '                    Case "500" ' Comp time bank
-  '                        .Banked_Comp_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
-  '                    Case "510" ' Holiday Bank
-  '                        .Banked_Holiday_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
-  '                    Case Else
-  '                End Select
-  '                .Banked_Vacation_Hours = IsNull(dr("lv2_bal"), Double.MinValue)
-  '                .Banked_Sick_Hours = IsNull(dr("lv1_bal"), Double.MinValue)
-  '            End If
-  '        End With
-  '        Return x
-  '    Catch ex As Exception
-  '        Log(ex)
-  '        Return Nothing
-  '    End Try
-  'End Function
 
   Public Function Approve_Payperiod(ByRef Req As System.Web.HttpRequestBase, EmployeeId As Integer,
                                     PayPeriodEnding As Date, ApprovalType As String) As Boolean
@@ -2039,8 +1875,10 @@ Public Module ModuleDataAccess
     Dim P() As SqlParameter = {
         New SqlParameter("@DeptID", Data.SqlDbType.VarChar, 16) With {.Value = t.DepartmentNumber},
         New SqlParameter("@WorkTimes", Data.SqlDbType.VarChar, 500) With {.Value = t.WorkTimes},
-        New SqlParameter("@BreakCredit", Data.SqlDbType.Float) With {.Value = t.BreakCreditHours},
         New SqlParameter("@WorkHours", Data.SqlDbType.Float) With {.Value = t.WorkHours},
+        New SqlParameter("@DisasterWorkTimes", Data.SqlDbType.VarChar, 500) With {.Value = t.DisasterWorkTimes},
+        New SqlParameter("@DisasterWorkHours", Data.SqlDbType.Float) With {.Value = t.DisasterWorkHours},
+        New SqlParameter("@BreakCredit", Data.SqlDbType.Float) With {.Value = t.BreakCreditHours},
         New SqlParameter("@HolidayHours", Data.SqlDbType.Float) With {.Value = t.HolidayHours},
         New SqlParameter("@DoubleTimeHours", Data.SqlDbType.Float) With {.Value = t.DoubleTimeHours},
         New SqlParameter("@LWOPHours", Data.SqlDbType.Float) With {.Value = t.LWOPHours},
@@ -2056,6 +1894,7 @@ Public Module ModuleDataAccess
     With sbQ
       .AppendLine("USE TimeStore;")
       .AppendLine("UPDATE Work_Hours SET dept_id=@DeptID, work_times=@WorkTimes,")
+      .AppendLine("disaster_work_hours=@DisasterWorkHours, disaster_work_times=@DisasterWorkTimes, ")
       .AppendLine("break_credit=@BreakCredit,work_hours=@WorkHours,holiday=@HolidayHours,")
       .AppendLine("leave_without_pay=@LWOPHours,total_hours=@TotalHours,vehicle=@Vehicle,")
       .AppendLine("comment=@Comment,by_employeeid=@ByEmployeeID,by_username=@ByUsername,")
@@ -2085,8 +1924,10 @@ Public Module ModuleDataAccess
         New SqlParameter("@DeptID", Data.SqlDbType.VarChar, 16) With {.Value = t.DepartmentNumber},
         New SqlParameter("@WorkDate", Data.SqlDbType.Date) With {.Value = t.WorkDate},
         New SqlParameter("@WorkTimes", Data.SqlDbType.VarChar, 500) With {.Value = t.WorkTimes},
-        New SqlParameter("@BreakCredit", Data.SqlDbType.Float) With {.Value = t.BreakCreditHours},
         New SqlParameter("@WorkHours", Data.SqlDbType.Float) With {.Value = t.WorkHours},
+        New SqlParameter("@DisasterWorkTimes", Data.SqlDbType.VarChar, 500) With {.Value = t.DisasterWorkTimes},
+        New SqlParameter("@DisasterWorkHours", Data.SqlDbType.Float) With {.Value = t.DisasterWorkHours},
+        New SqlParameter("@BreakCredit", Data.SqlDbType.Float) With {.Value = t.BreakCreditHours},
         New SqlParameter("@HolidayHours", Data.SqlDbType.Float) With {.Value = t.HolidayHours},
         New SqlParameter("@DoubleTimeHours", Data.SqlDbType.Float) With {.Value = t.DoubleTimeHours},
         New SqlParameter("@LWOPHours", Data.SqlDbType.Float) With {.Value = t.LWOPHours},
@@ -2108,11 +1949,11 @@ Public Module ModuleDataAccess
       .AppendLine("ELSE")
       .AppendLine("BEGIN")
       .AppendLine("INSERT INTO Work_Hours (employee_id,dept_id,pay_period_ending,work_date,work_times")
-      .AppendLine(",break_credit,work_hours,holiday,leave_without_pay,total_hours,vehicle,comment")
+      .AppendLine(",break_credit,work_hours, disaster_work_hours, disaster_work_times, holiday,leave_without_pay,total_hours,vehicle,comment")
       .AppendLine(",by_employeeid, by_username, by_machinename, by_ip_address, doubletime_hours) ")
       .AppendLine("OUTPUT INSERTED.work_hours_id ")
       .AppendLine("VALUES (@EmployeeId, @DeptID, @PayPeriodEnding, @WorkDate, @WorkTimes ")
-      .AppendLine(", @BreakCredit, @WorkHours, @HolidayHours, @LWOPHours, @TotalHours, @Vehicle, @Comment")
+      .AppendLine(", @BreakCredit, @WorkHours, @DisasterWorkHours, @DisasterWorkTimes, @HolidayHours, @LWOPHours, @TotalHours, @Vehicle, @Comment")
       .AppendLine(", @ByEmployeeID, @ByUsername, @ByMachinename, @ByIpAddress, @DoubleTimeHours);")
       .AppendLine("END")
     End With

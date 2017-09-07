@@ -182,6 +182,7 @@
     End Function
 
     Public Function Validate() As Boolean
+      If DisasterWorkTimes Is Nothing Then DisasterWorkTimes = ""
       If Comment Is Nothing Then Comment = ""
       If WorkTimes Is Nothing Then WorkTimes = ""
       If OnCallWorkTimes Is Nothing Then OnCallWorkTimes = ""
@@ -196,100 +197,104 @@
       Return True
     End Function
 
-    Public Function Save(tca As Timecard_Access) As Boolean
+    '    Public Function Save(tca As Timecard_Access) As Boolean
 
 
-      ' here's what this process is going to do:
-      'User chooses to save record
-      'check If work record exists
-      Dim existing = To_Saved_TimeStore_Data()
-      'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-      'Dim existing = Get_Saved_Timestore_Data_by_Date(T.EmployeeID, T.WorkDate)
+    '      ' here's what this process is going to do:
+    '      'User chooses to save record
+    '      'check If work record exists
+    '      Dim existing = To_Saved_TimeStore_Data()
+    '      'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+    '      'Dim existing = Get_Saved_Timestore_Data_by_Date(T.EmployeeID, T.WorkDate)
 
-      If existing.employee_id = 0 Then ' record does Not exist
+    '      If existing.employee_id = 0 Then ' record does Not exist
 
-        Dim workID As Long = Save_Timestore_Data(Me, tca) '   Insert New work record, return work record ID
-        If Save_Hours_To_Approve(Me, workID, tca) Then
-          ' If this user's leave doesn't require approval, let's go ahead and approve everything.
-          If Not tca.RequiresApproval Then
-            existing = To_Saved_TimeStore_Data()
-            'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-            For Each hta In existing.HoursToApprove
-              Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
-            Next
-          Else
-            'let's remove any current approvals.
-            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed.")
-            End If
-          End If
-          Return True
-        Else
-          Return False
-        End If
-
-
-        ' 8/26/2015 Going to skip the auto approving.
-        '   check person saving rows' approval level (Check Authority)
-        '       If they Then have the authority To "pre-approve" the time
-        '		    insert the hours into the hours To approve table Using the work record id, capturing the ID inserted.
-        '           Use the returned ID to save the approval data for each hours to add the rows to approve record.
-
-        '       If they do not have the authority to pre-approve
-        '           insert the hours into the hours to approve table using the work record id
-
-      Else ' record exists
-
-        If Not Update_Timestore_Work_Data(T, tca, existing) Then Return False
-
-        Select Case Update_Hours_To_Approve(T, tca, existing)
-          Case 5 ' data was updated and everything was good.
-            'let's remove any current approvals.
-            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. **")
-            End If
-          Case 2 ' data wasn't updated but it completed normally
-            If Not Compare_Existing_To_Current(existing, T) Then
-              Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-              If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-                Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. *")
-              End If
-            End If
-          Case 1 ' data was updated but there was an error
-            Return False
-          Case -1 ' error
-            Return False
-        End Select
-        If Not tca.RequiresApproval Then
-          existing = T.To_Saved_TimeStore_Data
-          'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-          For Each hta In existing.HoursToApprove
-            If Not hta.is_approved Then Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
-          Next
-        End If
-        Return True
-
-        '   Return ID Of existing data
-        '       get list of hours to approve rows with that ID
-        '       get list of approvals that match those IDs
-        '       if the hours to approve are already approved and the new hours are greater than the hours approved
-        '           then remove the approval.
-        '       update work record with New data (ID stays the same), update date_last_updated with current date/time
-        '       Loop through each Hours to approve row And update the used_hours And worktimes field to match the current saved value, unless it Is denied, then enforce it to zero.
-
-        '       insert any New hours to approve that were Not present
-
-      End If
+    '        Dim workID As Long = Save_Timestore_Data(Me, tca) '   Insert New work record, return work record ID
+    '        If Save_Hours_To_Approve(Me, workID, tca) Then
+    '          ' If this user's leave doesn't require approval, let's go ahead and approve everything.
+    '          If Not tca.RequiresApproval Then
+    '            existing = To_Saved_TimeStore_Data()
+    '            'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+    '            For Each hta In existing.HoursToApprove
+    '              Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
+    '            Next
+    '          Else
+    '            'let's remove any current approvals.
+    '            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+    '            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+    '              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed.")
+    '            End If
+    '          End If
+    '          Return True
+    '        Else
+    '          Return False
+    '        End If
 
 
+    '        ' 8/26/2015 Going to skip the auto approving.
+    '        '   check person saving rows' approval level (Check Authority)
+    '        '       If they Then have the authority To "pre-approve" the time
+    '        '		    insert the hours into the hours To approve table Using the work record id, capturing the ID inserted.
+    '        '           Use the returned ID to save the approval data for each hours to add the rows to approve record.
+
+    '        '       If they do not have the authority to pre-approve
+    '        '           insert the hours into the hours to approve table using the work record id
+
+    '      Else ' record exists
+
+    '        If Not Update_Timestore_Work_Data(T, tca, existing) Then Return False
+
+    '        Select Case Update_Hours_To_Approve(T, tca, existing)
+    '          Case 5 ' data was updated and everything was good.
+    '            'let's remove any current approvals.
+    '            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+    '            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+    '              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. **")
+    '            End If
+    '          Case 2 ' data wasn't updated but it completed normally
+    '            If Not Compare_Existing_To_Current(existing, T) Then
+    '              Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
+    '              If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
+    '                Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. *")
+    '              End If
+    '            End If
+    '          Case 1 ' data was updated but there was an error
+    '            Return False
+    '          Case -1 ' error
+    '            Return False
+    '        End Select
+    '        If Not tca.RequiresApproval Then
+    '          existing = T.To_Saved_TimeStore_Data
+    '          'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
+    '          For Each hta In existing.HoursToApprove
+    '            If Not hta.is_approved Then Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
+    '          Next
+    '        End If
+    '        Return True
+
+    '        '   Return ID Of existing data
+    '        '       get list of hours to approve rows with that ID
+    '        '       get list of approvals that match those IDs
+    '        '       if the hours to approve are already approved and the new hours are greater than the hours approved
+    '        '           then remove the approval.
+    '        '       update work record with New data (ID stays the same), update date_last_updated with current date/time
+    '        '       Loop through each Hours to approve row And update the used_hours And worktimes field to match the current saved value, unless it Is denied, then enforce it to zero.
+
+    '        '       insert any New hours to approve that were Not present
+
+    '      End If
 
 
-    End Function
 
-    Private Function SaveWorkData(tca As Timecard_Access)
 
-    End Function
+    '    End Function
+
+    '    Private Function SaveWorkData(tca As Timecard_Access)
+    '      Dim query As String = "
+
+
+    '"
+
+    '    End Function
   End Class
 End Namespace

@@ -49436,6 +49436,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         }
         LoadLunchTime(tctd);
+        console.log('tctd', tctd);
         return tctd;
       }
 
@@ -49466,6 +49467,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
+        tctd.DisasterName = rawtctd.DisasterName;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -49475,7 +49477,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         processTimecardWorkTimes(
           tctd,
           rawtctd.WorkTimes,
-          rawtctd.OnCallWorkTimes
+          rawtctd.OnCallWorkTimes,
+          rawtctd.DisasterWorkTimes
         );
       }
 
@@ -49483,6 +49486,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         var hours = [
           "WorkHours",
+          "DisasterWorkHours",
           "BreakCreditHours",
           "HolidayHours",
           "VacationHours",
@@ -49530,7 +49534,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         );
       }
 
-      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime)
+      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime, disasterWorkTime)
       {
         var sT = [];
         var t = [];
@@ -49570,6 +49574,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           tctd.OnCallSelectedTimes = sT;
           tctd.OnCallSelectedTimesDisplay = OnCallWorkTime;
         }
+
+
+        if (disasterWorkTime.length === 0)
+        {
+          tctd.disasterWorkTimes = "";
+          tctd.disasterSelectedTimes = [];
+          tctd.disasterSelectedTimesDisplay = "";
+        } else
+        {
+          t = disasterWorkTime.split("-");
+          sT = [];
+          for (var ii = 0; ii < t.length; ii++)
+          {
+            sT.push(tl.indexOf(t[ii].trim()));
+          }
+          tctd.disasterWorkTimes = sT.join(" ");
+          tctd.disasterSelectedTimes = sT;
+          tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
+        }
+
+       
       }
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
@@ -49598,6 +49623,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkDate: workDate,
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
+          DisasterWorkTimes: "",
+          DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
           OnCallWorkHours: getDefaultHoursNoMax("On Call Hours Worked"),
@@ -49643,7 +49670,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           Vehicle: 0,
           errorText: "",
           selectedTimesDisplay: "",
-          selectedTimes: []
+          selectedTimes: [],
+          disasterSelectedTimesDisplay: "",
+          disasterSelectedTimes: []
         };
         return tctd;
       }
@@ -49656,6 +49685,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkDate: tctd.WorkDate,
           WorkTimes: tctd.selectedTimesDisplay,
           WorkHours: getValue(tctd.WorkHours.value),
+          DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
+          DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
           VacationHours: getValue(tctd.VacationHours.value),
@@ -49695,6 +49726,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         calcWorkHours(tctd, isExempt);
         calcOnCallHours(tctd);
+        calcDisasterWorkHours(tctd);
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminJuryDuty.value);
@@ -50141,6 +50173,58 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           //    }
           //}
         }
+      }
+
+      function calcDisasterWorkHours(tctd)
+      {
+        tctd.DisasterWorkHours.value = 0;
+        tctd.disasterSelectedTimesDisplay = "";
+        tctd.DisasterWorkTimes = "";        
+        if (tctd.disasterSelectedTimes === undefined)
+        {
+          return;
+        }
+        var times = tctd.disasterSelectedTimes;
+        tctd.disasterSelectedTimesDisplay = "";
+
+        var timeList = getTimeList();
+        if (times.length === 0)
+        {
+          return;
+        }
+        var timeDisplay = "";
+        var workHours = 0;
+        var st = times.sort(function (a, b)
+        {
+          return a - b;
+        });
+        var length = st.length - st.length % 2;
+        if (length > 1)
+        {
+          for (var i = 0; i < length; i += 2)
+          {
+            workHours += (st[i + 1] - st[i]) / 4;
+            if (timeDisplay.length > 0)
+            {
+              timeDisplay += " - ";
+            }
+            timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+          }
+        }
+        if (st.length % 2 === 1)
+        {
+          if (timeDisplay.length > 0)
+          {
+            timeDisplay += " - ";
+          }
+          timeDisplay += timeList[st[st.length - 1]];
+        }
+        tctd.DisasterWorkTimes = times.join(" ");
+        tctd.DisasterWorkHours.value = workHours;
+        console.log('d wt', tctd.DisasterWorkTimes);
+        console.log('d wh', tctd.DisasterWorkHours);
+        tctd.disasterSelectedTimesDisplay = timeDisplay;
+        
       }
 
       function handleBreakCredit(tctd)
@@ -51048,10 +51132,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.workDate
     ); 
     $scope.isCurrentPPD = isCurrentPayPeriod();
-
+    $scope.disasterChoiceError = "";
+    $scope.disasterTimeError = "";
+    //$scope.disasterHours = $scope.TCTD.DisasterWorkHours.value > 0 ? 'true' : null;
+    
     populateTimeLists();
     updateBanksUsed();
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
+    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;
+    $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
     checkForErrors();
 
     function populateTimeLists()
@@ -51146,6 +51235,66 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       }
     }
 
+    $scope.DisasterHoursChoice = function ()
+    {
+      $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
+      if ($scope.DisasterHoursRelated === false)
+      {
+        $scope.calculateTotalHours();
+      }
+    }
+
+    function validateDisasterHours()
+    {
+      console.log("tctd", $scope.TCTD);
+      $scope.disasterChoiceError = "";
+      $scope.disasterTimeError = "";
+      // we need to compare the times in DisasterWorkTimes and WorkTimes
+      // to ensure that they always overlap
+      if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
+      {
+        if ($scope.DisasterHoursRelated === null)
+        {
+          $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated.";
+          $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+          return;
+        }
+        var dst = $scope.TCTD.disasterSelectedTimes;
+        var wst = $scope.TCTD.selectedTimes;
+        var dLength = dst.length - dst.length % 2;
+        var wLength = wst.length - wst.length % 2;
+        for (var i = 0; i < dLength; i += 2)
+        {
+          var dStart = dst[i];
+          var dEnd = dst[i + 1];
+          var found = false;
+          for (var j = 0; j < wLength; j += 2)
+          {
+            var wStart = wst[j];
+            var wEnd = wst[j + 1];
+            var dStartGood = dStart >= wStart && dStart <= wEnd;
+            var dEndGood = dEnd >= wStart && dEnd <= wEnd;
+            found = (dStartGood && dEndGood);
+            if (dStartGood || dEndGood)
+            {
+              break;
+            }
+          }
+          if (!found)
+          {
+            $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
+            $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
+            return;
+          }
+        }
+        if ($scope.TCTD.DisasterWorkHours.value > 0 && $scope.TCTD.Comment.length === 0)
+        {
+          $scope.disasterTimeError = "You must enter a comment indicating your duties relating to the disaster.";
+          $scope.errorList.push("You must enter a comment indicating your duties relating to the disaster.");
+        }
+      }
+    }
+
     function checkForErrors()
     {
       $scope.errorList = [];
@@ -51155,6 +51304,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       checkHourValues();
       checkOnCallHours();
       updateBanksUsed();
+      validateDisasterHours();
       $scope.isCurrentPPD = isCurrentPayPeriod();
 
       // here we're going to do as much error handling as possible.
@@ -51164,7 +51314,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       // Let's make sure they aren't using more hours than they have banked.
       // These should be errors.
-      console.log("tctd", $scope.TCTD);
+      
       var hireDateCheck = addtimeFunctions.calculateWithinFirstNinetyDays(
         $scope.timecard.hireDate,
         $scope.TCTD.workDate
@@ -51351,19 +51501,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       }
     }
 
-    //function checkHourValues() {
-    //    var hourTypes = addtimeFunctions.getHourTypesList();
-    //    for (var i = 0; i < hourTypes.length; i++) {
-    //        var v = $scope.TCTD[hourTypes[i]].value;
-    //        if (v % .25 > 0) {
-    //            $scope.errorList.push('Invalid number of hours entered for ' + hourTypes[i] + '.  The hours must be rounded to the quarter hour.');
-    //        }
-    //        if (v !== '' && !angular.isNumber(v)) {
-    //            $scope.errorList.push('Invalid number of hours entered for ' + hourTypes[i] + '.');
-    //        }
-    //    }
-    //}
-
     function checkHourValues()
     {
       var hourTypes = addtimeFunctions.getHourTypesList();
@@ -51472,7 +51609,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.saveTCTD = function ()
     {
       var basetctd = addtimeFunctions.getBaseTCTD($scope.TCTD, $scope.timecard);
-      _.times(10, timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError));
+      console.log('basetctd', basetctd);
+      timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError);
     };
 
     function onTCTDSave(response)
@@ -51495,6 +51633,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.TCTD.showAdminHours = !$scope.TCTD.showAdminHours;
     };
 
+    $scope.Toggle_DisasterHours = function ()
+    {
+      console.log('showDisaster', $scope.showDisaster);
+      $scope.showDisaster = !$scope.showDisaster;
+      
+    };
+
     $scope.Toggle_OnCallHours = function ()
     {
       $scope.toggleOnCall = !$scope.toggleOnCall;
@@ -51509,6 +51654,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         $scope.timecard.exemptStatus === "Exempt"
       );
       checkForErrors();
+      console.log('lastcheck tctd', $scope.TCTD);
       if ($scope.errorList.length === 0)
       {
         $scope.saveTCTD();
@@ -52937,7 +53083,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           var e2 = parseInt(b['employeeID']);
           var d1 = new Date(a['payPeriodStart']);
           var d2 = new Date(b['payPeriodStart']);
-          return (e1 === e2) ? d1 - d2 : e1 - e2;
+          return e1 === e2 ? d1 - d2 : e1 - e2;
         });
         console.log('sorted', $scope.timeData);
         return;
@@ -52988,7 +53134,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     // pub works Grading cat b - not run yet.
     // [{"ppe": "10/18/2016", "employees": [1012,1028,1074,1079,1159,1167]}]
     // pub works Misc
-    // [{"ppe": "10/4/2016", "employees": [1569]}, {"ppe": "10/18/2016", "employees": [1030,1063,1075,1080,1097,1117,1121,1124,1125,1140,1168,1191,1212,1245,1328,1337,1389,1414,1445,1460,1480,1569,1759,1892,1978,2018,2022,2057,2127,2216,2220,2515,2516,2551,2619,2677,2681,2703,2714,2735,2737,2747,2754,2791]}, {"ppe": "11/1/2016", "employees": [1245,1369,1863,2266,2515,2551,2604,2641,2703,2761]}, {"ppe": "11/15/2016", "employees": [2604]}]
+    // [{"ppe": "10/4/2016", "employees": [1569]}, {"ppe": "10/18/2016", "employees": [1030,1063,1075,1080,1097,1117,1121,1124,1125,1140,1168,1191,1212,1245,1328,1337,1389,1414,1445,1460,1480,1569,1759,1892,1978,2018,2022,2057,2127,2216,2220,2515,2516,2551,2619,2677,2681,2703,2714,2735,2737,2747,2754,2791]}, {"ppe": "11/1/2016", "employees": [1245,1369,1863,2266,2515,2551,2604,2641,2703,2761]}, {"ppe": "11/15/2016", "employees": [ 2604 ]}]
     // pub works signs 
     // [{"ppe": "10/18/2016", "employees": [1066,1306,1449,1707,1759,2010,2262,2674]}]
     // Cat B Preliminary Timestore data
