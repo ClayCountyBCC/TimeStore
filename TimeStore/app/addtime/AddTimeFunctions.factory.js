@@ -154,6 +154,7 @@
           "CompTimeUsed",
           "AdminHours",
           "AdminBereavement",
+          "AdminDisaster",
           "AdminWorkersComp",
           "AdminJuryDuty",
           "AdminMilitaryLeave",
@@ -184,6 +185,7 @@
       {
         return (
           rawtctd.AdminBereavement +
+          rawtctd.AdminDisaster +
           rawtctd.AdminHours +
           rawtctd.AdminJuryDuty +
           rawtctd.AdminMilitaryLeave +
@@ -197,6 +199,7 @@
         var sT = [];
         var t = [];
         var tl = getTimeList();
+        var ii = 0;
         if (workTime.length === 0)
         {
           tctd.WorkTimes = "";
@@ -224,7 +227,7 @@
         {
           t = OnCallWorkTime.split("-");
           sT = [];
-          for (var ii = 0; ii < t.length; ii++)
+          for (ii = 0; ii < t.length; ii++)
           {
             sT.push(tl.indexOf(t[ii].trim()));
           }
@@ -243,7 +246,7 @@
         {
           t = disasterWorkTime.split("-");
           sT = [];
-          for (var ii = 0; ii < t.length; ii++)
+          for (ii = 0; ii < t.length; ii++)
           {
             sT.push(tl.indexOf(t[ii].trim()));
           }
@@ -314,6 +317,7 @@
           AdminHours: getDefaultHours("Admin - Total", true), // meant to be a total for the other Admin hours.
           AdminOther: getDefaultHours("Other Admin"),
           AdminBereavement: getDefaultHours("Bereavement"),
+          AdminDisaster: getDefaultHours("Disaster"),
           AdminJuryDuty: getDefaultHours("Jury Duty"),
           AdminMilitaryLeave: getDefaultHours("Military Leave"),
           AdminWorkersComp: getDefaultHours("Worker's Comp"),
@@ -357,6 +361,7 @@
           showAdminHours: false,
           AdminHours: getValue(tctd.AdminHours.value),
           AdminBereavement: getValue(tctd.AdminBereavement.value),
+          AdminDisaster: getValue(tctd.AdminDisaster.value),
           AdminWorkersComp: getValue(tctd.AdminWorkersComp.value),
           AdminJuryDuty: getValue(tctd.AdminJuryDuty.value),
           AdminMilitaryLeave: getValue(tctd.AdminMilitaryLeave.value),
@@ -387,6 +392,7 @@
         calcDisasterWorkHours(tctd);
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
+        th += getValue(tctd.AdminDisaster.value);
         th += getValue(tctd.AdminJuryDuty.value);
         th += getValue(tctd.AdminMilitaryLeave.value);
         th += getValue(tctd.AdminWorkersComp.value);
@@ -933,6 +939,7 @@
         hourTypes.push("CompTimeUsed");
         hourTypes.push("AdminOther");
         hourTypes.push("AdminBereavement");
+        hourTypes.push("AdminDisaster");
         hourTypes.push("AdminJuryDuty");
         hourTypes.push("AdminMilitaryLeave");
         hourTypes.push("AdminWorkersComp");

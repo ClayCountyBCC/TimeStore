@@ -35,6 +35,7 @@
     Property CompTimeUsed As Double = 0
     Property Admin As Double = 0
     Property AdminBereavement As Double = 0
+    Property AdminDisaster As Double = 0
     Property AdminWorkersComp As Double = 0
     Property AdminJuryDuty As Double = 0
     Property AdminMilitaryLeave As Double = 0
@@ -80,6 +81,7 @@
 
       Admin = tctd.AdminHours ' This needs to be broken out into the ones below:
       AdminBereavement = tctd.AdminBereavement
+      AdminDisaster = tctd.AdminDisaster
       AdminJuryDuty = tctd.AdminJuryDuty
       AdminMilitaryLeave = tctd.AdminMilitaryLeave
       AdminWorkersComp = tctd.AdminWorkersComp

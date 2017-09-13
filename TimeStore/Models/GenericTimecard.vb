@@ -1254,6 +1254,7 @@
       End If
       timeList.Add(New WorkType("Admin", e.Admin(0), 0, "002"))
       timeList.Add(New WorkType("Admin Bereavement", e.Admin_Bereavement(0), 0, "002"))
+      timeList.Add(New WorkType("Admin Disaster", e.Admin_Disaster(0), 0, "002"))
       timeList.Add(New WorkType("Admin Jury Duty", e.Admin_JuryDuty(0), 0, "002"))
       timeList.Add(New WorkType("Admin Military Leave", e.Admin_MilitaryLeave(0), 0, "002"))
       timeList.Add(New WorkType("Admin Worker's Comp", e.Admin_WorkersComp(0), 0, "002"))
@@ -1395,9 +1396,9 @@
       If tctd.CompTimeEarned > 0 Then wcl.Add(New WorkType("Comp Time Earned", tctd.CompTimeEarned, 5, ""))
       If tctd.CompTimeUsed > 0 Then wcl.Add(New WorkType("Comp Time Used", tctd.CompTimeUsed, 6, ""))
       If tctd.DoubleTimeHours > 0 Then wcl.Add(New WorkType("Double Time", tctd.DoubleTimeHours, 7, ""))
-      Dim TotalAdmin As Double = tctd.AdminBereavement + tctd.AdminJuryDuty + tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminHours + tctd.AdminWorkersComp
+      Dim TotalAdmin As Double = tctd.AdminBereavement + tctd.AdminDisaster + tctd.AdminJuryDuty + tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminHours + tctd.AdminWorkersComp
       If TotalAdmin > 0 Then wcl.Add(New WorkType("Admin", TotalAdmin, 8, ""))
-      If tctd.AdminBereavement > 0 Then wcl.Add(New WorkType("Admin", tctd.AdminHours, 8, ""))
+      'If tctd.AdminBereavement > 0 Then wcl.Add(New WorkType("Admin", tctd.AdminHours, 8, ""))
       If tctd.OnCallTotalHours > 0 Then wcl.Add(New WorkType("Call Adjusted Hours", tctd.OnCallTotalHours, 9, ""))
       Check_Work_Types(wcl)
       Return wcl

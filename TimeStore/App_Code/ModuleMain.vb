@@ -600,6 +600,7 @@ Public Module ModuleMain
       .Add("SickLeavePoolHours", New Timestore_Field(14, "SickLeavePoolHours", "Sick Leave Pool", True))
       .Add("CompTimeUsed", New Timestore_Field(4, "CompTimeUsed", "Comp Time Used", True))
       .Add("AdminBereavement", New Timestore_Field(5, "AdminBereavement", "Admin - Bereavement Leave", True))
+      .Add("AdminDisaster", New Timestore_Field(19, "AdminDisaster", "Admin - Disaster Leave", True))
       .Add("AdminJuryDuty", New Timestore_Field(6, "AdminJuryDuty", "Admin - Jury Duty", True))
       .Add("AdminMilitaryLeave", New Timestore_Field(7, "AdminMilitaryLeave", "Admin - Military Leave", True))
       .Add("AdminWorkersComp", New Timestore_Field(8, "AdminWorkersComp", "Admin - Worker's Comp", True))

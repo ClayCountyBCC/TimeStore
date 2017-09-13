@@ -49496,6 +49496,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           "CompTimeUsed",
           "AdminHours",
           "AdminBereavement",
+          "AdminDisaster",
           "AdminWorkersComp",
           "AdminJuryDuty",
           "AdminMilitaryLeave",
@@ -49526,6 +49527,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         return (
           rawtctd.AdminBereavement +
+          rawtctd.AdminDisaster +
           rawtctd.AdminHours +
           rawtctd.AdminJuryDuty +
           rawtctd.AdminMilitaryLeave +
@@ -49539,6 +49541,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var sT = [];
         var t = [];
         var tl = getTimeList();
+        var ii = 0;
         if (workTime.length === 0)
         {
           tctd.WorkTimes = "";
@@ -49566,7 +49569,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           t = OnCallWorkTime.split("-");
           sT = [];
-          for (var ii = 0; ii < t.length; ii++)
+          for (ii = 0; ii < t.length; ii++)
           {
             sT.push(tl.indexOf(t[ii].trim()));
           }
@@ -49585,7 +49588,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           t = disasterWorkTime.split("-");
           sT = [];
-          for (var ii = 0; ii < t.length; ii++)
+          for (ii = 0; ii < t.length; ii++)
           {
             sT.push(tl.indexOf(t[ii].trim()));
           }
@@ -49656,6 +49659,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           AdminHours: getDefaultHours("Admin - Total", true), // meant to be a total for the other Admin hours.
           AdminOther: getDefaultHours("Other Admin"),
           AdminBereavement: getDefaultHours("Bereavement"),
+          AdminDisaster: getDefaultHours("Disaster"),
           AdminJuryDuty: getDefaultHours("Jury Duty"),
           AdminMilitaryLeave: getDefaultHours("Military Leave"),
           AdminWorkersComp: getDefaultHours("Worker's Comp"),
@@ -49699,6 +49703,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           showAdminHours: false,
           AdminHours: getValue(tctd.AdminHours.value),
           AdminBereavement: getValue(tctd.AdminBereavement.value),
+          AdminDisaster: getValue(tctd.AdminDisaster.value),
           AdminWorkersComp: getValue(tctd.AdminWorkersComp.value),
           AdminJuryDuty: getValue(tctd.AdminJuryDuty.value),
           AdminMilitaryLeave: getValue(tctd.AdminMilitaryLeave.value),
@@ -49729,6 +49734,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         calcDisasterWorkHours(tctd);
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
+        th += getValue(tctd.AdminDisaster.value);
         th += getValue(tctd.AdminJuryDuty.value);
         th += getValue(tctd.AdminMilitaryLeave.value);
         th += getValue(tctd.AdminWorkersComp.value);
@@ -50275,6 +50281,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         hourTypes.push("CompTimeUsed");
         hourTypes.push("AdminOther");
         hourTypes.push("AdminBereavement");
+        hourTypes.push("AdminDisaster");
         hourTypes.push("AdminJuryDuty");
         hourTypes.push("AdminMilitaryLeave");
         hourTypes.push("AdminWorkersComp");
@@ -52190,7 +52197,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.csvFilename = 'CustomReport.csv';
 
     $scope.fieldList = ['Vacation', 'Holiday', 'Sick', 'CompTimeEarned', 'CompTimeUsed', 'Admin',
-        'AdminBereavement', 'AdminWorkersComp', 'AdminJuryDuty', 'AdminMilitaryLeave', 'AdminOther', 'SickFamilyLeave',
+        'AdminBereavement', 'AdminDisaster', 'AdminWorkersComp', 'AdminJuryDuty', 'AdminMilitaryLeave', 'AdminOther', 'SickFamilyLeave',
         'SickLeavePool', 'AdminEducation', 'Swap', 'MWI', 'StepUp', 'HonorGuard', 'LWOPSuspension', 'LWOPScheduled',
         'LeaveWithoutPay', 'SickLeaveWithoutPay', 'BreakCredit', 'DoubleTime', 'CallMin', 'Vehicle',
         'WorkersComp', 'OnCallTotalHours', 'OnCallWorkHours', 'OnCallMinimumHours', 'UnionTimePool'];
@@ -52342,7 +52349,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             case 'TerminationDate':
             case 'HireDate':
               return moment(row[fieldName]).format('M/D/YYYY HH:mm A');
-              break;
+              //break;
             default:
               return row[fieldName] || '';
           }

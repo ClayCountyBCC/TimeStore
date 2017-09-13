@@ -24,7 +24,7 @@
     $scope.csvFilename = 'CustomReport.csv';
 
     $scope.fieldList = ['Vacation', 'Holiday', 'Sick', 'CompTimeEarned', 'CompTimeUsed', 'Admin',
-        'AdminBereavement', 'AdminWorkersComp', 'AdminJuryDuty', 'AdminMilitaryLeave', 'AdminOther', 'SickFamilyLeave',
+        'AdminBereavement', 'AdminDisaster', 'AdminWorkersComp', 'AdminJuryDuty', 'AdminMilitaryLeave', 'AdminOther', 'SickFamilyLeave',
         'SickLeavePool', 'AdminEducation', 'Swap', 'MWI', 'StepUp', 'HonorGuard', 'LWOPSuspension', 'LWOPScheduled',
         'LeaveWithoutPay', 'SickLeaveWithoutPay', 'BreakCredit', 'DoubleTime', 'CallMin', 'Vehicle',
         'WorkersComp', 'OnCallTotalHours', 'OnCallWorkHours', 'OnCallMinimumHours', 'UnionTimePool'];
@@ -176,7 +176,7 @@
             case 'TerminationDate':
             case 'HireDate':
               return moment(row[fieldName]).format('M/D/YYYY HH:mm A');
-              break;
+              //break;
             default:
               return row[fieldName] || '';
           }

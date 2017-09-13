@@ -24,6 +24,7 @@
     Property CompTimeEarned As Double = 0
     Property AdminHours As Double = 0
     Property AdminBereavement As Double = 0
+    Property AdminDisaster As Double = 0
     Property AdminWorkersComp As Double = 0
     Property AdminJuryDuty As Double = 0
     Property AdminMilitaryLeave As Double = 0
@@ -125,6 +126,8 @@
             SickFamilyLeave = s.hours_used
           Case 18
             TermHours = s.hours_used
+          Case 19
+            AdminDisaster = s.hours_used
         End Select
       Next
     End Sub
@@ -155,6 +158,7 @@
       d.Add("OnCallTotalHours", New Timestore_Field_With_Hours(TSF("OnCallTotalHours"), OnCallTotalHours))
 
       d.Add("AdminBereavement", New Timestore_Field_With_Hours(TSF("AdminBereavement"), AdminBereavement))
+      d.Add("AdminDisaster", New Timestore_Field_With_Hours(TSF("AdminDisaster"), AdminDisaster))
       d.Add("AdminJuryDuty", New Timestore_Field_With_Hours(TSF("AdminJuryDuty"), AdminJuryDuty))
       d.Add("AdminMilitaryLeave", New Timestore_Field_With_Hours(TSF("AdminMilitaryLeave"), AdminMilitaryLeave))
       d.Add("AdminWorkersComp", New Timestore_Field_With_Hours(TSF("AdminWorkersComp"), AdminWorkersComp))

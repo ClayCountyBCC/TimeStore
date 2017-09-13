@@ -216,7 +216,8 @@
     Public ReadOnly Property Admin_Total(Week As Integer) As Double
       Get
         Return Admin(Week) + Admin_Other(Week) + Admin_Bereavement(Week) _
-                    + Admin_JuryDuty(Week) + Admin_MilitaryLeave(Week) + Admin_WorkersComp(Week)
+                    + Admin_JuryDuty(Week) + Admin_MilitaryLeave(Week) +
+                    Admin_WorkersComp(Week) + Admin_Disaster(Week)
       End Get
     End Property
 
@@ -229,6 +230,12 @@
     Public ReadOnly Property Admin_Bereavement(Week As Integer) As Double
       Get
         Return (From t In Week_TL(Week) Select t.AdminBereavement).Sum
+      End Get
+    End Property
+
+    Public ReadOnly Property Admin_Disaster(Week As Integer) As Double
+      Get
+        Return (From t In Week_TL(Week) Select t.AdminDisaster).Sum
       End Get
     End Property
 
@@ -569,7 +576,7 @@
         ErrorList.Add("Employee has no time entered this pay period.")
       End If
 
-      If (From t In TL Select t.AdminBereavement + t.AdminHours +
+      If (From t In TL Select t.AdminBereavement + t.AdminHours + t.AdminDisaster +
                          t.AdminJuryDuty + t.AdminMilitaryLeave +
                          t.AdminOther + t.AdminWorkersComp).Sum > 24 Then
         WarningList.Add("More than 24 hours of Admin Leave used.")
