@@ -120,6 +120,21 @@ End code
           232
         </th>
         <th>
+          299
+        </th>
+        <th>
+          300
+        </th>
+        <th>
+          301
+        </th>
+        <th>
+          302
+        </th>
+        <th>
+          303
+        </th>
+        <th>
           Total
         </th>
       </tr>
@@ -216,6 +231,21 @@ End code
         <td>
           @item.pc232_d
         </td>
+         <td>
+           @item.pc299_d
+         </td>
+         <td>
+           @item.pc300_d
+         </td>
+         <td>
+           @item.pc301_d
+         </td>
+         <td>
+           @item.pc302_d
+         </td>
+         <td>
+           @item.pc303_d
+         </td>
         <td>
           @item.Total_d
         </td>

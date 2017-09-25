@@ -7,12 +7,14 @@ Imports System.Runtime.Caching
 
 Public Module ModuleMain
 
+  Public Const PayPeriodEndingCutoff As Integer = 10 ' This is the hour we cutoff the ability to save changes for the previous pay period.
   Public Const toolsAppId As Integer = 20006
   Public Const toolsDBError As Tools.DB.DB_Error_Handling_Method = Tools.DB.DB_Error_Handling_Method.Send_Errors_To_Log_Only
 
   Public Enum ConnectionStringType
     Timestore = 0
     FinPlus = 1
+    FinplusTraining = 5
     Telestaff = 2
     Timecard = 3
     Log = 4
@@ -277,7 +279,8 @@ Public Module ModuleMain
 
       Select Case WorkType
         Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12",
-             "SUE", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE"
+             "SUE", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE",
+             "OTSUED"
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
           ' Regular shift Step up and Overtime Step up
@@ -285,7 +288,7 @@ Public Module ModuleMain
              "SU10", "OT10", "OTLC10", "OTLR10",
              "SUO", "SUBC", "OTSUO", "OTSUO", "OTSUBC",
              "OTMSUO", "OTMSUBC", "OTLCSUO", "OTLCSUBC",
-             "OTLRSUO", "OLTRSUBC"
+             "OTLRSUO", "OLTRSUBC", "OTSUOD"
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
         Case "ST12", "STE" ' Shift trade working step up
@@ -600,7 +603,7 @@ Public Module ModuleMain
       .Add("SickLeavePoolHours", New Timestore_Field(14, "SickLeavePoolHours", "Sick Leave Pool", True))
       .Add("CompTimeUsed", New Timestore_Field(4, "CompTimeUsed", "Comp Time Used", True))
       .Add("AdminBereavement", New Timestore_Field(5, "AdminBereavement", "Admin - Bereavement Leave", True))
-      .Add("AdminDisaster", New Timestore_Field(19, "AdminDisaster", "Admin - Disaster Leave", True))
+      .Add("AdminDisaster", New Timestore_Field(19, "AdminDisaster", "Admin - Disaster", True))
       .Add("AdminJuryDuty", New Timestore_Field(6, "AdminJuryDuty", "Admin - Jury Duty", True))
       .Add("AdminMilitaryLeave", New Timestore_Field(7, "AdminMilitaryLeave", "Admin - Military Leave", True))
       .Add("AdminWorkersComp", New Timestore_Field(8, "AdminWorkersComp", "Admin - Worker's Comp", True))
@@ -641,6 +644,10 @@ Public Module ModuleMain
       .Add("230", 7) ' Unscheduled Regular OT
       .Add("231", 8) ' Unscheduled OT
       .Add("232", 9) ' Unscheduled Double OT
+      .Add("300", 14)
+      .Add("301", 15)
+      .Add("302", 16)
+      .Add("303", 17)
       .Add("777", 11) ' Disaster 1.5
     End With
     Return ltrOrder
@@ -670,7 +677,11 @@ Public Module ModuleMain
       .Add("230", "Unscheduled OT 1.0") ' Unscheduled Regular OT
       .Add("231", "Unscheduled OT 1.5") ' Unscheduled OT
       .Add("232", "Unscheduled OT 2.0") ' Unscheduled Double OT
-      .Add("777", "Disaster 1.5")
+      '.Add("777", "Disaster 1.5")
+      .Add("300", "Disaster Admin")
+      .Add("301", "Disaster 1.0")
+      .Add("302", "Disaster 1.5")
+      .Add("303", "Disaster 2.0")
       .Add("800", "Ineligible Holiday")
     End With
     Return p

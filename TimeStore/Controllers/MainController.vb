@@ -50,7 +50,7 @@ Namespace Controllers
       If Not tca.Backend_Reports_Access Then Return New HttpUnauthorizedResult
       Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
       ' If we're looking at this before Noon, we should default to the current payperiod.
-      If dtmp = Today And Now.Hour < 13 And ppd = 0 Then dtmp = GetPayPeriodStart(Today.AddDays(-1))
+      If dtmp = Today And Now.Hour < PayPeriodEndingCutoff And ppd = 0 Then dtmp = GetPayPeriodStart(Today.AddDays(-1))
       Dim telist As List(Of TimecardTimeException) = Get_All_Timecard_Exceptions(dtmp)
 
       If et.Length > 0 Then
@@ -76,7 +76,7 @@ Namespace Controllers
       If Not tca.Backend_Reports_Access Then Return New HttpUnauthorizedResult
       Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
       ' If we're looking at this before Noon, we should default to the current payperiod.
-      If dtmp = Today And Now.Hour < 13 And ppd = 0 Then dtmp = GetPayPeriodStart(Today.AddDays(-1))
+      If dtmp = Today And Now.Hour < PayPeriodEndingCutoff And ppd = 0 Then dtmp = GetPayPeriodStart(Today.AddDays(-1))
       Dim cl As List(Of Crosstab) = GetCrosstabData(dtmp) _
                         .OrderBy(Function(o) IIf(o.orgn = "", "9999", o.orgn)) _
                         .ThenBy(Function(o) IIf(o.LastName = "", "zzzzzzzz", o.LastName)).ToList

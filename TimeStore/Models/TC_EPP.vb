@@ -61,9 +61,15 @@
       Get
         Select Case Week
           Case 1
-            Return (From t In TL Where t.WorkDate >= PayPeriodStart And t.WorkDate < PayPeriodStart.AddDays(7)).ToList
+            Return (From t In TL
+                    Where t.WorkDate >= PayPeriodStart And
+                      t.WorkDate < PayPeriodStart.AddDays(7)
+                    Select t).ToList
           Case 2
-            Return (From t In TL Where t.WorkDate >= PayPeriodStart.AddDays(7) And t.WorkDate < PayPeriodStart.AddDays(14)).ToList
+            Return (From t In TL
+                    Where t.WorkDate >= PayPeriodStart.AddDays(7) And
+                      t.WorkDate < PayPeriodStart.AddDays(14)
+                    Select t).ToList
           Case Else
             Return TL
         End Select
@@ -103,9 +109,12 @@
       Get
 
         'DisasterHours = (From t In Week_TL)
-        Return (From t In Week_TL(Week) Select t.WorkHours).Sum +
+        Return Math.Max((From t In Week_TL(Week)
+                         Select t.WorkHours).Sum +
             BreakCredit(Week) + Holiday(Week) + OnCall_HoursWorked(Week) -
-            HolidayHoursWorkedDifference(Week) - DisasterHours(Week)
+            HolidayHoursWorkedDifference(Week) - DisasterDoubleTime(Week) -
+            DisasterStraightTime(Week) -
+            DisasterOverTime(Week) - Math.Max(DisasterRegular(Week), 0), 0)
         ' old version to test on call hour change
         'Return (From t In Week_TL(Week) Select t.WorkHours).Sum +
         '    BreakCredit(Week) + Holiday(Week) + OnCall_TotalHours(Week) -
@@ -124,64 +133,141 @@
       End Get
     End Property
 
-    Public ReadOnly Property DisasterOT(Week As Integer) As Double
+    Public ReadOnly Property Calculated_Regular(Week As Integer) As Double
       Get
-        Return 0
-        'If IsExempt Then Return 0
+        Select Case Week
+          Case 1, 2
+            Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
+            ' Introducing change to handle people who are exempt and work less than 40 hours per week.
+            'If val > 40 Then val = 40
+            'If EmployeeData.EmployeeType = "E" And val > 0 And val < 40 Then val = 40
+            ' There is one person currently who is exempt but is only paid for 12 hours per pay period. 
+            ' Any hours in addition to that are reduced to 12.
+            If Term_Hours(0) = 0 Then
 
-        'Select Case Week
-        '  Case 1
-        '    Dim DisasterStartDate As Date = Date.Parse("10/6/2016 12:00 AM")
-        '    Dim DisasterEndDate As Date = Date.Parse("10/8/2016 11:59:59 PM")
-        '    Dim DisasterStart As Date = Date.Parse("10/6/2016 12:00:00 PM")
-        '    Dim DisasterEnd As Date = Date.Parse("10/8/2016 11:59:59 PM")
-        '    Dim dt = (From t In Week_TL(Week)
-        '              Where t.WorkTimes.Length > 0 And
-        '              t.WorkDate >= DisasterStartDate And
-        '              t.WorkDate <= DisasterEndDate
-        '              Select t).ToList()
-        '    If dt.Count > 0 Then
-        '      Return CalculateDisasterOT(dt, DisasterStart, DisasterEnd)
-        '    Else
-        '      Return 0
-        '    End If
+              If IsExempt AndAlso EmployeeData.HireDate < PayPeriodStart Then
+                Dim HoursForOTByWeek As Double = EmployeeData.HoursNeededForOvertime / 2
+                If val > HoursForOTByWeek Then val = HoursForOTByWeek
+                If val > 0 And val < HoursForOTByWeek Then val = HoursForOTByWeek
+              Else
+                'If DisasterHours(Week) > 0 Then
+                '  val = val - Double_Time(Week) - DisasterHours(Week) - DisasterOT(Week)
+                'End If
+                If val > 40 Then
+                  val = 40
+                End If
 
-        '  Case 2
-        '    Return 0
-        '  Case Else
-        '    Return DisasterOT(1) + DisasterOT(2)
-        'End Select
+
+              End If
+
+            End If
+
+            val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
+              LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) -
+              Calculated_DisasterRegular(Week) - DisasterAdminLeave(Week)
+            If val < 0 Then val = 0
+            Return val
+          Case Else
+            Return Calculated_Regular(1) + Calculated_Regular(2)
+        End Select
+
       End Get
     End Property
 
-    Public ReadOnly Property DisasterHours(Week As Integer) As Double
+    Public ReadOnly Property DisasterRegular(week As Integer) As Double
       Get
-        ' These hours will all be treated as Overtime.
-        ' To qualify, they need to be on a day other than a sunday (those are all doubletime)
-        ' and to fall within the Disaster Hours range.
-        Return 0
-        'If IsExempt Then Return 0
-        'If Week = 0 Then Return DisasterHours(1) + DisasterHours(2)
-        'If DisasterHoursValue(Week - 1) = Double.MinValue Then
-        '  Dim DisasterStartDate As Date = Date.Parse("10/6/2016 12:00 AM")
-        '  Dim DisasterEndDate As Date = Date.Parse("10/8/2016 11:59:59 PM")
-        '  Dim DisasterStart As Date = Date.Parse("10/6/2016 12:00:00 PM")
-        '  Dim DisasterEnd As Date = Date.Parse("10/8/2016 11:59:59 PM")
-        '  Dim dt = (From t In Week_TL(Week)
-        '            Where t.WorkTimes.Length > 0 And
-        '              t.WorkDate >= DisasterStartDate And
-        '              t.WorkDate <= DisasterEndDate
-        '            Select t).ToList()
-        '  If dt.Count > 0 Then
-        '    DisasterHoursValue(Week - 1) = CalculateDisasterHours(dt, DisasterStart, DisasterEnd)
-        '  Else
-        '    DisasterHoursValue(Week - 1) = 0
-        '  End If
-        'End If
-        'Return DisasterHoursValue(Week - 1)
+        Return (From t In Week_TL(week)
+                Where t.DisasterRule = 2
+                Select t.DisasterWorkHours).Sum -
+                DisasterOverTime(week) -
+                DisasterAdminLeave(week)
+
       End Get
     End Property
 
+    Public ReadOnly Property Calculated_DisasterRegular(Week As Integer) As Double
+      Get
+        Select Case Week
+          Case 1, 2
+            'Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
+            Dim val As Double = DisasterRegular(Week)
+            If Term_Hours(0) = 0 Then
+              If IsExempt AndAlso EmployeeData.HireDate < PayPeriodStart Then
+                Dim HoursForOTByWeek As Double = EmployeeData.HoursNeededForOvertime / 2
+                If val > HoursForOTByWeek Then val = HoursForOTByWeek
+                If val > 0 And val < HoursForOTByWeek Then val = HoursForOTByWeek
+              Else
+                If val > 40 Then
+                  val = 40
+                End If
+              End If
+              'If val > DisasterRegular(Week) Then
+              '  val = DisasterRegular(Week)
+              'End If
+            End If
+            val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
+              LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) - DisasterAdminLeave(Week)
+            Return Math.Max(val, 0)
+          Case Else
+            Return Calculated_DisasterRegular(1) + Calculated_DisasterRegular(2)
+        End Select
+      End Get
+    End Property
+
+    Public ReadOnly Property DisasterDoubleTime(Week As Integer) As Double
+      Get
+        If IsExempt Then
+          Return 0
+        Else
+          Return (From t In Week_TL(Week)
+                  Where t.DisasterRule = 1
+                  Select t.WorkHours + t.BreakCreditHours).Sum
+
+        End If
+      End Get
+    End Property
+
+    Public ReadOnly Property DisasterOverTime(Week As Integer) As Double
+      Get
+        If IsExempt Then
+          Return 0
+        Else
+          Return (From t In Week_TL(Week)
+                  Where t.DisasterRule = 2 And
+                      t.WorkHours + t.BreakCreditHours > 8 And
+                    t.DoubleTimeHours = 0
+                  Select t.WorkHours + t.BreakCreditHours - 8).Sum
+        End If
+      End Get
+    End Property
+
+    Public ReadOnly Property DisasterAdminLeave(Week As Integer) As Double
+      Get
+        Return (From t In Week_TL(Week)
+                Select t.AdminDisaster).Sum
+      End Get
+    End Property
+
+    Public ReadOnly Property DisasterStraightTime(Week As Integer) As Double
+      Get
+        If IsExempt Then
+          Dim weekday = (From t In Week_TL(Week)
+                         Where t.DisasterRule = 1 And
+                           t.WorkHours > 8 And
+                           t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
+                           t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
+                         Select t.WorkHours - 8).Sum
+          Dim weekend = (From t In Week_TL(Week)
+                         Where t.DisasterRule = 1 And
+                           (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+                           t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+                         Select t.WorkHours).Sum
+          Return weekday + weekend
+        Else
+          Return 0
+        End If
+      End Get
+    End Property
 
     Public ReadOnly Property OnCall_MinimumHours(Week As Integer) As Double
       Get
@@ -215,9 +301,9 @@
 
     Public ReadOnly Property Admin_Total(Week As Integer) As Double
       Get
-        Return Admin(Week) + Admin_Other(Week) + Admin_Bereavement(Week) _
-                    + Admin_JuryDuty(Week) + Admin_MilitaryLeave(Week) +
-                    Admin_WorkersComp(Week) + Admin_Disaster(Week)
+        Return Admin(Week) + Admin_Other(Week) + Admin_Bereavement(Week) +
+          Admin_JuryDuty(Week) + Admin_MilitaryLeave(Week) +
+          Admin_WorkersComp(Week)
       End Get
     End Property
 
@@ -356,7 +442,7 @@
 
     Public ReadOnly Property Non_Working_Paid_Time(Week As Integer) As Double
       Get
-        Return Admin(Week) + Vacation(Week) + Sick(Week) + SickLeavePool(Week) + LWOP_All(Week) + Comp_Time_Used(Week)
+        Return Admin(Week) + Vacation(Week) + Sick(Week) + SickLeavePool(Week) + LWOP_All(Week) + Comp_Time_Used(Week) + Admin_Disaster(Week)
       End Get
     End Property
 
@@ -370,29 +456,10 @@
           'newDiff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40 - Non_Working_Paid_Time(Week)
           Select Case Week
             Case 1, 2
-              Diff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40
-              Return Math.Max(Math.Max(Diff, 0), DisasterOT(Week))
+              Diff = Regular(Week) + DisasterRegular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - DisasterDoubleTime(Week) - 40
+              Return Math.Max(Diff, 0)
             Case Else
               Return Overtime(1) + Overtime(2)
-          End Select
-        End If
-      End Get
-    End Property
-
-    Public ReadOnly Property New_Overtime(Week As Integer) As Double
-      Get
-        If IsExempt Then
-          Return 0
-        Else
-          Dim Diff As Double = 0
-          Dim newDiff As Double = 0
-          Select Case Week
-            Case 1, 2
-              Diff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40
-              newDiff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40 - Non_Working_Paid_Time(Week)
-              If newDiff > 0 Then Return newDiff Else Return 0
-            Case Else
-              Return New_Overtime(1) + New_Overtime(2)
           End Select
         End If
       End Get
@@ -409,7 +476,8 @@
               diff = Total_Hours(Week) - 40 - Overtime(Week) -
                 Comp_Time_Earned(Week) - Double_Time(Week) -
                 (HolidayHoursWorked(Week) - HolidayHoursWorkedDifference(Week)) -
-                DisasterHours(Week)
+                DisasterStraightTime(Week) - DisasterDoubleTime(Week) -
+                DisasterOverTime(Week)
 
 
               'If diff > 0 Then Return diff Else Return 0
@@ -459,44 +527,7 @@
     '    End Get
     'End Property
 
-    Public ReadOnly Property Calculated_Regular(Week As Integer) As Double
-      Get
-        Select Case Week
-          Case 1, 2
-            Dim val As Double = Total_Hours(Week)
-            ' Introducing change to handle people who are exempt and work less than 40 hours per week.
-            'If val > 40 Then val = 40
-            'If EmployeeData.EmployeeType = "E" And val > 0 And val < 40 Then val = 40
-            ' There is one person currently who is exempt but is only paid for 12 hours per pay period. 
-            ' Any hours in addition to that are reduced to 12.
-            If Term_Hours(0) = 0 Then
 
-              If IsExempt AndAlso EmployeeData.HireDate < PayPeriodStart Then
-                Dim HoursForOTByWeek As Double = EmployeeData.HoursNeededForOvertime / 2
-                If val > HoursForOTByWeek Then val = HoursForOTByWeek
-                If val > 0 And val < HoursForOTByWeek Then val = HoursForOTByWeek
-              Else
-                If DisasterHours(Week) > 0 Then
-                  val = val - Double_Time(Week) - DisasterHours(Week) - DisasterOT(Week)
-                End If
-                If val > 40 Then
-                  val = 40
-                End If
-
-
-              End If
-
-            End If
-
-            val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
-              LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week)
-            Return val
-          Case Else
-            Return Calculated_Regular(1) + Calculated_Regular(2)
-        End Select
-
-      End Get
-    End Property
 
     'Public ReadOnly Property Calculated_Regular_Overtime(Week As Integer) As Double
     '    Get
@@ -592,11 +623,6 @@
     Private Sub Catch_Non_Exempt_Exceptions()
       ' No admin leave
       ' Comp Time Calculation errors
-      For a As Integer = 1 To 2
-        If New_Overtime(a) <> Overtime(a) Then
-          WarningList.Add("Double check the overtime hours calculated for Week " & a.ToString & ".")
-        End If
-      Next
       ' Warning if part time and > 24 hours
       If Not EmployeeData.isFulltime And (Total_Hours(1) > 24 Or Total_Hours(2) > 24) Then
         WarningList.Add("Employee is part time and has more than 24 hours worked for the week, please notify HR.")

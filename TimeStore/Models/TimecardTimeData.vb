@@ -3,6 +3,7 @@
     Public Enum TimeCardDataSource
       Timecard = 0
       TimeStore = 1
+      Telestaff = 2
     End Enum
     Property DataSource As TimeCardDataSource = TimeCardDataSource.Timecard
     Property WorkHoursID As Long = 0
@@ -14,6 +15,7 @@
     Property DisasterName As String = ""
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
+    Property DisasterRule As Integer = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
     Property VacationHours As Double = 0
@@ -82,6 +84,7 @@
       DisasterName = STD.disaster_name
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
+      DisasterRule = STD.disaster_rule
     End Sub
 
     Private Sub Load_Hours_To_Approve(STDTA As List(Of Saved_TimeStore_Data_To_Approve))

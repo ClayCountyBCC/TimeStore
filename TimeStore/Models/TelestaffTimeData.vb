@@ -5,6 +5,7 @@
     Property WorkDate As Date ' The date this work was performed
     Property StartTime As Date ' the time this particular chunk of time started
     Property EndTime As Date ' the time this chunk ended.
+    Property DisasterRule As Integer = 0
     Property WorkHours As Double ' The number of hours worked on this date
     Property PayRate As Double ' The hourly rate paid for these hours
     Property WorkCode As String ' The workcode that defines the kind of work this is, ie: straight pay, OT, vacation, holiday, etc.
@@ -19,11 +20,10 @@
     Property ProfileType As TelestaffProfileType ' dispatch / field / office
     Property StratName As String = ""
     Property ProfileID As Integer ' the specific profile ID in telestaff.
-    Property ProfileDesc As String ' Their profile's title string.
+    'Property ProfileDesc As String ' Their profile's title string.
     Property RequiresApproval As Boolean = False ' Indicates if the hours have been approved or not.
     Property IsPaidTime As Boolean = False
     Property IsWorkingTime As Boolean = False
-    Property WageFactor As Double = 0 ' This is how Telestaff determines the rate at which something is paid. it's a number like 1.0, or 1.5 for overtime, or 2.0 for doubletime.
     Property CountsTowardsOvertime As Boolean = False ' This is whether or not the hours count towards your total hours for overtime.
     Property Specialties As String = ""
     Property ProfileStartDate As Date
@@ -32,9 +32,8 @@
       Dim x As New TelestaffTimeData
       x.Comment = Comment
       x.ProfileID = ProfileID
-      x.ProfileDesc = ProfileDesc
+      'x.ProfileDesc = ProfileDesc
       x.RequiresApproval = RequiresApproval
-      x.WageFactor = WageFactor
       'x.ShiftDuration = ShiftDuration
       x.ConstantShift = ConstantShift
       x.ShiftType = ShiftType

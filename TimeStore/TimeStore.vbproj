@@ -323,7 +323,9 @@
     <Content Include="app\addtime\HoursDisplay.directive.tmpl.html" />
     <None Include="bundleconfig.json" />
     <None Include="compilerconfig.json" />
-    <Content Include="ConnectionStrings.config" />
+    <Content Include="ConnectionStrings.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="My Project\PublishProfiles\DeployFolder.pubxml" />
     <None Include="My Project\PublishProfiles\DV10.pubxml" />
     <Content Include="images\ic_alarm_24px.svg" />

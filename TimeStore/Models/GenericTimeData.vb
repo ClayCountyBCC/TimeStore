@@ -144,7 +144,7 @@
              "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "SUO",
              "SUBC", "OTSUO", "OTSUO", "OTSUBC", "OTMSUO",
              "OTMSUBC", "OTLCSUO", "OTLCSUBC", "OTLRSUO",
-             "OLTRSUBC", "STE", "STO", "STBC"
+             "OLTRSUBC", "STE", "STO", "STBC", "OTSUED", "OTSUOD"
 
           StepUp = ttd.WorkHours
         Case "SDOT"

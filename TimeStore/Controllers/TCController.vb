@@ -18,7 +18,7 @@ Namespace Controllers
       ' users would have until 9/7/2016 10:00 AM EDT to make changes.
       ' If the current date/time is after that for a given pay period ending date, 
       ' we return true.
-      Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(10)
+      Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
     End Function
 
     Private Function GetTimeCardAccess(EmployeeId As Integer) As Timecard_Access
@@ -384,7 +384,7 @@ Namespace Controllers
       Dim payperiodstart As Date
       If ppdIndex = 0 Then
         payperiodstart = GetPayPeriodStart(Today)
-        If Today = payperiodstart And Now.Hour < 10 Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
       Else
         payperiodstart = GetPayPeriodStart(Today.AddDays(ppdIndex * 14))
       End If
@@ -733,7 +733,7 @@ Namespace Controllers
         payperiodstart = GetPayPeriodStart(StartDate)
       Else
         payperiodstart = GetPayPeriodStart(Today)
-        If Today = payperiodstart And Now.Hour < 11 Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
       End If
       Dim bUseDept As Boolean = (deptId.Length > 0)
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)

@@ -11,6 +11,7 @@
     Property disaster_work_times As String = ""
     Property disaster_work_hours As Double = 0
     Property disaster_name As String = ""
+    Property disaster_rule As Integer = 0
     Property break_credit As Double = 0
     Property work_hours As Double = 0
     Property holiday As Double = 0
@@ -65,6 +66,7 @@
           disaster_work_times,
           disaster_work_hours,
           ISNULL(D.Name, '') disaster_name,
+          ISNULL(DPR.rule_applied, 0) disaster_rule,
           break_credit,
           work_hours,
           holiday,
@@ -79,8 +81,9 @@
           by_machinename,
           by_ip_address,
           doubletime_hours 
-        FROM Work_Hours
-        LEFT OUTER JOIN Disaster_Data D ON Work_Hours.work_date BETWEEN D.Disaster_Start AND D.Disaster_End"
+        FROM Work_Hours 
+        LEFT OUTER JOIN Disaster_Data D ON Work_Hours.work_date BETWEEN D.Disaster_Start AND D.Disaster_End
+        LEFT OUTER JOIN Disaster_Pay_Rules DPR ON Work_Hours.work_date = DPR.disaster_date"
       Return query
     End Function
 

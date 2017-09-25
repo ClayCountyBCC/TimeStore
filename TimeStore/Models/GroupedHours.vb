@@ -39,6 +39,35 @@
       End If
     End Sub
 
+    Public Sub Move_Day(NumberHours As Double,
+                        WorkDate As Date,
+                        ByRef Week As List(Of TelestaffTimeData),
+                        ByRef Target As GroupedHours,
+                        ByRef TL As List(Of TelestaffTimeData))
+      ' We should never be trying to move more hours than are currently in this group
+      If NumberHours <= 0 Then Exit Sub
+      Dim HoursLeft As Double = NumberHours
+      For Each w In (From t In Week
+                     Where t.WorkDate = WorkDate
+                     Select t)
+
+        Dim clone = w.Clone
+
+        If w.WorkHours >= HoursLeft Then
+          clone.WorkHours = HoursLeft
+          w.WorkHours -= HoursLeft
+          TL.Add(clone)
+          HoursLeft = 0
+        Else
+          HoursLeft = HoursLeft - w.WorkHours
+          w.WorkHours = 0
+        End If
+        Target.Add(clone)
+        If HoursLeft <= 0 Then Exit For
+      Next
+    End Sub
+
+
     Public Sub Move_First(NumberHours As Double, ByRef Target As GroupedHours, ByRef TL As List(Of TelestaffTimeData))
       ' Move_First is different than Move_Last in that it tries to move stuff from the beginning of the pay period to the end.
       ' We should never be trying to move more hours than are currently in this group

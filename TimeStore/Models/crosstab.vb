@@ -28,7 +28,11 @@
     Property pc230 As Double = 0
     Property pc231 As Double = 0
     Property pc232 As Double = 0
-
+    Property pc299 As Double = 0
+    Property pc300 As Double = 0
+    Property pc301 As Double = 0
+    Property pc302 As Double = 0
+    Property pc303 As Double = 0
     ReadOnly Property EmployeeID_d As String
       Get
         If EmployeeID = "" Then Return "Total" Else Return EmployeeID
@@ -152,6 +156,36 @@
       End Get
     End Property
 
+    ReadOnly Property pc299_d As String
+      Get
+        If pc299 = 0 Then Return "" Else Return String.Format("{0:N2}", pc299)
+      End Get
+    End Property
+
+    ReadOnly Property pc300_d As String
+      Get
+        If pc300 = 0 Then Return "" Else Return String.Format("{0:N2}", pc300)
+      End Get
+    End Property
+
+    ReadOnly Property pc301_d As String
+      Get
+        If pc301 = 0 Then Return "" Else Return String.Format("{0:N2}", pc301)
+      End Get
+    End Property
+
+    ReadOnly Property pc302_d As String
+      Get
+        If pc302 = 0 Then Return "" Else Return String.Format("{0:N2}", pc302)
+      End Get
+    End Property
+
+    ReadOnly Property pc303_d As String
+      Get
+        If pc303 = 0 Then Return "" Else Return String.Format("{0:N2}", pc303)
+      End Get
+    End Property
+
     Public Sub New(d As DataRow, f As FinanceData, PPS As Date)
       PayPeriodStart = PPS
       EmployeeID = f.EmployeeId
@@ -184,6 +218,13 @@
       pc230 = IsNull(d("230"), 0)
       pc231 = IsNull(d("231"), 0)
       pc232 = IsNull(d("232"), 0)
+      pc299 = IsNull(d("299"), 0)
+      pc300 = IsNull(d("300"), 0)
+      pc301 = IsNull(d("301"), 0)
+      pc302 = IsNull(d("302"), 0)
+      pc303 = IsNull(d("303"), 0)
+
+
     End Sub
 
     Public Sub New(f As FinanceData, PPS As Date)
@@ -222,6 +263,11 @@
       pc230 = IsNull(d("230"), 0)
       pc231 = IsNull(d("231"), 0)
       pc232 = IsNull(d("232"), 0)
+      pc299 = IsNull(d("299"), 0)
+      pc300 = IsNull(d("300"), 0)
+      pc301 = IsNull(d("301"), 0)
+      pc302 = IsNull(d("302"), 0)
+      pc303 = IsNull(d("303"), 0)
     End Sub
 
   End Class

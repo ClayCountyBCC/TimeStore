@@ -10,6 +10,11 @@
     Private _unscheduled_double_overtime, _holiday_time_banked As New GroupedHours
     Private _holiday_time_used, _non_working, _term_hours As New GroupedHours
     Private _comp_time_banked, _comp_time_used, _non_paid, _union_time_pool As New GroupedHours
+    Private _disaster_regular As New GroupedHours
+    Private _disaster_straighttime As New GroupedHours ' regular overtime
+    Private _disaster_overtime As New GroupedHours
+    Private _disaster_doubletime As New GroupedHours
+    Private _admin_leave_disaster As New GroupedHours
     Public Property Banked_Holiday_Hours As Double = 0
     Public Property TelestaffHoursNeededForOvertime As Double = Double.MinValue
     Public Property TelestaffProfileType As TelestaffProfileType
@@ -35,6 +40,11 @@
       _comp_time_banked.PayCode = "120"
       _comp_time_used.PayCode = "121"
       _union_time_pool.PayCode = "007"
+      _admin_leave_disaster.PayCode = "300"
+      _disaster_doubletime.PayCode = "303"
+      _disaster_overtime.PayCode = "302"
+      _disaster_straighttime.PayCode = "301"
+      _disaster_regular.PayCode = "299"
 
       Select Case TelestaffProfileType
         Case TelestaffProfileType.Field
@@ -72,6 +82,7 @@
       'TelestaffProfileDescription = ProfileDesc
       'TelestaffProfileID = ProfileID
       'Dim j As Double = Total_Hours
+
       Parse_Hours()
       Balance_Hours()
       Check_Exceptions()
@@ -119,73 +130,80 @@
       ' In this sub we're going to add the hours to the particular group they belong to based on their work code
       ' and work abreviation
       For Each T In Timelist
-        'If T.PayRate = 0 Then T.PayRate = EmployeeData.Base_Payrate
-        'Select Case T.WageFactor
-        '    Case 1.0, 1.5, 2.0, 0
-        '    Case Else
-        '        Select Case T.WorkTypeAbrv
-        '        End Select
-        '        T.PayRate = T.PayRate * T.WageFactor
-        'End Select
-        Select Case T.WorkCode
-          Case "002" ' straight time aka regular
-            If Not T.CountsTowardsOvertime Then
-              _regular.Add(T)
-              _non_working.Add(T.Clone)
-            Else
-              _regular.Add(T)
-            End If
-          Case "230" ' Unscheduled Regular OT
-            _unscheduled_regular_overtime.Add(T)
-          Case "131" ' Scheduled OT
-            _scheduled_overtime.Add(T)
-          Case "231" ' Unscheduled OT
-            ' If an office staffer works on a sunday or a holiday, they get double overtime.
-            _unscheduled_overtime.Add(T)
+
+        If Not Handle_Disaster_Hours_Office(T) Then
+          Select Case T.WorkCode
+            Case "002" ' straight time aka regular
+              If Not T.CountsTowardsOvertime Then
+                _regular.Add(T)
+                _non_working.Add(T.Clone)
+              Else
+                _regular.Add(T)
+              End If
+            Case "230" ' Unscheduled Regular OT
+              _unscheduled_regular_overtime.Add(T)
+            Case "131" ' Scheduled OT
+              _scheduled_overtime.Add(T)
+            Case "231" ' Unscheduled OT
+              ' If an office staffer works on a sunday or a holiday, they get double overtime.
+              _unscheduled_overtime.Add(T)
                     'If T.ProfileType = Models.TelestaffProfileType.Office And T.WorkDate.DayOfWeek = DayOfWeek.Sunday Then
                     '    _unscheduled_double_overtime.Add(T)
                     'Else
 
                     'End If
 
-          Case "130" ' Scheduled Regular overtime
-            _scheduled_regular_overtime.Add(T)
+            Case "130" ' Scheduled Regular overtime
+              _scheduled_regular_overtime.Add(T)
                     ' This one will probably not be used by Telestaff, it doesn't know what this is.
-          Case "095"
-            _term_hours.Add(T)
-          Case "090" ' Leave without pay
-            _lwop.Add(T)
-          Case "101", "100" ' vacation
-            _vacation.Add(T)
-          Case "134" ' paid holiday
-            _holiday_paid.Add(T)
-          Case "110", "111" ' sick 
-            _sick.Add(T)
-          Case "232" ' Unscheduled Double OT
-            _unscheduled_double_overtime.Add(T)
-          Case "122" ' Holiday Time Bank
-            _holiday_time_banked.Add(T)
-          Case "123", "430" ' Holiday time bank Hours Requested to be used
-            _holiday_time_used.Add(T)
-          Case "120" ' Comp time accrued
-            _comp_time_banked.Add(T)
-          Case "121" ' Banked comp time used
-            _comp_time_used.Add(T)
-          Case "007"
-            ' 007 is the Union Time Pool. It's not part of the green sheet numbers, it will need to be added
-            ' in addition to those, in a separate area.  
-            ' As for now, I'm going to stick it in the non_paid area just to make sure it's not lost somewhere.
-            ' An exception will be added so that it will show up to the Public Safety payroll staff to do the manual
-            ' addition to the greensheet.
-            _union_time_pool.Add(T)
-            _non_working.Add(T.Clone)
-          Case Else
-            If T.IsPaidTime Then
-              Log("Unknown Payroll Code", T.WorkCode, T.EmployeeId.ToString, T.WorkTypeAbrv)
-            Else
-              _non_paid.Add(T)
-            End If
-        End Select
+            Case "095"
+              _term_hours.Add(T)
+            Case "090" ' Leave without pay
+              _lwop.Add(T)
+            Case "101", "100" ' vacation
+              _vacation.Add(T)
+            Case "134" ' paid holiday
+              _holiday_paid.Add(T)
+            Case "110", "111" ' sick 
+              _sick.Add(T)
+            Case "232" ' Unscheduled Double OT
+              _unscheduled_double_overtime.Add(T)
+            Case "122" ' Holiday Time Bank
+              _holiday_time_banked.Add(T)
+            Case "123", "430" ' Holiday time bank Hours Requested to be used
+              _holiday_time_used.Add(T)
+            Case "120" ' Comp time accrued
+              _comp_time_banked.Add(T)
+            Case "121" ' Banked comp time used
+              _comp_time_used.Add(T)
+            Case "007"
+              ' 007 is the Union Time Pool. It's not part of the green sheet numbers, it will need to be added
+              ' in addition to those, in a separate area.  
+              ' As for now, I'm going to stick it in the non_paid area just to make sure it's not lost somewhere.
+              ' An exception will be added so that it will show up to the Public Safety payroll staff to do the manual
+              ' addition to the greensheet.
+              _union_time_pool.Add(T)
+              _non_working.Add(T.Clone)
+            Case "299"
+              _disaster_regular.Add(T)
+            Case "300"
+              _admin_leave_disaster.Add(T)
+              _non_working.Add(T.Clone)
+            Case "301"
+              _disaster_straighttime.Add(T)
+            Case "302"
+              _disaster_overtime.Add(T)
+            Case "303"
+              _disaster_doubletime.Add(T)
+
+            Case Else
+              If T.IsPaidTime Then
+                Log("Unknown Payroll Code", T.WorkCode, T.EmployeeId.ToString, T.WorkTypeAbrv)
+              Else
+                _non_paid.Add(T)
+              End If
+          End Select
+        End If
       Next
     End Sub
 
@@ -194,6 +212,9 @@
       ' their minimum needed for overtime and move the hours to different types as needed.
 
       ' First we're going to move the regular pay to overtime and the overtime to regular pay as needed.
+      If TelestaffProfileType = TelestaffProfileType.Office Then
+        Balance_Disaster_Hours()
+      End If
       If Not IsExempt Then
         If Not IsOvertime_Calculated_Weekly Then
           Balance_Overtime_By_Payperiod_Hours()
@@ -204,6 +225,170 @@
       End If
       Balance_Timebanks_Versus_Hours_Requested()
     End Sub
+
+    Private Sub Balance_Disaster_Hours()
+      If TelestaffProfileType = TelestaffProfileType.Office Then
+        If IsExempt Then
+          Balance_Exempt_Disaster_By_Week(Regular.Week1, Disaster_Regular.Week1)
+          Balance_Exempt_Disaster_By_Week(Regular.Week2, Disaster_Regular.Week2)
+        Else
+          Balance_NonExempt_Disaster_By_Week(Regular.Week1, Disaster_Regular.Week1)
+          Balance_NonExempt_Disaster_By_Week(Regular.Week2, Disaster_Regular.Week2)
+        End If
+      End If
+    End Sub
+
+    Private Sub Balance_Exempt_Disaster_By_Week(Regular_Week As List(Of TelestaffTimeData),
+                                                Disaster_Regular_week As List(Of TelestaffTimeData))
+      ' Everything on these dates should be moved to disaster regular overtime.
+      Dim dates = (From t In Timelist
+                   Where t.DisasterRule = 1 And
+                     (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+                     t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+                   Select t.WorkDate).Distinct.ToList()
+
+      If dates.Count = 0 Then Exit Sub
+      For Each d In dates
+        Dim r As Double = (From t In Regular_Week
+                           Where t.WorkDate = d And
+                             t.DisasterRule = 1
+                           Select t.WorkHours).Sum
+        Dim dr As Double = (From t In Disaster_Regular_week
+                            Where t.WorkDate = d And
+                              t.DisasterRule = 1
+                            Select t.WorkHours).Sum
+        Regular.Move_Day(r, d, Regular_Week, Disaster_StraightTime, Timelist)
+        Disaster_Regular.Move_Day(dr, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+      Next
+      ' for these dates, we need to move everything worked past 8 hours to the disaster regular overtime
+      dates = (From t In Timelist
+               Where t.DisasterRule = 1 And
+                 t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
+                 t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
+               Select t.WorkDate).Distinct.ToList
+
+      If dates.Count = 0 Then Exit Sub
+
+      Dim hoursToMove As Double = 0
+      Dim tmp As Double = 0
+
+      For Each d In dates
+        Dim r As Double = (From t In Regular_Week
+                           Where t.WorkDate = d And
+                             t.DisasterRule = 1
+                           Select t.WorkHours).Sum
+        Dim dr As Double = (From t In Disaster_Regular_week
+                            Where t.WorkDate = d And
+                              t.DisasterRule = 1
+                            Select t.WorkHours).Sum
+        If dr + r > 8 Then
+          hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+          If dr > 0 Then
+            If dr - hoursToMove >= 0 Then
+              tmp = hoursToMove
+              hoursToMove = 0
+            Else
+              tmp = dr
+              hoursToMove = hoursToMove - dr
+            End If
+            Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+          End If
+          If hoursToMove > 0 Then
+            If r > 0 Then
+              If r - hoursToMove >= 0 Then
+                tmp = hoursToMove
+                hoursToMove = 0
+              Else
+                tmp = r
+                hoursToMove = hoursToMove - r
+              End If
+              Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+            End If
+          End If
+        End If
+      Next
+    End Sub
+
+    Private Sub Balance_NonExempt_Disaster_By_Week(Regular_Week As List(Of TelestaffTimeData),
+                                                Disaster_Regular_week As List(Of TelestaffTimeData))
+      ' Everything on these dates should be moved to disaster regular overtime.
+      Dim dates = (From t In Timelist
+                   Where t.DisasterRule = 2
+                   Select t.WorkDate).Distinct.ToList()
+
+      If dates.Count = 0 Then Exit Sub
+
+      Dim hoursToMove As Double = 0
+      Dim tmp As Double = 0
+
+      For Each d In dates
+        Dim r As Double = (From t In Regular_Week
+                           Where t.WorkDate = d And
+                             t.DisasterRule = 2
+                           Select t.WorkHours).Sum
+        Dim dr As Double = (From t In Disaster_Regular_week
+                            Where t.WorkDate = d And
+                              t.DisasterRule = 2
+                            Select t.WorkHours).Sum
+        If dr + r > 8 Then
+          hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+          If dr > 0 Then
+            If dr - hoursToMove >= 0 Then
+              tmp = hoursToMove
+              hoursToMove = 0
+            Else
+              tmp = dr
+              hoursToMove = hoursToMove - dr
+            End If
+            Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_Overtime, Timelist)
+          End If
+          If hoursToMove > 0 Then
+            If r > 0 Then
+              If r - hoursToMove >= 0 Then
+                tmp = hoursToMove
+                hoursToMove = 0
+              Else
+                tmp = r
+                hoursToMove = hoursToMove - r
+              End If
+              Regular.Move_Day(tmp, d, Regular_Week, Disaster_Overtime, Timelist)
+            End If
+          End If
+        End If
+      Next
+    End Sub
+
+    Private Function Handle_Disaster_Hours_Office(ByRef T As TelestaffTimeData) As Boolean
+      If T.DisasterRule = 0 Or
+        Not T.IsWorkingTime Or
+        Not TelestaffProfileType = TelestaffProfileType.Office Then Return False
+
+      If IsExempt Then
+        If T.DisasterRule = 2 Then Return False
+        Select Case T.WorkCode
+          Case "002", "299"
+            Return False
+          Case Else
+            If (T.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+              T.WorkDate.DayOfWeek = DayOfWeek.Sunday) Then
+              Disaster_StraightTime.Add(T)
+              Return True
+            End If
+        End Select
+        Return False
+      Else
+        Select Case T.DisasterRule
+          Case 1
+            Disaster_Doubletime.Add(T)
+            Return True
+          Case 2
+
+        End Select
+
+      End If
+      Return False
+    End Function
+
 
     Private Sub Check_Exceptions()
       Dim tmpList As New List(Of TimecardTimeException)
@@ -222,6 +407,8 @@
         End If
       Next
     End Sub
+
+
 
     Private Sub Balance_Timebanks_Versus_Hours_Requested()
       ' We also need to check the sick, vacation, holiday hours used and comp time used against
@@ -265,9 +452,34 @@
         If Total_Hours > Scheduled_Hours Then
           Dim diff As Double = Total_Hours - Scheduled_Hours
           If diff <= TelestaffHoursNeededForOvertime - Scheduled_Hours Then
-            Unscheduled_Overtime.Move_First(diff, _unscheduled_regular_overtime, Timelist)
+
+            If Unscheduled_Overtime.TotalHours >= diff Then
+              Unscheduled_Overtime.Move_First(diff, _unscheduled_regular_overtime, Timelist)
+              diff = 0
+            Else
+              Dim toMove As Double = diff - Unscheduled_Overtime.TotalHours
+              Unscheduled_Overtime.Move_First(diff, _unscheduled_regular_overtime, Timelist)
+              diff = diff - toMove
+            End If
+            If diff > 0 And Disaster_Overtime.TotalHours > 0 Then
+              Disaster_Overtime.Move_First(diff, _unscheduled_regular_overtime, Timelist)
+            End If
+
           Else
-            Unscheduled_Overtime.Move_First(TelestaffHoursNeededForOvertime - Scheduled_Hours, _unscheduled_regular_overtime, Timelist)
+            Dim toMove As Double = TelestaffHoursNeededForOvertime - Scheduled_Hours
+            If Unscheduled_Overtime.TotalHours >= toMove Then
+              Unscheduled_Overtime.Move_First(toMove, _unscheduled_regular_overtime, Timelist)
+            Else
+              If Unscheduled_Overtime.TotalHours > 0 Then
+                Dim tmp As Double = toMove - Unscheduled_Overtime.TotalHours
+                Unscheduled_Overtime.Move_First(toMove - Unscheduled_Overtime.TotalHours, _unscheduled_regular_overtime, Timelist)
+                toMove = tmp
+              End If
+
+            End If
+            If toMove > 0 And Disaster_Overtime.TotalHours > 0 Then
+              Disaster_Overtime.Move_First(toMove, _unscheduled_regular_overtime, Timelist)
+            End If
           End If
         End If
       End If
@@ -280,7 +492,8 @@
           Regular.Move_First(diff - (diff - (Total_Non_Working_Hours - Scheduled_Regular_Overtime.TotalHours)), _unscheduled_overtime, Timelist)
         End If
       End If
-      If (Total_Non_Working_Hours > Scheduled_Regular_Overtime.TotalHours + Unscheduled_Regular_Overtime.TotalHours) AndAlso Unscheduled_Overtime.TotalHours > 0 Then
+      If (Total_Non_Working_Hours > Scheduled_Regular_Overtime.TotalHours +
+        Unscheduled_Regular_Overtime.TotalHours) AndAlso Unscheduled_Overtime.TotalHours > 0 Then
 
         Dim diff As Double = Total_Non_Working_Hours + (TelestaffHoursNeededForOvertime - Scheduled_Hours) - (Scheduled_Regular_Overtime.TotalHours + Unscheduled_Regular_Overtime.TotalHours)
         'If there are any scheduled_regular_overtime hours, they've already been subtracted from the total non working hours
@@ -497,6 +710,36 @@
       End Get
     End Property
 
+    Public ReadOnly Property Disaster_Overtime As GroupedHours
+      Get
+        Return _disaster_overtime
+      End Get
+    End Property
+
+    Public ReadOnly Property Disaster_Doubletime As GroupedHours
+      Get
+        Return _disaster_doubletime
+      End Get
+    End Property
+
+    Public ReadOnly Property Disaster_StraightTime As GroupedHours
+      Get
+        Return _disaster_straighttime
+      End Get
+    End Property
+
+    Public ReadOnly Property Disaster_Regular As GroupedHours
+      Get
+        Return _disaster_regular
+      End Get
+    End Property
+
+    Public ReadOnly Property Admin_Leave_Disaster As GroupedHours
+      Get
+        Return _admin_leave_disaster
+      End Get
+    End Property
+
     ReadOnly Property HoursNeededForOvertimeByWeek() As Double
       Get
         Return TelestaffHoursNeededForOvertime / 2
@@ -550,7 +793,10 @@
       Get
         Select Case TelestaffProfileType
           Case TelestaffProfileType.Field, TelestaffProfileType.Dispatch
-            Return Regular.TotalHours + Vacation.TotalHours + Holiday_Time_Used.TotalHours + Leave_Without_Pay.TotalHours + Sick.TotalHours + Comp_Time_Used.TotalHours + Union_Time_Pool.TotalHours
+            Return Regular.TotalHours + Vacation.TotalHours +
+              Holiday_Time_Used.TotalHours + Leave_Without_Pay.TotalHours +
+              Sick.TotalHours + Comp_Time_Used.TotalHours +
+              Union_Time_Pool.TotalHours + Disaster_Regular.TotalHours
           Case TelestaffProfileType.Office
             If IsExempt Then
               Return 80
@@ -696,26 +942,36 @@
 
     Public ReadOnly Property Holiday_Requested() As Double
       Get
-        Return (From t In Timelist Where t.WorkType = "123" Or t.WorkType = "430" Select t.WorkHours).Sum
+        Return (From t In Timelist
+                Where t.WorkType = "123" Or t.WorkType = "430"
+                Select t.WorkHours).Sum
       End Get
     End Property
 
     Public ReadOnly Property Vacation_Requested() As Double
       Get
-        Return (From t In Timelist Where t.WorkType = "101" Or t.WorkType = "100" Select t.WorkHours).Sum
+        Return (From t In Timelist
+                Where t.WorkType = "101" Or t.WorkType = "100"
+                Select t.WorkHours).Sum
       End Get
     End Property
 
     Public ReadOnly Property Sick_Requested() As Double
       Get
-        Return (From t In Timelist Where t.WorkType = "110" Or t.WorkType = "111" Select t.WorkHours).Sum
+        Return (From t In Timelist
+                Where t.WorkType = "110" Or t.WorkType = "111"
+                Select t.WorkHours).Sum
       End Get
     End Property
 
     Public Function Get_Profile_Type() As TelestaffProfileType
-      If (From t In Timelist Where t.ProfileType = TelestaffProfileType.Field Select t).Count > 0 Then
+      If (From t In Timelist
+          Where t.ProfileType = TelestaffProfileType.Field
+          Select t).Count > 0 Then
         Return TelestaffProfileType.Field
-      ElseIf (From t In Timelist Where t.ProfileType = TelestaffProfileType.Dispatch Select t).Count > 0 Then
+      ElseIf (From t In Timelist
+              Where t.ProfileType = TelestaffProfileType.Dispatch
+              Select t).Count > 0 Then
         Return TelestaffProfileType.Dispatch
       Else
         Return TelestaffProfileType.Office
@@ -724,7 +980,9 @@
 
     Public Function Get_Hours_Needed_For_Overtime() As Double
       If Timelist.Count = 0 Then Return 0
-      Return (From t In Timelist Where t.ProfileType = Get_Profile_Type() Select t.FLSAHoursRequirement).First
+      Return (From t In Timelist
+              Where t.ProfileType = Get_Profile_Type()
+              Select t.FLSAHoursRequirement).First
     End Function
 
     Private Function Get_Telestaff_Exceptions(e As EPP) As List(Of TimecardTimeException)
@@ -979,7 +1237,7 @@
              "STE", "STBC", "OTSUE", "OTSUO", "OTSUO",
              "OTSUBC", "OTMSUO", "OTMSUBC", "OTMSUE",
              "OTLCSUO", "OTLCSUBC", "OTLCSUE", "OTLRSUO",
-             "OLTRSUBC", "OTLRSUE"
+             "OLTRSUBC", "OTLRSUE", "OTSUED", "OTSUOD"
           TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Step up pay, double check that this employee's rate was correct."))
         Case "OTLR"
           If t.WorkHours > 3 Then
@@ -993,7 +1251,7 @@
              "STE", "STBC", "OTSUE", "OTSUO", "OTSUO",
              "OTSUBC", "OTMSUO", "OTMSUBC", "OTMSUE",
              "OTLCSUO", "OTLCSUBC", "OTLCSUE", "OTLRSUO",
-             "OLTRSUBC", "OTLRSUE"
+             "OLTRSUBC", "OTLRSUE", "OTSUED", "OTSUOD"
         Case Else
           If t.PayRate <> e.EmployeeData.Base_Payrate Then
             TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee's payrate in Telestaff different than Finplus rate."))
