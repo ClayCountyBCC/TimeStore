@@ -198,38 +198,15 @@
     Property ErrorText As String = ""
     Property Current_Timecard_Data As New List(Of Saved_Timecard_Data)
     Private _used_Types As New List(Of WorkType)
-
+    Public Property DisasterName_Display As String = ""
+    Public Property DisasterPeriodType_Display As Integer = 0
     Public ReadOnly Property IsLeaveApproved As Boolean
       Get
         Return ((From t In RawTCTD Where t.IsApproved = False Select t).Count = 0)
       End Get
     End Property
 
-    Public ReadOnly Property DisasterName_Display As String
-      Get
-        Try
-          Dim tmp = (From t In RawTCTD
-                     Where t.DisasterName.Length > 0
-                     Select t.DisasterName).ToList
 
-          If tmp.Count > 0 Then
-            Return tmp.First
-          Else
-            Dim disasters As List(Of Disaster) = myCache.GetItem("disasterdates")
-            Dim foundList As List(Of String) = (From d In disasters
-                                                Where payPeriodStart >= d.Disaster_Start And
-                                                  payPeriodStart <= d.Disaster_End
-                                                Select d.Name).ToList
-            If foundList.Count > 0 Then Return foundList.First
-            Return ""
-          End If
-        Catch ex As Exception
-          Dim e As New ErrorLog(ex, "ruh roh")
-          Return ""
-        End Try
-
-      End Get
-    End Property
 
     ReadOnly Property showAddTime As Boolean
       Get
@@ -1129,6 +1106,7 @@
           calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, p))
           calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 11, p))
           calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p))
+          calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
           calculatedTimeList.Add(New WorkType("Disaster Hours 1.5", e.Disaster_Overtime, 11, p))
           calculatedTimeList.Add(New WorkType("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p))
           Select Case e.TelestaffProfileType
@@ -1153,6 +1131,7 @@
           tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours
           calculatedTimeList.Add(New WorkType("Regular Work", tmp, 0, "002", p))
         End If
+
         timeList.Add(New WorkType("Term Hours", e.Term_Hours, 2, p))
         timeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2, p))
         timeList.Add(New WorkType("Vacation", e.Vacation, 3, p))
@@ -1351,6 +1330,36 @@
 
     End Sub
 
+    Private Sub UpdateDisasterData()
+      Try
+        Dim tmp = (From t In RawTCTD
+                   Where t.DisasterName.Length > 0
+                   Select t).ToList
+
+        If tmp.Count > 0 Then
+          Dim f = tmp.First
+          DisasterName_Display = f.DisasterName
+          DisasterPeriodType_Display = f.DisasterPeriodtype
+        Else
+          Dim disasters As List(Of Disaster) = myCache.GetItem("disasterdates")
+          Dim foundList As List(Of Disaster) = (From d In disasters
+                                                Where payPeriodStart >= d.Disaster_Start And
+                                                payPeriodStart <= d.Disaster_End
+                                                Order By d.Disaster_Start
+                                                Select d).ToList
+          If foundList.Count > 0 Then
+            Dim f = foundList.First
+            DisasterName_Display = f.Name
+            DisasterPeriodType_Display = f.Disaster_Period_Type
+          End If
+
+        End If
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
+      End Try
+    End Sub
+
+
     Private Sub Load_TCTD(Employee As TC_EPP)
       Load_FinanceData(Employee.EmployeeData)
       GroupName = Employee_Data.GetGroupName(employeeID)
@@ -1359,6 +1368,10 @@
       WarningList = Employee.WarningList
       ErrorList = Employee.ErrorList
       RawTCTD.AddRange(Employee.TL)
+
+      'load in the disaster info
+      UpdateDisasterData()
+
       Dim holidays As List(Of Date) = getHolidayList(payPeriodStart.Year)
       If payPeriodStart.Year <> payPeriodStart.AddDays(13).Year Then
         holidays.AddRange(getHolidayList(payPeriodStart.AddDays(13).Year))

@@ -273,14 +273,14 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-          <div ng-if="timecard.DisasterName_Display.length > 0 && TCTD.WorkHours.value > 0 && isCurrentPPD"
+          <div ng-if=" ShowDisasterWarning && TCTD.WorkHours.value > 0 && isCurrentPPD"
                layout="row"
                layout-wrap
                layout-padding
                flex="100">
             <md-input-container class="md-input-has-value"
                                 flex="100">
-              <label>Are any of the hours worked related to {{ timecard.DisasterName_Display }}?</label>
+              <label>Are any of the hours worked related to {{ TCTD.DisasterName.length > 0 ? TCTD.DisasterName : timecard.DisasterName_Display }}?</label>
               <md-radio-group ng-change="DisasterHoursChoice()"
                               flex="100"
                               layout="row"
@@ -307,7 +307,7 @@
       </div>
     </div>
 
-    <div ng-show="isCurrentPPD">
+    <div ng-show="isCurrentPPD && timecard.DisasterPeriodType_Display > 0">
       <div ng-click="Toggle_DisasterHours()"
            style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
            flex="100"
@@ -316,7 +316,7 @@
            layout-align="start center">
         <span flex="5"></span>
         <h5>
-          Show / Hide -- Disaster hours worked related to {{ timecard.DisasterName_Display }}
+          Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName.length > 0 ? TCTD.DisasterName : timecard.DisasterName_Display }}
         </h5>
       </div>
 
@@ -2133,151 +2133,75 @@
 
 </script>
 <script type="text/ng-template" id="TimeApproval.tmpl.html">
-    <md-list flex="100">
-        <md-item>
-            <md-item-content>
-                <div flex="100"
-                     layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <span flex="20" layout="row" layout-align="end center">
-                        Type of Hours
-                    </span>
-                    <span flex="10" layout="row" layout-align="center center">
-                        Hours
-                    </span>
-                    <span flex>
-                        Check your hours
-                    </span>
-                    <md-divider flex="100"></md-divider>
-                </div>
-            </md-item-content>
-        </md-item>
-    </md-list>
-    <md-list ng-if="getGroups().length > 1"
-             ng-repeat="group in getGroups()"
-             flex="100">
+  <div style="margin-top: .75em;"
+       ng-show="tc.ErrorList.length > 0"
+       layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">
+    Your time cannot be approved while there are Errors present.
+    <timecard-warnings flex="100"
+                       alignheader="center"
+                       headerclass="warn"
+                       dl="tc.ErrorList"
+                       title="Errors"></timecard-warnings>
+  </div>
 
-        <md-item flex="100">
-            <md-item-content flex="100">
-                <div flex="100"
-                     class="short-toolbar my-accent"
-                     layout="row"
-                     layout-align="center center">
-                    <h5>Your hours at base Payrate: {{group}}</h5>
-                </div>
-            </md-item-content>
-        </md-item>
-        <md-item ng-repeat="t in tl | groupPayrateBy:group"
-                 flex="100">
-            <md-item-content>
-                <div flex="100"
-                     layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <span flex="20" layout="row" layout-align="end center">
-                        {{t.name}}
-                    </span>
-                    <span flex="10" layout="row" layout-align="center center">
-                        {{t.hours}}
-                    </span>
-                    <md-checkbox style="margin-left: 0; margin-right: 0;"
-                                 flex
-                                 class="green"
-                                 ng-change="checkApproved()"
-                                 ng-model="t.approved" 
-                                 aria-label="These hours are correct">
-                        These hours are correct
-                    </md-checkbox>
-                    <!--<md-radio-group flex
-                                    layout="row"
-                                    ng-model="t.approved"
-                                    layout-align="start center"
-                                    layout-wrap
-                                    ng-change="checkApproved()">
-                        <md-radio-button ng-value="true">
-                            These hours are correct.
-                        </md-radio-button>
-                        <md-radio-button ng-value="false">
-                            These hours are wrong.
-                        </md-radio-button>
-                    </md-radio-group>-->
-                    <md-divider flex="100"></md-divider>
-                </div>
-            </md-item-content>
+  <div ng-show="tc.Approval_Level > 0 && tc.Days_Since_PPE < 1"
+       layout="row"
+       layout-align="center center"
+       flex="100">
+    Your time has already been approved.
+  </div>
+  <div ng-show="tc.Days_Since_PPE > 1"
+       layout="row"
+       layout-align="center center"
+       flex="100">
+    It is too late to approve your time for this pay period.
+  </div>
+  <div ng-show="tc.timeList.length === 0 && tc.Days_Since_PPE < 1"
+       layout="row"
+       layout-align="center center"
+       flex="100">
+    No time has been entered to approve.
+  </div>
+  <div ng-show="tc.WarningList.length > 0"
+       layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">    
+    <timecard-warnings flex="100"
+                       alignheader="center"
+                       headerclass="my-accent"
+                       dl="tc.WarningList"
+                       title="Warnings"></timecard-warnings>
+  </div>
+  <md-list ng-if="showHolidayError === true"
+           flex="100">
+    <md-item>
+      <md-item-content>
+        <div flex="100"
+             layout="row"
+             layout-align="center center">
+          You must choose how to handle your Holiday hours before you can approve your time.
+        </div>
+      </md-item-content>
+    </md-item>
+  </md-list>
+  <md-list flex="100"
+           ng-if="showApprovalButton === true">
+    <md-item flex>
+      <md-item-content flex
+                       layout="row"
+                       layout-align="center center">
+        <md-button ng-click="approve()"
+                   class="md-raised md-warn ">
+          Approve and Finalize
+        </md-button>
+      </md-item-content>
+    </md-item>
 
-        </md-item>
-    </md-list>
-
-    <md-list flex="100"
-             ng-if="getGroups().length == 1">
-        <md-item ng-repeat="t in tl">
-            <md-item-content>
-                <div flex="100"
-                     layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <span flex="20" layout="row" layout-align="end center">
-                        {{t.name}}
-                    </span>
-                    <span flex="10" layout="row" layout-align="center center">
-                        {{t.hours}}
-                    </span>
-                    <md-checkbox style="margin-left: 0; margin-right: 0;"
-                                 flex
-                                 class="green"
-                                 ng-change="checkApproved()"
-                                 ng-model="t.approved" 
-                                 aria-label="These hours are correct">
-                        These hours are correct
-                    </md-checkbox>
-                    <!--<md-radio-group flex
-                                    layout="row"
-                                    layout-align="start center"
-                                    ng-model="t.approved"
-                                    layout-wrap
-                                    ng-change="checkApproved()">
-                        <md-radio-button ng-value="true">
-                            These hours are correct.
-                        </md-radio-button>
-                        <md-radio-button ng-value="false">
-                            These hours are wrong.
-                        </md-radio-button>
-                    </md-radio-group>-->
-                    <md-divider flex="100"></md-divider>
-                </div>
-            </md-item-content>
-
-        </md-item>
-
-    </md-list>
-    <md-list ng-if="showHolidayError === true"
-             flex="100">
-        <md-item>
-            <md-item-content>
-                <div flex="100"
-                     layout="row"
-                     layout-align="center center">
-                    You must choose how to handle your Holiday hours before you can approve your time.
-                </div>
-            </md-item-content>
-        </md-item>
-    </md-list>
-    <md-list flex
-             ng-if="showApprovalButton === true">
-        <md-item flex>
-            <md-item-content flex
-                             layout="row"
-                             layout-align="center center"
-                             layout-padding>
-                <md-button ng-click="approve()"
-                           class="md-raised md-warn ">
-                    Approve and Finalize
-                </md-button>
-            </md-item-content>
-        </md-item>
-
-    </md-list>
+  </md-list>
 </script>
 <script type="text/ng-template" id="TimeCardDetail.tmpl.html">
   <md-tabs class="md-primary"
@@ -2317,10 +2241,21 @@
       </div>
     </md-tab>
 
-    <md-tab label="{{ (timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'? 'Comp / ': '') }} Time Summary"
+    <md-tab label="Time Summary & Approval"
             layout-padding
             id="calctimelist">
       <div flex="100">
+
+        <div style="margin-top: .75em;"
+             class="short-toolbar my-accent"
+             flex="100"
+             layout="row"
+             layout-align="center center">
+          <h5>Approval</h5>
+        </div>
+        <div>
+          <time-approval flex="100" tc="timecard"></time-approval>
+        </div>
 
         <div style="margin-top: .75em;"
              class="short-toolbar my-accent"
@@ -2332,15 +2267,18 @@
 
         <time-list flex="100" tl="timecard.calculatedTimeList"></time-list>
 
-        <add-comp-time flex="100"
-                       ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
-                       timecard="timecard"></add-comp-time>
 
       </div>
 
     </md-tab>
+    <md-tab ng-if="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+            label="Handle Comp Time">
+      <add-comp-time flex="100"
+                     ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+                     timecard="timecard"></add-comp-time>
+    </md-tab>
 
-    <md-tab label="Approve"
+    <!--<md-tab label="Approve"
             id="approveyourhours">
 
       <div ng-show="timecard.ErrorList.length === 0 && timecard.Approval_Level === 0 && timecard.Days_Since_PPE <= 1 && timecard.timeList.length > 0"
@@ -2382,7 +2320,7 @@
            layout-align="center center"
            layout-padding
            flex="100">
-        No time has been entered to approve.  You can enter time by going to the Week 1 or Week 2 tabs and clicking the Time Entry button.
+        No time has been entered to approve.
       </div>
       <div ng-show="timecard.WarningList.length > 0"
            layout="row"
@@ -2397,7 +2335,7 @@
                            dl="timecard.WarningList"
                            title="Warnings"></timecard-warnings>
       </div>
-    </md-tab>
+    </md-tab>-->
 
     <md-tab label="Notes"
             id="notelist">
@@ -2799,12 +2737,12 @@
             </div>
             <md-divider flex="100"></md-divider>
         </md-item>
-        <md-item flex="100"
+        <md-item style="margin-top: .75em; margin-left: 1em;"
+                 flex="100"
                  layout="row"
                  layout-align="center center"
                  ng-repeat="wl in dl"
-                 layout-wrap
-                 layout-padding>
+                 layout-wrap>
             <div flex="100"
                  layout="row"
                  layout-align="start center">

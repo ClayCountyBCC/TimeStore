@@ -47,7 +47,7 @@ Namespace Models
           note,
           date_approval_added 
         FROM Approval_Hours"
-      Return query
+      Return query ' Approval_Hours is a view.  
     End Function
 
     Public Sub New()

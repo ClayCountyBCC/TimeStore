@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
@@ -828,7 +828,7 @@ Public Module ModuleDataAccess
     ' or those that were terminated in the pay period.
     Dim employeeList As List(Of FinanceData) = (From el In GetEmployeeDataFromFinPlus()
                                                 Order By el.Department, el.EmployeeLastName
-                                                Where el.TerminationDate > PayPeriodStart
+                                                Where el.TerminationDate > PayPeriodStart And Not PublicWorks.Contains(el.Department)
                                                 Select el).ToList
     ' public works test And Not PublicWorks.Contains(el.Department)
     '(el.TerminationDate = Date.MaxValue Or
@@ -886,7 +886,8 @@ Public Module ModuleDataAccess
                                                 Order By el.Department, el.EmployeeLastName
                                                 Where (el.TerminationDate = Date.MaxValue Or
                                                 (el.TerminationDate > payPeriodStart And
-                                                el.TerminationDate <= ppEnd)) Select el).ToList
+                                                el.TerminationDate <= ppEnd)) And Not PublicWorks.Contains(el.Department)
+                                                Select el).ToList
     ' public works test
     ' And Not PublicWorks.Contains(el.Department
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
@@ -1185,7 +1186,7 @@ Public Module ModuleDataAccess
       .AppendLine("WHERE TC.pay_code IN ('002', '090', '007', '100', '101', '110', '111', '120', '121', '122',  ")
       .AppendLine("					'123', '124', '130', '131', '134', '230', '231', '232') ")
       ' public works test
-      '.AppendLine("AND LTRIM(RTRIM(E.home_orgn)) NOT IN ('3701', '3709', '3711', '3712') ")
+      .AppendLine("AND LTRIM(RTRIM(E.home_orgn)) NOT IN ('3701', '3709', '3711', '3712') ")
       .AppendLine("ORDER BY orgn ASC, empl_no ASC ")
 
     End With
@@ -1601,7 +1602,7 @@ Public Module ModuleDataAccess
             gtdl.Add(New GenericTimeData(t, f))
           Next
           ' public works test
-          'Case "3701", "3709", "3711", "3712" ' public works
+        Case "3701", "3709", "3711", "3712" ' public works
 
 
         Case Else ' timecard / timestore

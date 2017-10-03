@@ -847,39 +847,47 @@ Namespace Controllers
       Dim adl As List(Of AD_EmployeeData) = GetADEmployeeData()
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim jnr As New JsonNetResult
-      If fl.Count = 1 Then
-        Dim dept As String = fl.First.Department
-        fl = GetEmployeeDataFromFinPlus()
-        Dim flad = (From f In fl, a In adl Where f.EmployeeId = a.EmployeeID And
-                            Not f.IsTerminated And f.BirthDate <> Date.MinValue
-                    Select f.BirthDate, f.Department, f.EmployeeId, a.Name)
-        Dim bdayList As List(Of Namedday)
-        If tca.DepartmentsToApprove.Contains("ALL") Then
-          'bdayList = (From f In flad Select f.Department, f.Name, f.BirthDate)
-          bdayList = (From f In flad
-                      Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+      Try
 
-        ElseIf tca.DepartmentsToApprove.Count > 0 Then
-          bdayList = (From f In flad
-                      Where tca.DepartmentsToApprove.Contains(f.Department) And
-                      f.Department = dept
-                      Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
 
+        If fl.Count = 1 Then
+          Dim dept As String = fl.First.Department
+          fl = GetEmployeeDataFromFinPlus()
+          Dim flad = (From f In fl, a In adl Where f.EmployeeId = a.EmployeeID And
+                              Not f.IsTerminated And f.BirthDate <> Date.MinValue
+                      Select f.BirthDate, f.Department, f.EmployeeId, a.Name)
+          Dim bdayList As List(Of Namedday)
+          If tca.DepartmentsToApprove.Contains("ALL") Then
+            'bdayList = (From f In flad Select f.Department, f.Name, f.BirthDate)
+            bdayList = (From f In flad
+                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+
+          ElseIf tca.DepartmentsToApprove.Count > 0 Then
+            bdayList = (From f In flad
+                        Where tca.DepartmentsToApprove.Contains(f.Department) And
+                        f.Department = dept
+                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+
+          Else
+            bdayList = (From f In flad Where f.Department = dept
+                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+          End If
+
+          Dim ndList As New List(Of Namedday)
+          For Each b In bdayList
+            ndList.AddRange(b.ToList)
+          Next
+          jnr.Data = ndList
         Else
-          bdayList = (From f In flad Where f.Department = dept
-                      Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+          ' if we don't get the expected information from finplus, let's just return this user's leave requests.
+          jnr.Data = ""
         End If
-
-        Dim ndList As New List(Of Namedday)
-        For Each b In bdayList
-          ndList.AddRange(b.ToList)
-        Next
-        jnr.Data = ndList
-      Else
-        ' if we don't get the expected information from finplus, let's just return this user's leave requests.
+        Return jnr
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
         jnr.Data = ""
-      End If
-      Return jnr
+        Return jnr
+      End Try
     End Function
 
   End Class

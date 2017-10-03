@@ -12,9 +12,18 @@
 
     Private Function GetCurrentBirthdays(Birthday As Date) As Date()
       Dim bd(2) As Date
-      bd(0) = New Date(Now.Year - 1, Birthday.Month, Birthday.Day)
-      bd(1) = New Date(Now.Year, Birthday.Month, Birthday.Day)
-      bd(2) = New Date(Now.Year + 1, Birthday.Month, Birthday.Day)
+      Try
+        Dim m As Integer = Birthday.Month
+        Dim d As Integer = Birthday.Day
+        If m = 2 And d = 29 Then d = 28
+        bd(0) = New Date(Now.Year - 1, m, d)
+        bd(1) = New Date(Now.Year, m, d)
+        bd(2) = New Date(Now.Year + 1, m, d)
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
+        Return Nothing
+      End Try
+
       Return bd
     End Function
 

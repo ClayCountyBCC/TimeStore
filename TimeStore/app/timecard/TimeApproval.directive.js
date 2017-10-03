@@ -10,36 +10,51 @@
         templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
         scope: {
           tc: '=',
-          tl: '=',
+          //tl: '=',
           showApproval: '='
 
         },
         controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions',
           function ($scope, $mdToast, timestoredata, commonFunctions)
           {
-
             $scope.showHolidayError = false;
             $scope.showApprovalButton = false;
 
             $scope.checkApproved = function ()
             {
               $scope.showApprovalButton = false;
-              if ($scope.tl === undefined)
+              if ($scope.tc.ErrorList.length > 0)
               {
                 return false;
               }
-              var ctl = $scope.tl;
-              if (ctl.length === 0)
+              if ($scope.tc.Approval_Level !== 0)
               {
                 return false;
               }
-              for (var i = 0; i < ctl.length; i++)
+              if ($scope.tc.Days_Since_PPE > 1)
               {
-                if (ctl[i].approved === false)
-                {
-                  return false;
-                }
+                return false;
               }
+              if ($scope.tc.timeList.length === 0)
+              {
+                return false;
+              }
+              //if ($scope.tl === undefined)
+              //{
+              //  return false;
+              //}
+              //var ctl = $scope.tl;
+              //if (ctl.length === 0)
+              //{
+              //  return false;
+              //}
+              //for (var i = 0; i < ctl.length; i++)
+              //{
+              //  if (ctl[i].approved === false)
+              //  {
+              //    return false;
+              //  }
+              //}
               // Now let's check that the holidays are handled
               if ($scope.tc.isHolidayTimeBankable === true && $scope.tc.HolidaysInPPD.length > 0)
               {
@@ -76,6 +91,7 @@
 
             var onApproval = function (data)
             {
+              $scope.showApprovalButton = false;
               showToast(data);
               viewOptions.approvalUpdated.approvalUpdated = true;
               viewOptions.approvalUpdated.share();
@@ -86,19 +102,19 @@
               alert(data + '  Your approval was not saved!');
             };
 
-            $scope.getGroups = function ()
-            {
-              return commonFunctions.getGroupsByShortPayRate($scope.tl);
+            //$scope.getGroups = function ()
+            //{
+            //  return commonFunctions.getGroupsByShortPayRate($scope.tl);
 
-              //var groupArray = [];
+            //  //var groupArray = [];
 
-              //angular.forEach($scope.tl, function (item, idx) {
-              //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
-              //        groupArray.push(parseFloat(item.shortPayRate));
-              //    }
-              //});
-              //return groupArray;
-            };
+            //  //angular.forEach($scope.tl, function (item, idx) {
+            //  //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
+            //  //        groupArray.push(parseFloat(item.shortPayRate));
+            //  //    }
+            //  //});
+            //  //return groupArray;
+            //};
 
             $scope.toastPosition = {
               bottom: true,
@@ -107,19 +123,19 @@
               right: true
             };
 
-            $scope.getTotalHours = function ()
-            {
-              return commonFunctions.getTotalHours($scope.tl);
-              //if ($scope.tl === undefined) {
-              //    return 0;
-              //}
-              //var tl = $scope.tl;
-              //var total = 0;
-              //for (var i = 0; i < tl.length; i++) {
-              //    total += tl[i].hours;
-              //}
-              //return total;
-            };
+            //$scope.getTotalHours = function ()
+            //{
+            //  return commonFunctions.getTotalHours($scope.tl);
+            //  //if ($scope.tl === undefined) {
+            //  //    return 0;
+            //  //}
+            //  //var tl = $scope.tl;
+            //  //var total = 0;
+            //  //for (var i = 0; i < tl.length; i++) {
+            //  //    total += tl[i].hours;
+            //  //}
+            //  //return total;
+            //};
 
             function showToast(Message)
             {
@@ -137,6 +153,8 @@
                 .filter(function (pos) { return $scope.toastPosition[pos]; })
                 .join(' ');
             };
+
+            $scope.checkApproved();
           }]
       };
     }]);

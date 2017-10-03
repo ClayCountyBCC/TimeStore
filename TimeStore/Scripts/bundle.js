@@ -49157,6 +49157,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         share: function ()
         {
           $rootScope.$broadcast("shareTimecardReloaded");
+          console.log('sharetimecardreloaded');
         }
       };
       return {
@@ -49468,6 +49469,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
         tctd.DisasterName = rawtctd.DisasterName;
+        tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -49627,6 +49629,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
           DisasterWorkTimes: "",
+          DisasterName: "",
+          DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
@@ -49691,6 +49695,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkHours: getValue(tctd.WorkHours.value),
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
+          DisasterName: "",
+          DisasterPeriodType: 0,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
           VacationHours: getValue(tctd.VacationHours.value),
@@ -51147,6 +51153,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     updateBanksUsed();
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
     $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;
+    $scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
     checkForErrors();
 
@@ -51249,7 +51256,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         $scope.calculateTotalHours();
       }
-    }
+    };
 
     function validateDisasterHours()
     {
@@ -51260,7 +51267,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       // to ensure that they always overlap
       if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
       {
-        if ($scope.DisasterHoursRelated === null)
+        if ($scope.DisasterHoursRelated === null && $scope.ShowDisasterWarning)
         {
           $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated.";
           $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
@@ -53164,36 +53171,51 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
         scope: {
           tc: '=',
-          tl: '=',
+          //tl: '=',
           showApproval: '='
 
         },
         controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions',
           function ($scope, $mdToast, timestoredata, commonFunctions)
           {
-
             $scope.showHolidayError = false;
             $scope.showApprovalButton = false;
 
             $scope.checkApproved = function ()
             {
               $scope.showApprovalButton = false;
-              if ($scope.tl === undefined)
+              if ($scope.tc.ErrorList.length > 0)
               {
                 return false;
               }
-              var ctl = $scope.tl;
-              if (ctl.length === 0)
+              if ($scope.tc.Approval_Level !== 0)
               {
                 return false;
               }
-              for (var i = 0; i < ctl.length; i++)
+              if ($scope.tc.Days_Since_PPE > 1)
               {
-                if (ctl[i].approved === false)
-                {
-                  return false;
-                }
+                return false;
               }
+              if ($scope.tc.timeList.length === 0)
+              {
+                return false;
+              }
+              //if ($scope.tl === undefined)
+              //{
+              //  return false;
+              //}
+              //var ctl = $scope.tl;
+              //if (ctl.length === 0)
+              //{
+              //  return false;
+              //}
+              //for (var i = 0; i < ctl.length; i++)
+              //{
+              //  if (ctl[i].approved === false)
+              //  {
+              //    return false;
+              //  }
+              //}
               // Now let's check that the holidays are handled
               if ($scope.tc.isHolidayTimeBankable === true && $scope.tc.HolidaysInPPD.length > 0)
               {
@@ -53230,6 +53252,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             var onApproval = function (data)
             {
+              $scope.showApprovalButton = false;
               showToast(data);
               viewOptions.approvalUpdated.approvalUpdated = true;
               viewOptions.approvalUpdated.share();
@@ -53240,19 +53263,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               alert(data + '  Your approval was not saved!');
             };
 
-            $scope.getGroups = function ()
-            {
-              return commonFunctions.getGroupsByShortPayRate($scope.tl);
+            //$scope.getGroups = function ()
+            //{
+            //  return commonFunctions.getGroupsByShortPayRate($scope.tl);
 
-              //var groupArray = [];
+            //  //var groupArray = [];
 
-              //angular.forEach($scope.tl, function (item, idx) {
-              //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
-              //        groupArray.push(parseFloat(item.shortPayRate));
-              //    }
-              //});
-              //return groupArray;
-            };
+            //  //angular.forEach($scope.tl, function (item, idx) {
+            //  //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
+            //  //        groupArray.push(parseFloat(item.shortPayRate));
+            //  //    }
+            //  //});
+            //  //return groupArray;
+            //};
 
             $scope.toastPosition = {
               bottom: true,
@@ -53261,19 +53284,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               right: true
             };
 
-            $scope.getTotalHours = function ()
-            {
-              return commonFunctions.getTotalHours($scope.tl);
-              //if ($scope.tl === undefined) {
-              //    return 0;
-              //}
-              //var tl = $scope.tl;
-              //var total = 0;
-              //for (var i = 0; i < tl.length; i++) {
-              //    total += tl[i].hours;
-              //}
-              //return total;
-            };
+            //$scope.getTotalHours = function ()
+            //{
+            //  return commonFunctions.getTotalHours($scope.tl);
+            //  //if ($scope.tl === undefined) {
+            //  //    return 0;
+            //  //}
+            //  //var tl = $scope.tl;
+            //  //var total = 0;
+            //  //for (var i = 0; i < tl.length; i++) {
+            //  //    total += tl[i].hours;
+            //  //}
+            //  //return total;
+            //};
 
             function showToast(Message)
             {
@@ -53291,6 +53314,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
                 .filter(function (pos) { return $scope.toastPosition[pos]; })
                 .join(' ');
             };
+
+            $scope.checkApproved();
           }]
       };
     }]);
@@ -53533,8 +53558,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         console.log('shareapprovalupdated');
         var ppi = timestoredata.getPayPeriodIndex(moment($routeParams.payPeriod, 'YYYYMMDD'));
         timestoredata.getEmployee(ppi, $routeParams.employeeId)
-            .then(onEmployee, onError)
-            .then(viewOptions.timecardReloaded.share());
+          .then(onEmployee, onError);
       }
     });
 
@@ -53547,6 +53571,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.timecard = data;
       updateCalculatedTimeList();
       console.log('timecard data', $scope.timecard);
+      viewOptions.timecardReloaded.share()
     };
 
 

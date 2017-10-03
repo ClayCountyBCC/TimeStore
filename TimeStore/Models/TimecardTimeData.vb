@@ -13,6 +13,7 @@
     Property WorkTimes As String = ""
     Property WorkHours As Double = 0
     Property DisasterName As String = ""
+    Property DisasterPeriodType As Integer = 0
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
     Property DisasterRule As Integer = 0
@@ -82,6 +83,7 @@
       WorkHours = STD.work_hours
       WorkTimes = STD.work_times
       DisasterName = STD.disaster_name
+      DisasterPeriodType = STD.disaster_period_type
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
       DisasterRule = STD.disaster_rule

@@ -126,6 +126,7 @@
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
         tctd.DisasterName = rawtctd.DisasterName;
+        tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -285,6 +286,8 @@
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
           DisasterWorkTimes: "",
+          DisasterName: "",
+          DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
@@ -349,6 +352,8 @@
           WorkHours: getValue(tctd.WorkHours.value),
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
+          DisasterName: "",
+          DisasterPeriodType: 0,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
           VacationHours: getValue(tctd.VacationHours.value),

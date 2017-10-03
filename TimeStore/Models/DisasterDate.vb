@@ -5,6 +5,7 @@
     Public Property Name As String
     Public Property Disaster_Start As Date
     Public Property Disaster_End As Date
+    Public Property Disaster_Period_Type As Integer = 0
     Public Sub New()
 
     End Sub
@@ -14,7 +15,8 @@
       SELECT 
         Name,
         Disaster_Start,
-        Disaster_End
+        Disaster_End, 
+        Period_Type
       FROM Disaster_Data
       ORDER BY Disaster_Start"
       Try

@@ -95,14 +95,14 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-          <div ng-if="timecard.DisasterName_Display.length > 0 && TCTD.WorkHours.value > 0 && isCurrentPPD"
+          <div ng-if=" ShowDisasterWarning && TCTD.WorkHours.value > 0 && isCurrentPPD"
                layout="row"
                layout-wrap
                layout-padding
                flex="100">
             <md-input-container class="md-input-has-value"
                                 flex="100">
-              <label>Are any of the hours worked related to {{ timecard.DisasterName_Display }}?</label>
+              <label>Are any of the hours worked related to {{ TCTD.DisasterName.length > 0 ? TCTD.DisasterName : timecard.DisasterName_Display }}?</label>
               <md-radio-group ng-change="DisasterHoursChoice()"
                               flex="100"
                               layout="row"
@@ -129,7 +129,7 @@
       </div>
     </div>
 
-    <div ng-show="isCurrentPPD">
+    <div ng-show="isCurrentPPD && timecard.DisasterPeriodType_Display > 0">
       <div ng-click="Toggle_DisasterHours()"
            style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
            flex="100"
@@ -138,7 +138,7 @@
            layout-align="start center">
         <span flex="5"></span>
         <h5>
-          Show / Hide -- Disaster hours worked related to {{ timecard.DisasterName_Display }}
+          Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName.length > 0 ? TCTD.DisasterName : timecard.DisasterName_Display }}
         </h5>
       </div>
 

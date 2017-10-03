@@ -69,6 +69,7 @@
     updateBanksUsed();
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
     $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;
+    $scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
     checkForErrors();
 
@@ -171,7 +172,7 @@
       {
         $scope.calculateTotalHours();
       }
-    }
+    };
 
     function validateDisasterHours()
     {
@@ -182,7 +183,7 @@
       // to ensure that they always overlap
       if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
       {
-        if ($scope.DisasterHoursRelated === null)
+        if ($scope.DisasterHoursRelated === null && $scope.ShowDisasterWarning)
         {
           $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated.";
           $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");

@@ -36,10 +36,21 @@
       </div>
     </md-tab>
 
-    <md-tab label="{{ (timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'? 'Comp / ': '') }} Time Summary"
+    <md-tab label="Time Summary & Approval"
             layout-padding
             id="calctimelist">
       <div flex="100">
+
+        <div style="margin-top: .75em;"
+             class="short-toolbar my-accent"
+             flex="100"
+             layout="row"
+             layout-align="center center">
+          <h5>Approval</h5>
+        </div>
+        <div>
+          <time-approval flex="100" tc="timecard"></time-approval>
+        </div>
 
         <div style="margin-top: .75em;"
              class="short-toolbar my-accent"
@@ -51,15 +62,18 @@
 
         <time-list flex="100" tl="timecard.calculatedTimeList"></time-list>
 
-        <add-comp-time flex="100"
-                       ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
-                       timecard="timecard"></add-comp-time>
 
       </div>
 
     </md-tab>
+    <md-tab ng-if="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+            label="Handle Comp Time">
+      <add-comp-time flex="100"
+                     ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+                     timecard="timecard"></add-comp-time>
+    </md-tab>
 
-    <md-tab label="Approve"
+    <!--<md-tab label="Approve"
             id="approveyourhours">
 
       <div ng-show="timecard.ErrorList.length === 0 && timecard.Approval_Level === 0 && timecard.Days_Since_PPE <= 1 && timecard.timeList.length > 0"
@@ -101,7 +115,7 @@
            layout-align="center center"
            layout-padding
            flex="100">
-        No time has been entered to approve.  You can enter time by going to the Week 1 or Week 2 tabs and clicking the Time Entry button.
+        No time has been entered to approve.
       </div>
       <div ng-show="timecard.WarningList.length > 0"
            layout="row"
@@ -116,7 +130,7 @@
                            dl="timecard.WarningList"
                            title="Warnings"></timecard-warnings>
       </div>
-    </md-tab>
+    </md-tab>-->
 
     <md-tab label="Notes"
             id="notelist">

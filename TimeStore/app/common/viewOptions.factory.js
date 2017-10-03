@@ -35,6 +35,7 @@
         share: function ()
         {
           $rootScope.$broadcast("shareTimecardReloaded");
+          console.log('sharetimecardreloaded');
         }
       };
       return {

@@ -28,8 +28,7 @@
         console.log('shareapprovalupdated');
         var ppi = timestoredata.getPayPeriodIndex(moment($routeParams.payPeriod, 'YYYYMMDD'));
         timestoredata.getEmployee(ppi, $routeParams.employeeId)
-            .then(onEmployee, onError)
-            .then(viewOptions.timecardReloaded.share());
+          .then(onEmployee, onError);
       }
     });
 
@@ -42,6 +41,7 @@
       $scope.timecard = data;
       updateCalculatedTimeList();
       console.log('timecard data', $scope.timecard);
+      viewOptions.timecardReloaded.share()
     };
 
 
