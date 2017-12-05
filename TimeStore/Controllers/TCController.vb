@@ -651,6 +651,7 @@ Namespace Controllers
             Return New HttpStatusCodeResult(403)
           Else
             If Save_Timestore_Data(SavedTCTD, myTca) Then
+              'If SavedTCTD.Save(myTca) Then
               Return New HttpStatusCodeResult(200)
             Else
               Return New HttpStatusCodeResult(500)
@@ -661,8 +662,6 @@ Namespace Controllers
         End If
 
       End If
-      'If SavedTCTD.EmployeeID = myEID 
-
     End Function
 
     Public Function SaveCompTimeChoices(EmployeeID As Integer, PayPeriodEnding As Date,

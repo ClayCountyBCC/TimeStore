@@ -1,6 +1,6 @@
 ﻿<script type="text/ng-template" id="TimeApproval.tmpl.html">
   <div style="margin-top: .75em;"
-       ng-show="tc.ErrorList.length > 0"
+       ng-show="ctrl.tc.ErrorList.length > 0"
        layout="row"
        layout-align="center center"
        layout-wrap
@@ -9,29 +9,29 @@
     <timecard-warnings flex="100"
                        alignheader="center"
                        headerclass="warn"
-                       dl="tc.ErrorList"
+                       dl="ctrl.tc.ErrorList"
                        title="Errors"></timecard-warnings>
   </div>
 
-  <div ng-show="tc.Approval_Level > 0 && tc.Days_Since_PPE < 1"
+  <div ng-show="ctrl.tc.Approval_Level > 0 && ctrl.tc.Days_Since_PPE < 1"
        layout="row"
        layout-align="center center"
        flex="100">
     Your time has already been approved.
   </div>
-  <div ng-show="tc.Days_Since_PPE > 1"
+  <div ng-show="ctrl.tc.Days_Since_PPE > 1"
        layout="row"
        layout-align="center center"
        flex="100">
     It is too late to approve your time for this pay period.
   </div>
-  <div ng-show="tc.timeList.length === 0 && tc.Days_Since_PPE < 1"
+  <div ng-show="ctrl.tc.timeList.length === 0 && ctrl.tc.Days_Since_PPE < 1"
        layout="row"
        layout-align="center center"
        flex="100">
     No time has been entered to approve.
   </div>
-  <div ng-show="tc.WarningList.length > 0"
+  <div ng-show="ctrl.tc.WarningList.length > 0"
        layout="row"
        layout-align="center center"
        layout-wrap
@@ -39,10 +39,10 @@
     <timecard-warnings flex="100"
                        alignheader="center"
                        headerclass="my-accent"
-                       dl="tc.WarningList"
+                       dl="ctrl.tc.WarningList"
                        title="Warnings"></timecard-warnings>
   </div>
-  <md-list ng-if="showHolidayError === true"
+  <md-list ng-if="ctrl.showHolidayError === true"
            flex="100">
     <md-item>
       <md-item-content>
@@ -55,12 +55,12 @@
     </md-item>
   </md-list>
   <md-list flex="100"
-           ng-if="showApprovalButton === true">
+           ng-if="ctrl.showApprovalButton === true">
     <md-item flex>
       <md-item-content flex
                        layout="row"
                        layout-align="center center">
-        <md-button ng-click="approve()"
+        <md-button ng-click="ctrl.approve()"
                    class="md-raised md-warn ">
           Approve and Finalize
         </md-button>

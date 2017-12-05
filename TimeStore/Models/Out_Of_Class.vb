@@ -1,6 +1,11 @@
 ﻿Namespace Models
   Public Class Out_Of_Class
-    Property EmployeeID As Integer
+    ReadOnly Property Active As Integer
+      Get
+        If EmployeeID = -1 Then Return 0 Else Return 1
+      End Get
+    End Property
+    Property EmployeeID As Integer = -1
     Property WorkDate As Date
     Property ServiceRequestNumber As String
     Property Reason As String
@@ -16,6 +21,7 @@
 
     End Sub
 
+    ' Need to add Save function if this ends up going live.
     Public Function Retrieve(EmployeeID As Integer, PayPeriodEnding As Date) As List(Of Out_Of_Class)
       Dim dp As New DynamicParameters
       dp.Add("@EmployeeID", EmployeeID)

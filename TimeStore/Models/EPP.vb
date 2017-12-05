@@ -1211,6 +1211,12 @@
           TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "Not enough hours scheduled in Week 2."))
         End If
       End If
+      If e.TelestaffProfileType = TelestaffProfileType.Office Then
+        If e.Comp_Time_Banked.TotalHours + EmployeeData.Banked_Comp_Hours - Comp_Time_Used.TotalHours > 32 Then
+          TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "You can only bank a maximum of 32 hours of Comp Time."))
+        End If
+
+      End If
 
       If _term_hours.TotalHours > 0 Then
         TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee has Term Hours entered."))

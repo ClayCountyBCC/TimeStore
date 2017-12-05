@@ -1,6 +1,6 @@
 ﻿@*@Modeltype TimeStore.Models.Timecard_Access*@
 @code
-  Dim LatestVer As String = "V20171002 1456"
+  Dim LatestVer As String = "V20171114 0900"
   Dim MaterialVer As String = "1.4" ' was 1.1
   Dim AngularVer As String = "1.5.11" ' was 1.4.2
 

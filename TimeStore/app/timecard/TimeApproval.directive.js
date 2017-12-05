@@ -6,44 +6,53 @@
     .directive('timeApproval', ['viewOptions', function (viewOptions)
     {
       return {
+        bindToController: true,
         restrict: 'E',
         templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
         scope: {
-          tc: '=',
+          tc: '='
           //tl: '=',
-          showApproval: '='
+          //showApproval: '='
 
         },
-        controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions',
+        controllerAs: 'ctrl',
+        controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions', 
           function ($scope, $mdToast, timestoredata, commonFunctions)
           {
-            $scope.showHolidayError = false;
-            $scope.showApprovalButton = false;
-
-            $scope.checkApproved = function ()
+            var ctrl = this;
+            $scope.$on("shareTimecardReloaded", function ()
             {
-              $scope.showApprovalButton = false;
-              if ($scope.tc.ErrorList.length > 0)
+              ctrl.checkApproved();
+              
+            });
+
+            ctrl.showHolidayError = false;
+            ctrl.showApprovalButton = false;
+
+            ctrl.checkApproved = function ()
+            {
+              ctrl.showApprovalButton = false;
+              if (ctrl.tc.ErrorList.length > 0)
               {
                 return false;
               }
-              if ($scope.tc.Approval_Level !== 0)
+              if (ctrl.tc.Approval_Level !== 0)
               {
                 return false;
               }
-              if ($scope.tc.Days_Since_PPE > 1)
+              if (ctrl.tc.Days_Since_PPE > 1)
               {
                 return false;
               }
-              if ($scope.tc.timeList.length === 0)
+              if (ctrl.tc.timeList.length === 0)
               {
                 return false;
               }
-              //if ($scope.tl === undefined)
+              //if (ctrl.tl === undefined)
               //{
               //  return false;
               //}
-              //var ctl = $scope.tl;
+              //var ctl = ctrl.tl;
               //if (ctl.length === 0)
               //{
               //  return false;
@@ -56,29 +65,30 @@
               //  }
               //}
               // Now let's check that the holidays are handled
-              if ($scope.tc.isHolidayTimeBankable === true && $scope.tc.HolidaysInPPD.length > 0)
+              if (ctrl.tc.isHolidayTimeBankable === true && ctrl.tc.HolidaysInPPD.length > 0)
               {
                 // If they don't have any hours in 134 or 122 then we need to stop.                        
-                $scope.showHolidayError = true;
+                var ctl = ctrl.tc.timeList;
+                ctrl.showHolidayError = true;
                 for (var j = 0; j < ctl.length; j++)
                 {
                   if (ctl[j].payCode === '122' || ctl[j].payCode === '134')
                   {
-                    $scope.showHolidayError = false;
+                    ctrl.showHolidayError = false;
                   }
                 }
-                if ($scope.showHolidayError === true)
+                if (ctrl.showHolidayError === true)
                 {
                   return false;
                 }
               }
-              $scope.showApprovalButton = true;
+              ctrl.showApprovalButton = true;
               return true;
             };
 
-            $scope.approve = function ()
+            ctrl.approve = function ()
             {
-              var timecard = $scope.tc;
+              var timecard = ctrl.tc;
               var ad = {
                 EmployeeID: timecard.employeeID,
                 PayPeriodStart: timecard.payPeriodStart,
@@ -91,8 +101,8 @@
 
             var onApproval = function (data)
             {
-              $scope.showApprovalButton = false;
-              showToast(data);
+              ctrl.showApprovalButton = false;
+              showToast(data);              
               viewOptions.approvalUpdated.approvalUpdated = true;
               viewOptions.approvalUpdated.share();
             };
@@ -102,13 +112,13 @@
               alert(data + '  Your approval was not saved!');
             };
 
-            //$scope.getGroups = function ()
+            //ctrl.getGroups = function ()
             //{
-            //  return commonFunctions.getGroupsByShortPayRate($scope.tl);
+            //  return commonFunctions.getGroupsByShortPayRate(ctrl.tl);
 
             //  //var groupArray = [];
 
-            //  //angular.forEach($scope.tl, function (item, idx) {
+            //  //angular.forEach(ctrl.tl, function (item, idx) {
             //  //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
             //  //        groupArray.push(parseFloat(item.shortPayRate));
             //  //    }
@@ -116,20 +126,20 @@
             //  //return groupArray;
             //};
 
-            $scope.toastPosition = {
+            ctrl.toastPosition = {
               bottom: true,
               top: false,
               left: false,
               right: true
             };
 
-            //$scope.getTotalHours = function ()
+            //ctrl.getTotalHours = function ()
             //{
-            //  return commonFunctions.getTotalHours($scope.tl);
-            //  //if ($scope.tl === undefined) {
+            //  return commonFunctions.getTotalHours(ctrl.tl);
+            //  //if (ctrl.tl === undefined) {
             //  //    return 0;
             //  //}
-            //  //var tl = $scope.tl;
+            //  //var tl = ctrl.tl;
             //  //var total = 0;
             //  //for (var i = 0; i < tl.length; i++) {
             //  //    total += tl[i].hours;
@@ -142,19 +152,19 @@
               $mdToast.show(
                 $mdToast.simple()
                   .content(Message)
-                  .position($scope.getToastPosition())
+                  .position(ctrl.getToastPosition())
                   .hideDelay(3000)
               );
             }
 
-            $scope.getToastPosition = function ()
+            ctrl.getToastPosition = function ()
             {
-              return Object.keys($scope.toastPosition)
-                .filter(function (pos) { return $scope.toastPosition[pos]; })
+              return Object.keys(ctrl.toastPosition)
+                .filter(function (pos) { return ctrl.toastPosition[pos]; })
                 .join(' ');
             };
 
-            $scope.checkApproved();
+            ctrl.checkApproved();
           }]
       };
     }]);

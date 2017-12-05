@@ -20,8 +20,8 @@
       for (i = 0; i < $scope.timecard.timeList.length; i++) {
         $scope.timecard.timeList[i].approved = false;
       }
-
     }
+
 
     $scope.$on('shareApprovalUpdated', function () {
       if (viewOptions.approvalUpdated.approvalUpdated) {
@@ -38,9 +38,8 @@
 
     var onEmployee = function (data) {
       console.log('updating employee after approval updated', data);
-      $scope.timecard = data;
+      $scope.timecard = data;      
       updateCalculatedTimeList();
-      console.log('timecard data', $scope.timecard);
       viewOptions.timecardReloaded.share()
     };
 

@@ -4,7 +4,8 @@
         <label class="longerLabel"
                style="width: auto;"
                >{{ ::hours.label }}</label>
-        <input ng-model="hours.value"
+        <input ng-model-options="{ debounce: 1500 }"
+               ng-model="hours.value"
                ng-change="calc()"
                type="{{ ::hours.type }}"
                min="{{ ::hours.min }}"

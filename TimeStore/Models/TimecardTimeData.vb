@@ -1,4 +1,6 @@
-﻿Namespace Models
+﻿Imports System.Data.SqlClient
+
+Namespace Models
   Public Class TimecardTimeData
     Public Enum TimeCardDataSource
       Timecard = 0
@@ -93,7 +95,8 @@
       Dim ignoreList() As Integer = {10, 11}
       IsApproved = ((From std In STDTA
                      Where Not ignoreList.Contains(std.field_id) And
-                       Not std.is_approved Select std).Count = 0)
+                       Not std.is_approved
+                     Select std).Count = 0)
       For Each s In STDTA
         Select Case s.field_id
           Case 1
@@ -206,104 +209,96 @@
       Return True
     End Function
 
-    '    Public Function Save(tca As Timecard_Access) As Boolean
+    Public Function Save(tca As Timecard_Access) As Boolean
 
+      Dim std As New Saved_TimeStore_Data(Me, tca)
+      Dim dt As DataTable = PopulateData()
 
-    '      ' here's what this process is going to do:
-    '      'User chooses to save record
-    '      'check If work record exists
-    '      Dim existing = To_Saved_TimeStore_Data()
-    '      'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-    '      'Dim existing = Get_Saved_Timestore_Data_by_Date(T.EmployeeID, T.WorkDate)
+      Dim dp As New DynamicParameters(std)
+      ' Add an output parameter to find out if the transaction completed.
+      ' update the stored procedure and turn it into a transaction that 
+      ' can be rolled back.
+      dp.Add("@HTA", dt.AsTableValuedParameter("HoursToApproveData"))
 
-    '      If existing.employee_id = 0 Then ' record does Not exist
-
-    '        Dim workID As Long = Save_Timestore_Data(Me, tca) '   Insert New work record, return work record ID
-    '        If Save_Hours_To_Approve(Me, workID, tca) Then
-    '          ' If this user's leave doesn't require approval, let's go ahead and approve everything.
-    '          If Not tca.RequiresApproval Then
-    '            existing = To_Saved_TimeStore_Data()
-    '            'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-    '            For Each hta In existing.HoursToApprove
-    '              Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
-    '            Next
-    '          Else
-    '            'let's remove any current approvals.
-    '            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-    '            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-    '              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed.")
-    '            End If
-    '          End If
-    '          Return True
-    '        Else
-    '          Return False
-    '        End If
-
-
-    '        ' 8/26/2015 Going to skip the auto approving.
-    '        '   check person saving rows' approval level (Check Authority)
-    '        '       If they Then have the authority To "pre-approve" the time
-    '        '		    insert the hours into the hours To approve table Using the work record id, capturing the ID inserted.
-    '        '           Use the returned ID to save the approval data for each hours to add the rows to approve record.
-
-    '        '       If they do not have the authority to pre-approve
-    '        '           insert the hours into the hours to approve table using the work record id
-
-    '      Else ' record exists
-
-    '        If Not Update_Timestore_Work_Data(T, tca, existing) Then Return False
-
-    '        Select Case Update_Hours_To_Approve(T, tca, existing)
-    '          Case 5 ' data was updated and everything was good.
-    '            'let's remove any current approvals.
-    '            Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-    '            If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-    '              Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. **")
-    '            End If
-    '          Case 2 ' data wasn't updated but it completed normally
-    '            If Not Compare_Existing_To_Current(existing, T) Then
-    '              Dim payperiodstart As Date = GetPayPeriodStart(T.WorkDate)
-    '              If Clear_Saved_Timestore_Data(T.EmployeeID, payperiodstart) = -1 Then
-    '                Add_Timestore_Note(T.EmployeeID, payperiodstart.AddDays(13), "Approval Removed, Hours or Payrate has changed. *")
-    '              End If
-    '            End If
-    '          Case 1 ' data was updated but there was an error
-    '            Return False
-    '          Case -1 ' error
-    '            Return False
-    '        End Select
-    '        If Not tca.RequiresApproval Then
-    '          existing = T.To_Saved_TimeStore_Data
-    '          'New Saved_TimeStore_Data(T.EmployeeID, T.WorkDate)
-    '          For Each hta In existing.HoursToApprove
-    '            If Not hta.is_approved Then Finalize_Leave_Request(True, hta.approval_hours_id, hta.hours_used, "", tca)
-    '          Next
-    '        End If
-    '        Return True
-
-    '        '   Return ID Of existing data
-    '        '       get list of hours to approve rows with that ID
-    '        '       get list of approvals that match those IDs
-    '        '       if the hours to approve are already approved and the new hours are greater than the hours approved
-    '        '           then remove the approval.
-    '        '       update work record with New data (ID stays the same), update date_last_updated with current date/time
-    '        '       Loop through each Hours to approve row And update the used_hours And worktimes field to match the current saved value, unless it Is denied, then enforce it to zero.
-
-    '        '       insert any New hours to approve that were Not present
-
-    '      End If
+      Try
+        Using db As IDbConnection = New SqlConnection(GetCS(ConnectionStringType.Timestore))
+          Dim i = db.Execute("SaveTimecardDay", dp, commandType:=CommandType.StoredProcedure)
+          Return True
+        End Using
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "SaveTimecardDay")
+        Return False
+      End Try
 
 
 
+    End Function
 
-    '    End Function
+    Private Shared Function BuildDataTable() As DataTable
+      Dim dt As New DataTable("HoursToApproveData")
+      'dt.Columns.Add("work_hours_id", Type.GetType("System.Int64"))
+      dt.Columns.Add("field_id", Type.GetType("System.Int16"))
+      dt.Columns.Add("work_times", Type.GetType("System.String"))
+      dt.Columns.Add("hours_used", Type.GetType("System.Double"))
+      Return dt
+    End Function
 
-    '    Private Function SaveWorkData(tca As Timecard_Access)
-    '      Dim query As String = "
+    Private Function PopulateData() As DataTable
+      Dim dt As DataTable = BuildDataTable()
 
+      If VacationHours > 0 Then
+        dt.Rows.Add(2, "", VacationHours)
+      End If
+      If SickHours > 0 Then
+        dt.Rows.Add(3, "", SickHours)
+      End If
+      If CompTimeUsed > 0 Then
+        dt.Rows.Add(4, "", CompTimeUsed)
+      End If
+      If AdminBereavement > 0 Then
+        dt.Rows.Add(5, "", AdminBereavement)
+      End If
+      If AdminJuryDuty > 0 Then
+        dt.Rows.Add(6, "", AdminJuryDuty)
+      End If
+      If AdminMilitaryLeave > 0 Then
+        dt.Rows.Add(7, "", AdminMilitaryLeave)
+      End If
+      If AdminWorkersComp > 0 Then
+        dt.Rows.Add(8, "", AdminWorkersComp)
+      End If
+      If AdminOther > 0 Then
+        dt.Rows.Add(9, "", AdminOther)
+      End If
+      If OnCallMinimumHours > 0 Then
+        dt.Rows.Add(10, "", OnCallMinimumHours)
+      End If
+      If OnCallWorkHours > 0 Then
+        dt.Rows.Add(11, "", OnCallWorkHours)
+      End If
+      If OnCallTotalHours > 0 Or OnCallWorkTimes.Length > 0 Then
+        dt.Rows.Add(13, OnCallWorkTimes, OnCallTotalHours)
+      End If
+      If SickLeavePoolHours > 0 Then
+        dt.Rows.Add(14, "", SickLeavePoolHours)
+      End If
+      If LWOPSuspensionHours > 0 Then
+        dt.Rows.Add(15, "", LWOPSuspensionHours)
+      End If
+      If ScheduledLWOPHours > 0 Then
+        dt.Rows.Add(16, "", ScheduledLWOPHours)
+      End If
+      If SickFamilyLeave > 0 Then
+        dt.Rows.Add(17, "", SickFamilyLeave)
+      End If
+      If TermHours > 0 Then
+        dt.Rows.Add(18, "", TermHours)
+      End If
+      If AdminDisaster > 0 Then
+        dt.Rows.Add(19, "", AdminDisaster)
+      End If
+      Return dt
+    End Function
 
-    '"
-
-    '    End Function
   End Class
 End Namespace

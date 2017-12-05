@@ -14,23 +14,23 @@ Public Module ModuleMain
   Public Enum ConnectionStringType
     Timestore = 0
     FinPlus = 1
-    FinplusTraining = 5
     Telestaff = 2
     Timecard = 3
     Log = 4
+    FinplusTraining = 5
   End Enum
 
   Public Sub Log(e As Exception, Query As String)
-    Tools.Log(e, toolsAppId, Query, Tools.Logging.LogType.Database)
+    Dim el As New ErrorLog(e, Query)
   End Sub
 
   Public Sub Log(e As Exception)
-    Tools.Log(e, toolsAppId, "", Tools.Logging.LogType.Database)
+    Dim el As New ErrorLog(e, "")
   End Sub
 
   Public Sub Log(ErrorText As String, ErrorMessage As String, ErrorStacktrace As String,
                   ErrorSource As String)
-    Tools.Log(toolsAppId, ErrorText, ErrorMessage, ErrorStacktrace, ErrorSource, Tools.Logging.LogType.Database)
+    Dim el As New ErrorLog(ErrorText, ErrorMessage, ErrorStacktrace, ErrorSource, "")
   End Sub
 
   Public Function IsNull(Of T)(ByVal Value As T, ByVal DefaultValue As T) As T
@@ -38,14 +38,6 @@ Public Module ModuleMain
       Return DefaultValue
     Else
       Return Value
-    End If
-  End Function
-
-  Public Function IsEmpty(ByVal value As String) As Double
-    If value = String.Empty Then
-      Return 0
-    Else
-      Return CType(value, Double)
     End If
   End Function
 
@@ -92,9 +84,9 @@ Public Module ModuleMain
     HolidayList.Add(ThanksGiving)
     HolidayList.Add(ThanksGiving.AddDays(+1))
     Select Case vYear
-      Case 2014
+      Case 2014, 2017
         ' Christmas Eve         Dec 24
-        HolidayList.Add(DateSerial(vYear, 12, 26)) ' for 2014, the holidays are set to 12/25 and 12/26
+        HolidayList.Add(DateSerial(vYear, 12, 26)) ' for 2014 & 2017, the holidays are set to 12/25 and 12/26
       Case Else
         ' Christmas Eve         Dec 24
         HolidayList.Add(DateSerial(vYear, 12, 24))
@@ -260,8 +252,6 @@ Public Module ModuleMain
                                                     WorkType As String,
                                                     ProfileType As TelestaffProfileType,
                                                     ByRef Incentives As List(Of Incentive)) As Double
-    'If WageFactor = 1.62 Then WageFactor = 1.12
-    'If WageFactor = 1.6 Then WageFactor = 1.1
 
     If PR = 0 Then
       Return PR
@@ -278,25 +268,41 @@ Public Module ModuleMain
       Dim TotalIncentive As Double = Calculate_Telestaff_Incentives(Job, Specialties, Incentives)
 
       Select Case WorkType
-        Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12",
-             "SUE", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE",
-             "OTSUED"
+        Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12" ' for older work codes
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
-          ' Regular shift Step up and Overtime Step up
-        Case "SU10", "OT10", "OTLC10", "OTLR10", "OTM10",
-             "SU10", "OT10", "OTLC10", "OTLR10",
-             "SUO", "SUBC", "OTSUO", "OTSUO", "OTSUBC",
-             "OTMSUO", "OTMSUBC", "OTLCSUO", "OTLCSUBC",
-             "OTLRSUO", "OLTRSUBC", "OTSUOD"
+        Case "SU10", "OT10", "OTLC10", "OTLR10", "OTM10",' for older work codes, these shouldn't be used any longer.
+             "SU10", "OT10", "OTLC10", "OTLR10"
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
-        Case "ST12", "STE" ' Shift trade working step up
+        Case "SUE", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED"  ' Step up engineer 
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+
+        Case "SUO", "OTSUO", "OTMSUO", "OTLRSUO", "OTLCSUO", "OTSUOD" ' Step up Officer
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+
+        Case "SUBC", "OTSUBC", "OTMSUBC", "OLTRSUBC", "OTLCSUBC", "OTSUBCD" ' Step up BC
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+
+          ' Shift trades from here down
+        Case "ST10" ' older work codes, not used anymore
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Return Math.Round(StepupRate - PR, 5)
+
+        Case "ST12" ' older work codes, not used anymore
           Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
-        Case "ST10", "STO", "STBC"
+        Case "STE" ' Shift trade Engineer
           Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Return Math.Round(StepupRate - PR, 5)
+
+        Case "STO"
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Return Math.Round(StepupRate - PR, 5)
+
+        Case "STBC" ' Shift Trade
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case Else

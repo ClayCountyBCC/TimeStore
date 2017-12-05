@@ -33,11 +33,7 @@
       function getDeptLeaveRequests()
       {
         return $http
-          .post(
-          "TC/Leave_Requests_By_Department",
-          {},
-          { cache: false }
-          )
+          .post("TC/Leave_Requests_By_Department", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -213,12 +209,10 @@
           EndDate: endDate,
           Fields: fieldsToDisplay
         };
-        return $http
-          .post("Reports/GetGenericData", x)
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.post("Reports/GetGenericData", x).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var SaveNoteToPayPeriod = function (employeeId, note, payPeriodEnding)
@@ -238,12 +232,10 @@
 
       var saveTCTD = function (TCTD)
       {
-        return $http
-          .post("TC/SaveTimecardDay", TCTD)
-          .then(function (response)
-          {
-            return response;
-          });
+        return $http.post("TC/SaveTimecardDay", TCTD).then(function (response)
+        {
+          return response;
+        });
       };
 
       var classShiftTen = function ()
@@ -350,7 +342,6 @@
         });
       };
 
-
       var getUncompletedApprovals = function (ppdIndex)
       {
         return getUnrestrictedInitiallyApproved(ppdIndex).then(function (data)
@@ -454,12 +445,10 @@
 
       var getMyAccess = function ()
       {
-        return $http
-          .get("TC/Access", { cache: true })
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.get("TC/Access", { cache: true }).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var getAccess = function (employeeid)
@@ -473,12 +462,10 @@
       };
       var saveAccess = function (rawTCA)
       {
-        return $http
-          .post("TC/SaveAccess", rawTCA)
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.post("TC/SaveAccess", rawTCA).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var getDepartments = function ()

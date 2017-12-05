@@ -1,5 +1,8 @@
-﻿Namespace Models
+﻿Imports System.Data
+Imports System.Data.SqlClient
+Imports Dapper
 
+Namespace Models
 
   Public Class Saved_TimeStore_Data
 
@@ -19,6 +22,7 @@
     Property holiday As Double = 0
     Property leave_without_pay As Double = 0
     Property total_hours As Double = 0
+    Property out_of_class As Integer = 0
     Property doubletime_hours As Double = 0
     Property vehicle As Integer = 0
     Property comment As String = ""
@@ -51,6 +55,7 @@
       doubletime_hours = tctd.DoubleTimeHours
       vehicle = tctd.Vehicle
       comment = tctd.Comment
+      out_of_class = tctd.OutOfClass.Active
       by_employeeid = tca.EmployeeID
       by_username = tca.UserName
       by_machinename = tca.MachineName
@@ -165,47 +170,6 @@
         Return Nothing
       End Try
 
-    End Function
-
-    Public Function Save() As Long
-      Dim query As String = "
-        USE TimeStore;
-
-        SET NOCOUNT, XACT_ABORT ON;
-
-        MERGE Work_Hours WITH (HOLDLOCK) AS W
-
-        USING (SELECT @work_date, @employee_id) AS NW (work_date, employee_id)
-          ON NW.employee_id = W.employee_id AND NW.work_date = W.work_date
-
-        WHEN MATCHED THEN
-          
-          UPDATE 
-             SET 
-                ,dept_id = @dept_id
-                ,pay_period_ending = @pay_period_ending
-                ,work_times = @work_times
-                ,disaster_work_times = @disaster_work_times
-                ,disaster_work_hours = @disaster_work_hours
-                ,break_credit = @break_credit
-                ,work_hours = @work_hours
-                ,holiday = @holiday
-                ,leave_without_pay = @leave_without_pay
-                ,total_hours = @total_hours
-                ,doubletime_hours = @doubletime_hours
-                ,vehicle = @vehicle
-                ,comment = @comment
-                ,out_of_class = @out_of_class
-                ,date_last_updated = GETDATE()
-                ,by_employeeid = 
-                ,by_username = <by_username, varchar(100),>
-                ,by_machinename = <by_machinename, varchar(100),>
-                ,by_ip_address = <by_ip_address, varchar(20),>
-
-        WHEN NOT MATCHED THEN
-
-          );"
-      Return -1
     End Function
 
   End Class

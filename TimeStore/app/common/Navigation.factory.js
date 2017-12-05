@@ -114,7 +114,6 @@
 
         function goDefaultEmployee(eid)
         {
-          console.log('defaultemployee, getting payperiodend');
           go('/e/' + eid + '/ppd/' + timestoredata.getPayPeriodEnd());
           //$location.path('/e/' + eid + '/ppd/' + timestoredata.getPayPeriodEnd());
         }

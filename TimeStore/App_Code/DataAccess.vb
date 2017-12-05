@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString

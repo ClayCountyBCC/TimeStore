@@ -613,103 +613,109 @@
 </form>
 </script>
 <script type="text/ng-template" id="AddCompTime.directive.tmpl.html">
-    <div style="margin-top: .5em;"
-         layout-fill
-         layout="row"
-         layout-align="center center"
-         layout-wrap
+  <div style="margin-top: .5em;"
+       layout-fill
+       layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">
+    <div ng-show="timecard.exemptStatus !== 'Exempt'"
          flex="100">
-        <div ng-show="timecard.exemptStatus !== 'Exempt'"
-             flex="100">
-            <div class="short-toolbar my-accent"
-                 flex="100"
-                 layout="row"
-                 layout-align="center center">
-                <h5>Week 1</h5>
-            </div>
-            <time-list flex="100" tl="timecard.calculatedTimeList_Week1"></time-list>
+      <div class="short-toolbar my-accent"
+           flex="100"
+           layout="row"
+           layout-align="center center">
+        <h5>Week 1</h5>
+      </div>
+      <time-list flex="100" tl="timecard.calculatedTimeList_Week1"></time-list>
 
-            <div class="short-toolbar my-accent"
-                 flex="100"
-                 layout="row"
-                 layout-align="center center">
-                <h5>Week 2</h5>
-            </div>
-            <time-list flex="100" tl="timecard.calculatedTimeList_Week2"></time-list>
-            <div layout="row"
-                 layout-align="start center"
-                 layout-wrap
-                 flex="95">
-                <div layout="row"
-                     layout-align="start center"
-                     flex="100">
-                    <span style="text-align: center;"
-                          flex="25">
-                        Week 1 - {{ week1OT }} hours eligible:
-                    </span>
-                    <md-slider aria-label="Week 1 Overtime to Comp Time"
-                               flex="50"
-                               ng-disabled="week1OT <= 0"
-                               md-discrete
-                               min="0"
-                               max="{{ week1OT }}"
-                               step=".25"
-                               ng-model="week1CompTimeEarned">
-                    </md-slider>
-                    <span layout="row"
-                          layout-align="center center"
-                          flex="20">
-                        {{ formatNumber(week1CompTimeEarned) }} hours ( {{ formatNumber(week1CompTimeEarned * 1.5) }} calculated hours )
-                    </span>                   
-                </div>
-                <div layout="row"
-                     layout-align="start center"
-                     flex="100">
-                    <span style="text-align: center;"
-                          flex="25">
-                        Week 2 - {{ week2OT }} hours eligible:
-                    </span>
-                    <md-slider aria-label="Week 2 Overtime to Comp Time"
-                               flex="50"
-                               ng-disabled="week2OT <= 0"
-                               md-discrete
-                               min="0"
-                               max="{{ week2OT }}"
-                               step=".25"
-                               ng-model="week2CompTimeEarned">
-                    </md-slider>
-                    <span layout="row"
-                          layout-align="center center"
-                          flex="20">
-                        {{ formatNumber(week2CompTimeEarned) }} hours ( {{ formatNumber(week2CompTimeEarned * 1.5) }} calculated hours )
-                    </span>
-                </div>
-                <div layout="row"
-                     layout-align="center center"
-                     flex="100">
-                    <span layout="row"
-                          layout-align="end center"
-                          flex>
-                        {{ responseMessage }}
-                    </span>
-                    <span flex="5"></span>
-                    <md-button class="md-warn md-raised"
-                               ng-click="SaveCompTime()">
-                        Save Comp Time
-                        <md-icon aria-label="save icon"
-                                 md-svg-src="images/ic_save_24px.svg">
-                        </md-icon>
-                    </md-button>
-                </div>
-            </div>
+      <div class="short-toolbar my-accent"
+           flex="100"
+           layout="row"
+           layout-align="center center">
+        <h5>Week 2</h5>
+      </div>
+      <time-list flex="100" tl="timecard.calculatedTimeList_Week2"></time-list>
+      <div class="warn"
+           flex="100"
+           layout-align="center center"
+           layout="row">
+        You can only bank a maximum of 32 hours of comp time.
+      </div>
+      <div layout="row"
+           layout-align="start center"
+           layout-wrap
+           flex="95">
+        <div layout="row"
+             layout-align="start center"
+             flex="100">
+          <span style="text-align: center;"
+                flex="25">
+            Week 1 - {{ week1OT }} hours eligible:
+          </span>
+          <md-slider aria-label="Week 1 Overtime to Comp Time"
+                     flex="50"
+                     ng-disabled="week1OT <= 0"
+                     md-discrete
+                     min="0"
+                     max="{{ week1OT }}"
+                     step=".25"
+                     ng-model="week1CompTimeEarned">
+          </md-slider>
+          <span layout="row"
+                layout-align="center center"
+                flex="20">
+            {{ formatNumber(week1CompTimeEarned) }} hours ( {{ formatNumber(week1CompTimeEarned * 1.5) }} calculated hours )
+          </span>
+        </div>
+        <div layout="row"
+             layout-align="start center"
+             flex="100">
+          <span style="text-align: center;"
+                flex="25">
+            Week 2 - {{ week2OT }} hours eligible:
+          </span>
+          <md-slider aria-label="Week 2 Overtime to Comp Time"
+                     flex="50"
+                     ng-disabled="week2OT <= 0"
+                     md-discrete
+                     min="0"
+                     max="{{ week2OT }}"
+                     step=".25"
+                     ng-model="week2CompTimeEarned">
+          </md-slider>
+          <span layout="row"
+                layout-align="center center"
+                flex="20">
+            {{ formatNumber(week2CompTimeEarned) }} hours ( {{ formatNumber(week2CompTimeEarned * 1.5) }} calculated hours )
+          </span>
         </div>
         <div layout="row"
              layout-align="center center"
-             flex="100"
-             ng-if="timecard.exemptStatus === 'Exempt'">
-            Exempt employees are ineligible for comp time.
+             flex="100">
+          <span layout="row"
+                layout-align="end center"
+                flex>
+            {{ responseMessage }}
+          </span>
+          <span flex="5"></span>
+          <md-button class="md-warn md-raised"
+                     ng-click="SaveCompTime()">
+            Save Comp Time
+            <md-icon aria-label="save icon"
+                     md-svg-src="images/ic_save_24px.svg">
+            </md-icon>
+          </md-button>
         </div>
+      </div>
     </div>
+    <div layout="row"
+         layout-align="center center"
+         flex="100"
+         ng-if="timecard.exemptStatus === 'Exempt'">
+      Exempt employees are ineligible for comp time.
+    </div>
+  </div>
 </script>
 <script type="text/ng-template" id="HoursDisplay.directive.tmpl.html">
     <md-input-container ng-show="::hours.visible"
@@ -717,7 +723,8 @@
         <label class="longerLabel"
                style="width: auto;"
                >{{ ::hours.label }}</label>
-        <input ng-model="hours.value"
+        <input ng-model-options="{ debounce: 1500 }"
+               ng-model="hours.value"
                ng-change="calc()"
                type="{{ ::hours.type }}"
                min="{{ ::hours.min }}"
@@ -865,7 +872,7 @@
                              ng-if="t.showTimecard === true">
             </timecard-detail>
             <md-divider flex="100" ng-if="t.showTimecard === true"></md-divider>
-
+            
             <div ng-repeat="wtl in t.approvalTimeList"
                  flex="30"
                  layout="row"
@@ -2134,7 +2141,7 @@
 </script>
 <script type="text/ng-template" id="TimeApproval.tmpl.html">
   <div style="margin-top: .75em;"
-       ng-show="tc.ErrorList.length > 0"
+       ng-show="ctrl.tc.ErrorList.length > 0"
        layout="row"
        layout-align="center center"
        layout-wrap
@@ -2143,29 +2150,29 @@
     <timecard-warnings flex="100"
                        alignheader="center"
                        headerclass="warn"
-                       dl="tc.ErrorList"
+                       dl="ctrl.tc.ErrorList"
                        title="Errors"></timecard-warnings>
   </div>
 
-  <div ng-show="tc.Approval_Level > 0 && tc.Days_Since_PPE < 1"
+  <div ng-show="ctrl.tc.Approval_Level > 0 && ctrl.tc.Days_Since_PPE < 1"
        layout="row"
        layout-align="center center"
        flex="100">
     Your time has already been approved.
   </div>
-  <div ng-show="tc.Days_Since_PPE > 1"
+  <div ng-show="ctrl.tc.Days_Since_PPE > 1"
        layout="row"
        layout-align="center center"
        flex="100">
     It is too late to approve your time for this pay period.
   </div>
-  <div ng-show="tc.timeList.length === 0 && tc.Days_Since_PPE < 1"
+  <div ng-show="ctrl.tc.timeList.length === 0 && ctrl.tc.Days_Since_PPE < 1"
        layout="row"
        layout-align="center center"
        flex="100">
     No time has been entered to approve.
   </div>
-  <div ng-show="tc.WarningList.length > 0"
+  <div ng-show="ctrl.tc.WarningList.length > 0"
        layout="row"
        layout-align="center center"
        layout-wrap
@@ -2173,10 +2180,10 @@
     <timecard-warnings flex="100"
                        alignheader="center"
                        headerclass="my-accent"
-                       dl="tc.WarningList"
+                       dl="ctrl.tc.WarningList"
                        title="Warnings"></timecard-warnings>
   </div>
-  <md-list ng-if="showHolidayError === true"
+  <md-list ng-if="ctrl.showHolidayError === true"
            flex="100">
     <md-item>
       <md-item-content>
@@ -2189,12 +2196,12 @@
     </md-item>
   </md-list>
   <md-list flex="100"
-           ng-if="showApprovalButton === true">
+           ng-if="ctrl.showApprovalButton === true">
     <md-item flex>
       <md-item-content flex
                        layout="row"
                        layout-align="center center">
-        <md-button ng-click="approve()"
+        <md-button ng-click="ctrl.approve()"
                    class="md-raised md-warn ">
           Approve and Finalize
         </md-button>
@@ -2217,11 +2224,11 @@
 
         <timecard-week flex="95"
                        title="Week 1"
-                       week="timecard.RawTime_Week1"
-                       typelist="timecard.Get_Types_Used"
-                       employeeid="timecard.employeeID"
-                       showaddtime="timecard.showAddTime"
-                       datatype="timecard.Data_Type">
+                       week="ctrl.timecard.RawTime_Week1"
+                       typelist="ctrl.timecard.Get_Types_Used"
+                       employeeid="ctrl.timecard.employeeID"
+                       showaddtime="ctrl.timecard.showAddTime"
+                       datatype="ctrl.timecard.Data_Type">
         </timecard-week>
 
       </div>
@@ -2232,11 +2239,11 @@
            layout-wrap>
         <timecard-week flex="95"
                        title="Week 2"
-                       week="timecard.RawTime_Week2"
-                       typelist="timecard.Get_Types_Used"
-                       employeeid="timecard.employeeID"
-                       showaddtime="timecard.showAddTime"
-                       datatype="timecard.Data_Type"></timecard-week>
+                       week="ctrl.timecard.RawTime_Week2"
+                       typelist="ctrl.timecard.Get_Types_Used"
+                       employeeid="ctrl.timecard.employeeID"
+                       showaddtime="ctrl.timecard.showAddTime"
+                       datatype="ctrl.timecard.Data_Type"></timecard-week>
 
       </div>
     </md-tab>
@@ -2254,7 +2261,7 @@
           <h5>Approval</h5>
         </div>
         <div>
-          <time-approval flex="100" tc="timecard"></time-approval>
+          <time-approval flex="100" tc="::ctrl.timecard"></time-approval>
         </div>
 
         <div style="margin-top: .75em;"
@@ -2265,17 +2272,17 @@
           <h5>Pay Period Summary</h5>
         </div>
 
-        <time-list flex="100" tl="timecard.calculatedTimeList"></time-list>
+        <time-list flex="100" tl="ctrl.timecard.calculatedTimeList"></time-list>
 
 
       </div>
 
     </md-tab>
-    <md-tab ng-if="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
+    <md-tab ng-if="ctrl.timecard.exemptStatus !== 'Exempt' && ctrl.timecard.Data_Type === 'timecard'"
             label="Handle Comp Time">
       <add-comp-time flex="100"
-                     ng-show="timecard.exemptStatus !== 'Exempt' && timecard.Data_Type === 'timecard'"
-                     timecard="timecard"></add-comp-time>
+                     ng-show="ctrl.timecard.exemptStatus !== 'Exempt' && ctrl.timecard.Data_Type === 'timecard'"
+                     timecard="ctrl.timecard"></add-comp-time>
     </md-tab>
 
     <!--<md-tab label="Approve"
@@ -2343,17 +2350,17 @@
       <div flex="100">
 
         <timecard-notes flex="100"
-                        datatype="timecard.Data_Type"
-                        employeeid="timecard.employeeID"
-                        payperiodending="timecard.payPeriodEndingDisplay"
-                        notes="timecard.Notes">
+                        datatype="ctrl.timecard.Data_Type"
+                        employeeid="ctrl.timecard.employeeID"
+                        payperiodending="ctrl.timecard.payPeriodEndingDisplay"
+                        notes="ctrl.timecard.Notes">
         </timecard-notes>
 
       </div>
 
     </md-tab>
 
-    <md-tab ng-if="timecard.isPubWorks"
+    <md-tab ng-if="ctrl.timecard.isPubWorks"
             label="Incentives">
       <div flex="100">
 
@@ -2361,10 +2368,10 @@
     </md-tab>
 
     <md-tab label="Holiday" 
-            ng-if="(timecard.HolidaysInPPD.length > 0 || timecard.bankedHoliday > 0) && timecard.Data_Type === 'telestaff'">
+            ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
            flex="100">
-        <div ng-if="timecard.HolidaysInPPD.length > 0"
+        <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
              layout="row"
              layout-align="center center"
@@ -2378,8 +2385,8 @@
                           layout="row"
                           layout-align="center center"
                           layout-wrap
-                          ng-model="timecard.HolidayHoursChoice[$index]"
-                          ng-repeat="holiday in timecard.HolidaysInPPD">
+                          ng-model="ctrl.timecard.HolidayHoursChoice[$index]"
+                          ng-repeat="holiday in ctrl.timecard.HolidaysInPPD">
             <span flex="25">
               {{holiday}}
             </span>
@@ -2404,7 +2411,7 @@
              layout="row"
              layout-align="center center"
              layout-wrap
-             ng-if="timecard.bankedHoliday >= timecard.holidayIncrement">
+             ng-if="ctrl.timecard.bankedHoliday >= ctrl.timecard.holidayIncrement">
           <div flex="100"
                class="short-toolbar my-accent"
                layout="row"
@@ -2416,24 +2423,24 @@
           <md-input-container>
             <label>Pay me for these Banked Holiday Hours</label>
             <input required type="number"
-                   step="{{timecard.holidayIncrement}}"
+                   step="{{ctrl.timecard.holidayIncrement}}"
                    name="amount"
                    min="0"
-                   max="{{timecard.bankedHoliday - timecard.HolidayHoursUsed}}"
-                   ng-model="timecard.BankedHoursPaid" />
+                   max="{{ctrl.timecard.bankedHoliday - ctrl.timecard.HolidayHoursUsed}}"
+                   ng-model="ctrl.timecard.BankedHoursPaid" />
           </md-input-container>
-          <span flex="50">You have {{ timecard.bankedHoliday }} hours banked, and have currently marked {{ timecard.HolidayHoursUsed + timecard.BankedHoursPaid }} hours for use so far this pay period.  You can elect to be paid for them in groups of {{ timecard.holidayIncrement }} hours.</span>
+          <span flex="50">You have {{ ctrl.timecard.bankedHoliday }} hours banked, and have currently marked {{ timecard.HolidayHoursUsed + timecard.BankedHoursPaid }} hours for use so far this pay period.  You can elect to be paid for them in groups of {{ timecard.holidayIncrement }} hours.</span>
         </div>
         <div layout="row"
              layout-align="center center"
              flex="100"
-             ng-if="timecard.bankedHoliday < timecard.holidayIncrement">
-          You must have {{ timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
+             ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
+          You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
         <div layout="row"
              layout-align="center center"
              flex="100">
-          <md-button ng-click="SaveHolidays()"
+          <md-button ng-click="ctrl.SaveHolidays()"
                      class="md-warn md-raised">
             Save
           </md-button>
@@ -2707,7 +2714,7 @@
                            datetype="ppd"
                            flex="100">
             </date-selector>
-            <timecard-detail flex="100" timecard="timecard"></timecard-detail>
+            <timecard-detail flex="100" timecard="::timecard"></timecard-detail>
 
         </div>
     </div>

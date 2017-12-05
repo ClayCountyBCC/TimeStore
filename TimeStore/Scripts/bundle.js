@@ -48577,11 +48577,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function getDeptLeaveRequests()
       {
         return $http
-          .post(
-          "TC/Leave_Requests_By_Department",
-          {},
-          { cache: false }
-          )
+          .post("TC/Leave_Requests_By_Department", {}, { cache: false })
           .then(function (response)
           {
             return response.data;
@@ -48757,12 +48753,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           EndDate: endDate,
           Fields: fieldsToDisplay
         };
-        return $http
-          .post("Reports/GetGenericData", x)
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.post("Reports/GetGenericData", x).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var SaveNoteToPayPeriod = function (employeeId, note, payPeriodEnding)
@@ -48782,12 +48776,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       var saveTCTD = function (TCTD)
       {
-        return $http
-          .post("TC/SaveTimecardDay", TCTD)
-          .then(function (response)
-          {
-            return response;
-          });
+        return $http.post("TC/SaveTimecardDay", TCTD).then(function (response)
+        {
+          return response;
+        });
       };
 
       var classShiftTen = function ()
@@ -48894,7 +48886,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         });
       };
 
-
       var getUncompletedApprovals = function (ppdIndex)
       {
         return getUnrestrictedInitiallyApproved(ppdIndex).then(function (data)
@@ -48998,12 +48989,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       var getMyAccess = function ()
       {
-        return $http
-          .get("TC/Access", { cache: true })
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.get("TC/Access", { cache: true }).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var getAccess = function (employeeid)
@@ -49017,12 +49006,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       };
       var saveAccess = function (rawTCA)
       {
-        return $http
-          .post("TC/SaveAccess", rawTCA)
-          .then(function (response)
-          {
-            return response.data;
-          });
+        return $http.post("TC/SaveAccess", rawTCA).then(function (response)
+        {
+          return response.data;
+        });
       };
 
       var getDepartments = function ()
@@ -49157,7 +49144,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         share: function ()
         {
           $rootScope.$broadcast("shareTimecardReloaded");
-          console.log('sharetimecardreloaded');
         }
       };
       return {
@@ -49287,7 +49273,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
         function goDefaultEmployee(eid)
         {
-          console.log('defaultemployee, getting payperiodend');
           go('/e/' + eid + '/ppd/' + timestoredata.getPayPeriodEnd());
           //$location.path('/e/' + eid + '/ppd/' + timestoredata.getPayPeriodEnd());
         }
@@ -51014,73 +50999,129 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
 }());
 /* global moment, _ */
-(function () {
+(function ()
+{
   "use strict";
   angular.module('timestoreApp')
-      .directive('addCompTime', function () {
-        return {
-          restrict: 'E',
-          scope: {
-            timecard: '='
-          },
-          templateUrl: 'AddCompTime.directive.tmpl.html',
-          controller: ['$scope', 'timestoredata', 'timestoreNav', 'viewOptions', '$routeParams', '$timeout',
-          function ($scope, timestoredata, timestoreNav, viewOptions, $routeParams, $timeout) {
-
+    .directive('addCompTime', function ()
+    {
+      return {
+        restrict: 'E',
+        scope: {
+          timecard: '='
+        },
+        templateUrl: 'AddCompTime.directive.tmpl.html',
+        controller: ['$scope', 'timestoredata', 'timestoreNav', 'viewOptions', '$routeParams', '$timeout',
+          function ($scope, timestoredata, timestoreNav, viewOptions, $routeParams, $timeout)
+          {
+            $scope.compTimeMax = 32;
             $scope.responseMessage = '';
-            $scope.week1OT = getBoth($scope.timecard.calculatedTimeList_Week1);
-            $scope.week2OT = getBoth($scope.timecard.calculatedTimeList_Week2);
-            $scope.week1CompTimeEarned = getComptime($scope.timecard.calculatedTimeList_Week1);
-            $scope.week2CompTimeEarned = getComptime($scope.timecard.calculatedTimeList_Week2);
+            $scope.formatNumber = function (n)
+            {
+              return (Math.round(n * 4) / 4).toFixed(2);
+            }
+            updateEligibleOT();
+            // They can only have a maximum of 32 hours of comp time banked
+            // In order to enforce this maximum, we need to know how many
+            // comp time hours they already have banked
+            // $scope.timecard.bankedComp is how many hours they have banked
+            // Also important to realize is that the hours they are
+            // banking are multipled by 1.5, so we'll need to do that in order
+            // to figure out our maximum
+            // formula for (Week1/2)CompTimeEarned:
+            // ($scope.compTimeMax - timecard.bankedComp - comptimeused) / 1.5
 
-            function getBoth(week) {
-              return getTime(week, '231') + getTime(week, '120');
+            function updateEligibleOT()
+            {
+              var compTimeUsed = getComptimeUsed();
+              var ct = ($scope.compTimeMax - $scope.timecard.bankedComp + compTimeUsed);
+              var maxCompTimeHours = $scope.formatNumber(ct / 1.5);
+              var maxcth = parseFloat(maxCompTimeHours);
+              if (maxcth * 1.5 > ct)
+              {
+                maxCompTimeHours = $scope.formatNumber((ct - .25) / 1.5);
+              }
+              var week1OT = getBoth($scope.timecard.calculatedTimeList_Week1);
+              var week2OT = getBoth($scope.timecard.calculatedTimeList_Week2);
+              var totalEligibleHours = Math.min(week1OT + week2OT, maxCompTimeHours);
+              console.log(week1OT, week2OT, totalEligibleHours, ct, maxCompTimeHours);
+              $scope.week1OT = Math.min(week1OT, totalEligibleHours);
+              $scope.week2OT = Math.min(week2OT, totalEligibleHours - $scope.week1OT);
+              $scope.week1CompTimeEarned = getComptime($scope.timecard.calculatedTimeList_Week1);
+              $scope.week2CompTimeEarned = getComptime($scope.timecard.calculatedTimeList_Week2);
             }
 
-            function getOvertime(week) {
+            function getTotalCompTimeBanked()
+            {
+              $scope.totalCompTimeBanked = getComptime($scope.timecard.calculatedTimeList_Week1) + getComptime($scope.timecard.calculatedTimeList_Week2);
+            }
+
+            function getBoth(week)
+            {
+              var ot = getOvertime(week);
+              var cttest = ($scope.compTimeMax - $scope.timecard.bankedComp);
+              var maxct = $scope.formatNumber(cttest / 1.5);
+              ot = Math.min(ot, maxct);
+              var ct = getComptime(week);
+              return ot + ct;
+            }
+
+            function getOvertime(week)
+            {
               return getTime(week, '231');
             }
 
-            function getComptime(week) {
+            function getComptime(week)
+            {
               return getTime(week, '120');
             }
 
-            function getTime(week, payCode) {
+            function getComptimeUsed()
+            {
+              return getTime($scope.timecard.calculatedTimeList_Week1, '121') +
+                getTime($scope.timecard.calculatedTimeList_Week2, '121');
+            }
+
+            function getTime(week, payCode)
+            {
               return _.result(_.find(week, { payCode: payCode }), 'hours', 0);
             }
 
-            $scope.SaveCompTime = function () {
+            $scope.SaveCompTime = function ()
+            {
               var eId = $routeParams.employeeId;
               var PPE = $scope.timecard.payPeriodEndingDisplay;
               timestoredata.saveCompTimeEarned(eId, $scope.week1CompTimeEarned, $scope.week2CompTimeEarned, PPE)
-                  .then(onSuccess, onError)
+                .then(onSuccess, onError)
 
               //alert('Not Implemented Yet');
             }
 
-            $scope.formatNumber = function (n) {
-              return (Math.round(n * 4) / 4).toFixed(2);
-            }
 
-            function onSuccess(response) {
+
+            function onSuccess(response)
+            {
               viewOptions.approvalUpdated.approvalUpdated = true;
               viewOptions.approvalUpdated.share();
               showMessage('Changes saved.');
             }
 
-            function onError(response) {
+            function onError(response)
+            {
               console.log(response);
               showMessage('There was an issue saving your changes.  Please try again and contact MIS if the problem persists.');
             }
-            function showMessage(message) {
+            function showMessage(message)
+            {
               $scope.responseMessage = message;
-              $timeout(function (t) {
+              $timeout(function (t)
+              {
                 $scope.responseMessage = '';
               }, 5000);
             }
           }]
-        }
-      });
+      }
+    });
 })();
 /* global moment, _ */
 (function ()
@@ -53135,8 +53176,41 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     function GroupsByPayPeriod()
     {
-      return [{ "ppe": "10/18/2016", "employees": [1019, 1020, 1065, 1073, 1078, 1081, 1181, 1223, 1233, 1255, 1266, 1303, 1335, 1344, 1347, 1349, 1356, 1357, 1359, 1374, 1483, 1499, 1501, 1521, 1523, 1567, 1729, 1822, 1887, 1889, 1969, 1987, 1989, 2060, 2081, 2082, 2097, 2192, 2231, 2375, 2377, 2399, 2427, 2428, 2445, 2457, 2459, 2464, 2474, 2489, 2490, 2493, 2500, 2511, 2513, 2541, 2542, 2574, 2604, 2605, 2614, 2615, 2630, 2633, 2644, 2648, 2650, 2652, 2685, 2704, 2710, 2711, 2742, 2746, 2753, 2759, 2783] }];
+      return [{ "ppe": "9/19/2017", "employees": [1012, 1019, 1028, 1030, 1031, 1043, 1063, 1064, 1065, 1066, 1067, 1073, 1074, 1075, 1076, 1078, 1079, 1080, 1114, 1117, 1121, 1124, 1125, 1127, 1140, 1151, 1157, 1159, 1167, 1168, 1181, 1182, 1184, 1187, 1191, 1204, 1212, 1216, 1217, 1222, 1229, 1235, 1241, 1245, 1255, 1266, 1267, 1277, 1281, 1291, 1303, 1304, 1306, 1308, 1313, 1324, 1326, 1327, 1328, 1335, 1337, 1340, 1341, 1344, 1347, 1349, 1361, 1369, 1377, 1384, 1387, 1389, 1397, 1398, 1408, 1414, 1420, 1433, 1436, 1445, 1451, 1452, 1459, 1460, 1461, 1474, 1480, 1492, 1501, 1521, 1549, 1563, 1567, 1569, 1707, 1719, 1721, 1729, 1759, 1789, 1808, 1824, 1848, 1849, 1863, 1887, 1889, 1892, 1896, 1963, 1969, 1978, 1987, 1989, 2008, 2009, 2018, 2019, 2022, 2033, 2037, 2057, 2070, 2081, 2082, 2097, 2127, 2163, 2191, 2192, 2196, 2206, 2216, 2220, 2225, 2229, 2258, 2262, 2264, 2266, 2273, 2375, 2377, 2399, 2410, 2427, 2439, 2445, 2457, 2459, 2469, 2471, 2474, 2493, 2497, 2500, 2512, 2516, 2530, 2532, 2535, 2541, 2542, 2549, 2551, 2553, 2554, 2555, 2558, 2559, 2563, 2570, 2572, 2576, 2605, 2617, 2619, 2633, 2634, 2641, 2644, 2648, 2650, 2652, 2659, 2675, 2679, 2681, 2684, 2695, 2696, 2701, 2704, 2710, 2711, 2714, 2722, 2736, 2737, 2739, 2745, 2747, 2753, 2754, 2755, 2756, 2761, 2768, 2769, 2772, 2774, 2782, 2783, 2784, 2786, 2791, 2793, 2794, 2797, 2808, 2810, 2811, 2813, 2814, 2815, 2816, 2819, 2826, 2832, 2837, 2838, 2839, 2846, 2847, 2849, 2850, 2851, 2857, 2858, 2860, 2861] }];
     }
+    // Hurricane Irma Data
+
+    // BCC Staff through 09-19
+    // [{"ppe": "9/19/2017", "employees": [1012,1019,1028,1030,1031,1043,1063,1064,1065,1066,1067,1073,1074,1075,1076,1078,1079,1080,1114,1117,1121,1124,1125,1127,1140,1151,1157,1159,1167,1168,1181,1182,1184,1187,1191,1204,1212,1216,1217,1222,1229,1235,1241,1245,1255,1266,1267,1277,1281,1291,1303,1304,1306,1308,1313,1324,1326,1327,1328,1335,1337,1340,1341,1344,1347,1349,1361,1369,1377,1384,1387,1389,1397,1398,1408,1414,1420,1433,1436,1445,1451,1452,1459,1460,1461,1474,1480,1492,1501,1521,1549,1563,1567,1569,1707,1719,1721,1729,1759,1789,1808,1824,1848,1849,1863,1887,1889,1892,1896,1963,1969,1978,1987,1989,2008,2009,2018,2019,2022,2033,2037,2057,2070,2081,2082,2097,2127,2163,2191,2192,2196,2206,2216,2220,2225,2229,2258,2262,2264,2266,2273,2375,2377,2399,2410,2427,2439,2445,2457,2459,2469,2471,2474,2493,2497,2500,2512,2516,2530,2532,2535,2541,2542,2549,2551,2553,2554,2555,2558,2559,2563,2570,2572,2576,2605,2617,2619,2633,2634,2641,2644,2648,2650,2652,2659,2675,2679,2681,2684,2695,2696,2701,2704,2710,2711,2714,2722,2736,2737,2739,2745,2747,2753,2754,2755,2756,2761,2768,2769,2772,2774,2782,2783,2784,2786,2791,2793,2794,2797,2808,2810,2811,2813,2814,2815,2816,2819,2826,2832,2837,2838,2839,2846,2847,2849,2850,2851,2857,2858,2860,2861]}];
+    // CAT B Data
+    // Telestaff Fema Data PPE 09-19-2017
+    // [{"ppe": "9/19/2017", "employees": [1042,1091,1093,1095,1101,1109,1130,1145,1158,1162,1169,1172,1173,1190,1199,1202,1258,1259,1262,1272,1280,1289,1298,1318,1365,1379,1383,1404,1422,1425,1456,1472,1530,1546,1552,1562,1579,1584,1674,1677,1678,1679,1684,1713,1839,1853,1883,1885,1970,1971,1973,1993,1994,1996,1999,2039,2046,2051,2052,2111,2112,2116,2235,2237,2238,2241,2245,2249,2251,2260,2347,2386,2389,2400,2435,2436,2438,2481,2484,2485,2487,2505,2509,2523,2525,2526,2527,2533,2539,2552,2567,2568,2579,2580,2583,2584,2586,2590,2593,2594,2596,2597,2598,2609,2628,2636,2655,2662,2664,2666,2667,2670,2707,2715,2716,2718,2719,2720,2728,2744,2748,2752,2765,2781,2785,2796,2798,2799,2803,2806,2821,2822,2824,2825,2827,2828,2830,2831,2835,2842,2848,2854,2862,2863,2864,2865,2866,2867,2868,2869,2870,2871,2872,2873,2874]}];
+    // Telestaff Fema Data PPE 10-03-2017
+    // [{"ppe": "10/3/2017", "employees": [1589,2112,2116,2481,2526,2579,2583,2592,2609,2627,2636,2669,2707,2720,2752,2785,2803,2822,2830,2863]}];
+    // Telestaff Fema Data PPE 10-17-2017
+    // [{"ppe": "10/17/2017", "employees": [1237,1589,1679,2481,2526,2584,2590,2592,2597,2628,2666,2707,2715,2748,2749,2765,2806,2821,2822,2827,2830]}];
+    // Telestaff Fema Data PPE 10-31-2017
+    // [{"ppe": "10/31/2017", "employees": [1425,2112,2254,2414,2481,2592,2715,2796,2821,2827,2869,2870,2874]}];
+    // Timestore Fema Data PPE 09-19-2017
+
+    // Timestore Fema Data PPE 10-03-2017
+    // [{"ppe": "10/3/2017", "employees": [1030,1075,1090,1125,1204,1222,1251,1277,1304,1377,1508,1719,1879,1887,1987,2019,2041,2070,2081,2258,2273,2282,2410,2464,2493,2634,2704,2711,2742,2772,2813,2815,2818,2819,2849,2850,2851]}];
+    // Timestore Fema Data PPE 10-17-2017
+    // [{"ppe": "10/17/2017", "employees": [1030,1075,1125,1204,1222,1304,1508,1553,1719,1816,1887,1889,1989,2041,2081,2196,2197,2264,2273,2282,2385,2410,2464,2474,2493,2549,2701,2704,2710,2711,2742,2753,2818,2819,2849,2858]}];
+    // Timestore Fema Data PPE 10-31-2017
+    // [{"ppe": "10/31/2017", "employees": [1030,1125,1222,1241,1508,1719,1879,1889,2282,2410,2474,2493,2553,2644,2704,2753,2819]}];
+
+    // CAT A Data
+    // CAT A \Debris 10_03_2017
+    // [{"ppe": "10/3/2017", "employees": [1202,1259,1269,1404,1562,1584,1713,1856,1997,2241,2670,2716]}]
+    // CAT A \Debris 10-17-2017
+    // [{"ppe": "10/17/2017", "employees": [1259,1269,1404,1579,1584,1713,1997,2039,2508,2670]}];
+    // CAT A \Debris 10-31-2017
+    // [{"ppe": "10/31/2017", "employees": [1130,1202,1237,1259,1269,1383,1404,1552,1579,1584,1713,1993,1997,2052,2241,2508,2670,2716]}];
+
+
+
+    // Hurricane Matthew Data
     // Debris - Call Center - 30 day
     // [{"ppe": "10/18/2016", "employees": [1303,2377,2541]}, {"ppe": "11/1/2016", "employees": [1002,1083,1184,1303,1335,1349,1417,1433,1483,1523,1830,1848,1901,2029,2037,2192,2439,2489,2530,2634,2650,2659,2704,2750,2758,2759]}];
     // Debris - Call Center - 90 day
@@ -53154,8 +53228,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     // Cat B Preliminary Timestore data
     // [{"ppe": "10/18/2016", "employees": [1019,1020,1065,1073,1078,1081,1181,1223,1233,1255,1266,1303,1335,1344,1347,1349,1356,1357,1359,1374,1483,1499,1501,1521,1523,1567,1729,1822,1887,1889,1969,1987,1989,2060,2081,2082,2097,2192,2231,2375,2377,2399,2427,2428,2445,2457,2459,2464,2474,2489,2490,2493,2500,2511,2513,2541,2542,2574,2604,2605,2614,2615,2630,2633,2644,2648,2650,2652,2685,2704,2710,2711,2742,2746,2753,2759,2783]}]
 
-
-
   }
 
 })();
@@ -53167,44 +53239,53 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     .directive('timeApproval', ['viewOptions', function (viewOptions)
     {
       return {
+        bindToController: true,
         restrict: 'E',
         templateUrl: 'TimeApproval.tmpl.html', //'app/timecard/TimeApproval.tmpl.html',
         scope: {
-          tc: '=',
+          tc: '='
           //tl: '=',
-          showApproval: '='
+          //showApproval: '='
 
         },
-        controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions',
+        controllerAs: 'ctrl',
+        controller: ['$scope', '$mdToast', 'timestoredata', 'commonFunctions', 
           function ($scope, $mdToast, timestoredata, commonFunctions)
           {
-            $scope.showHolidayError = false;
-            $scope.showApprovalButton = false;
-
-            $scope.checkApproved = function ()
+            var ctrl = this;
+            $scope.$on("shareTimecardReloaded", function ()
             {
-              $scope.showApprovalButton = false;
-              if ($scope.tc.ErrorList.length > 0)
+              ctrl.checkApproved();
+              
+            });
+
+            ctrl.showHolidayError = false;
+            ctrl.showApprovalButton = false;
+
+            ctrl.checkApproved = function ()
+            {
+              ctrl.showApprovalButton = false;
+              if (ctrl.tc.ErrorList.length > 0)
               {
                 return false;
               }
-              if ($scope.tc.Approval_Level !== 0)
+              if (ctrl.tc.Approval_Level !== 0)
               {
                 return false;
               }
-              if ($scope.tc.Days_Since_PPE > 1)
+              if (ctrl.tc.Days_Since_PPE > 1)
               {
                 return false;
               }
-              if ($scope.tc.timeList.length === 0)
+              if (ctrl.tc.timeList.length === 0)
               {
                 return false;
               }
-              //if ($scope.tl === undefined)
+              //if (ctrl.tl === undefined)
               //{
               //  return false;
               //}
-              //var ctl = $scope.tl;
+              //var ctl = ctrl.tl;
               //if (ctl.length === 0)
               //{
               //  return false;
@@ -53217,29 +53298,30 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               //  }
               //}
               // Now let's check that the holidays are handled
-              if ($scope.tc.isHolidayTimeBankable === true && $scope.tc.HolidaysInPPD.length > 0)
+              if (ctrl.tc.isHolidayTimeBankable === true && ctrl.tc.HolidaysInPPD.length > 0)
               {
                 // If they don't have any hours in 134 or 122 then we need to stop.                        
-                $scope.showHolidayError = true;
+                var ctl = ctrl.tc.timeList;
+                ctrl.showHolidayError = true;
                 for (var j = 0; j < ctl.length; j++)
                 {
                   if (ctl[j].payCode === '122' || ctl[j].payCode === '134')
                   {
-                    $scope.showHolidayError = false;
+                    ctrl.showHolidayError = false;
                   }
                 }
-                if ($scope.showHolidayError === true)
+                if (ctrl.showHolidayError === true)
                 {
                   return false;
                 }
               }
-              $scope.showApprovalButton = true;
+              ctrl.showApprovalButton = true;
               return true;
             };
 
-            $scope.approve = function ()
+            ctrl.approve = function ()
             {
-              var timecard = $scope.tc;
+              var timecard = ctrl.tc;
               var ad = {
                 EmployeeID: timecard.employeeID,
                 PayPeriodStart: timecard.payPeriodStart,
@@ -53252,8 +53334,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             var onApproval = function (data)
             {
-              $scope.showApprovalButton = false;
-              showToast(data);
+              ctrl.showApprovalButton = false;
+              showToast(data);              
               viewOptions.approvalUpdated.approvalUpdated = true;
               viewOptions.approvalUpdated.share();
             };
@@ -53263,13 +53345,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               alert(data + '  Your approval was not saved!');
             };
 
-            //$scope.getGroups = function ()
+            //ctrl.getGroups = function ()
             //{
-            //  return commonFunctions.getGroupsByShortPayRate($scope.tl);
+            //  return commonFunctions.getGroupsByShortPayRate(ctrl.tl);
 
             //  //var groupArray = [];
 
-            //  //angular.forEach($scope.tl, function (item, idx) {
+            //  //angular.forEach(ctrl.tl, function (item, idx) {
             //  //    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
             //  //        groupArray.push(parseFloat(item.shortPayRate));
             //  //    }
@@ -53277,20 +53359,20 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             //  //return groupArray;
             //};
 
-            $scope.toastPosition = {
+            ctrl.toastPosition = {
               bottom: true,
               top: false,
               left: false,
               right: true
             };
 
-            //$scope.getTotalHours = function ()
+            //ctrl.getTotalHours = function ()
             //{
-            //  return commonFunctions.getTotalHours($scope.tl);
-            //  //if ($scope.tl === undefined) {
+            //  return commonFunctions.getTotalHours(ctrl.tl);
+            //  //if (ctrl.tl === undefined) {
             //  //    return 0;
             //  //}
-            //  //var tl = $scope.tl;
+            //  //var tl = ctrl.tl;
             //  //var total = 0;
             //  //for (var i = 0; i < tl.length; i++) {
             //  //    total += tl[i].hours;
@@ -53303,19 +53385,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               $mdToast.show(
                 $mdToast.simple()
                   .content(Message)
-                  .position($scope.getToastPosition())
+                  .position(ctrl.getToastPosition())
                   .hideDelay(3000)
               );
             }
 
-            $scope.getToastPosition = function ()
+            ctrl.getToastPosition = function ()
             {
-              return Object.keys($scope.toastPosition)
-                .filter(function (pos) { return $scope.toastPosition[pos]; })
+              return Object.keys(ctrl.toastPosition)
+                .filter(function (pos) { return ctrl.toastPosition[pos]; })
                 .join(' ');
             };
 
-            $scope.checkApproved();
+            ctrl.checkApproved();
           }]
       };
     }]);
@@ -53329,9 +53411,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     .directive("timecardDetail", function ()
     {
       return {
+        bindToController: true,
         restrict: "E",
         templateUrl: "TimeCardDetail.tmpl.html", //'app/timecard/TimeCardDetail.tmpl.html',
         controller: "TimeCardDetailController",
+        controllerAs: 'ctrl',
         scope: {
           timecard: "="
         }
@@ -53343,6 +53427,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       "$mdToast",
       "viewOptions",
       "$routeParams",
+      "timestoreNav",
       TimeCardDetail
     ]);
 
@@ -53351,31 +53436,37 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     timestoredata,
     $mdToast,
     viewOptions,
-    $routeParams
+    $routeParams,
+    timestoreNav
   )
   {
-    $scope.selectedWeekTab = 0;
+    var ctrl = this;
+    ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();
 
-    //$scope.$on('leaveRequestUpdated', function () {
+    //ctrl.$on('leaveRequestUpdated', function () {
     //    updateLeaveRequests();
     //});
-
+    //$scope.$watch('timecard', function (newValue, oldValue, scope)
+    //{
+    //  $scope.timecard = newValue;
+    //  console.log('$scope.watch fired', newValue, oldValue);
+    //});
     $scope.$on("shareTimecardReloaded", function ()
     {
-      $scope.selectedWeekTab = 0;
+      ctrl.selectedWeekTab = 0;
     });
 
-    $scope.SaveHolidays = function ()
+    ctrl.SaveHolidays = function ()
     {
-      if ($scope.timecard.isHolidayInPPD === false)
+      if (ctrl.timecard.isHolidayInPPD === false)
       {
-        $scope.timecard.HolidayHoursChoice = [];
+        ctrl.timecard.HolidayHoursChoice = [];
       } else
       {
-        for (var i = 0; i < $scope.timecard.HolidayHoursChoice.length; i++)
+        for (var i = 0; i < ctrl.timecard.HolidayHoursChoice.length; i++)
         {
-          if ($scope.timecard.HolidayHoursChoice[i].toUpperCase() === "NONE")
+          if (ctrl.timecard.HolidayHoursChoice[i].toUpperCase() === "NONE")
           {
             showToast(
               "You must choose whether to bank or be paid for the holiday(s) in order to save."
@@ -53384,21 +53475,21 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         }
       }
-      if ($scope.BankedHolidaysPaid > $scope.timecard.bankedHoliday)
+      if (ctrl.BankedHolidaysPaid > ctrl.timecard.bankedHoliday)
       {
         alert(
           "You have chosen to be paid for too many Holiday hours.  You have " +
-          $scope.timecard.bankedHoliday +
+          ctrl.timecard.bankedHoliday +
           " hours banked, and are trying to be paid for " +
-          $scope.BankedHoursPaid +
+          ctrl.BankedHoursPaid +
           ".  Please correct this and try again."
         );
         return;
       }
-      switch ($scope.timecard.TelestaffProfileType)
+      switch (ctrl.timecard.TelestaffProfileType)
       {
         case 1:
-          if ($scope.timecard.BankedHoursPaid % 24 > 0)
+          if (ctrl.timecard.BankedHoursPaid % 24 > 0)
           {
             alert(
               "Your Banked Holiday hours must be allocated in groups of 24 hours."
@@ -53407,7 +53498,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
           break;
         case 4:
-          if ($scope.timecard.BankedHoursPaid % 12 > 0)
+          if (ctrl.timecard.BankedHoursPaid % 12 > 0)
           {
             alert(
               "Your Banked Holiday hours must be allocated in groups of 12 hours."
@@ -53417,10 +53508,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           break;
       }
       var hr = {
-        EmployeeID: $scope.timecard.employeeID,
-        PayPeriodStart: $scope.timecard.payPeriodStart,
-        CurrentHolidayChoice: $scope.timecard.HolidayHoursChoice,
-        BankedHolidaysPaid: $scope.timecard.BankedHoursPaid
+        EmployeeID: ctrl.timecard.employeeID,
+        PayPeriodStart: ctrl.timecard.payPeriodStart,
+        CurrentHolidayChoice: ctrl.timecard.HolidayHoursChoice,
+        BankedHolidaysPaid: ctrl.timecard.BankedHoursPaid
       };
       timestoredata.saveHoliday(hr).then(function (data)
       {
@@ -53431,45 +53522,37 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     function onApproval(data)
     {
       showToast(data);
-      viewOptions.approvalUpdated.approvalUpdated = true;
-      viewOptions.approvalUpdated.share();
+      timestoreNav.goHome();
     }
 
-    $scope.toastPosition = {
+    ctrl.toastPosition = {
       bottom: true,
       top: false,
       left: true,
       right: false
     };
+
     function showToast(Message)
     {
       $mdToast.show(
         $mdToast
           .simple()
           .content(Message)
-          .position($scope.getToastPosition())
+          .position(ctrl.getToastPosition())
           .hideDelay(3000)
       );
     }
-    $scope.getToastPosition = function ()
+
+    ctrl.getToastPosition = function ()
     {
-      return Object.keys($scope.toastPosition)
+      return Object.keys(ctrl.toastPosition)
         .filter(function (pos)
         {
-          return $scope.toastPosition[pos];
+          return ctrl.toastPosition[pos];
         })
         .join(" ");
     };
 
-    //function updateLeaveRequests() {
-    //    timestoredata.getLeaveRequestsByEmployee($routeParams.employeeId)
-    //        .then(function (data) {
-    //            _.forEach(data.leaveData, function (l) {
-    //                l.work_date_display = moment(l.work_date).format('M/D/YYYY');
-    //            });
-    //            $scope.leaveRequests = data.leaveData;
-    //        });
-    //}
   }
 })();
 
@@ -53550,8 +53633,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       for (i = 0; i < $scope.timecard.timeList.length; i++) {
         $scope.timecard.timeList[i].approved = false;
       }
-
     }
+
 
     $scope.$on('shareApprovalUpdated', function () {
       if (viewOptions.approvalUpdated.approvalUpdated) {
@@ -53568,9 +53651,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     var onEmployee = function (data) {
       console.log('updating employee after approval updated', data);
-      $scope.timecard = data;
+      $scope.timecard = data;      
       updateCalculatedTimeList();
-      console.log('timecard data', $scope.timecard);
       viewOptions.timecardReloaded.share()
     };
 

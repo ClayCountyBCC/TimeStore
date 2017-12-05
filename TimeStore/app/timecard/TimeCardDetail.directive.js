@@ -7,9 +7,11 @@
     .directive("timecardDetail", function ()
     {
       return {
+        bindToController: true,
         restrict: "E",
         templateUrl: "TimeCardDetail.tmpl.html", //'app/timecard/TimeCardDetail.tmpl.html',
         controller: "TimeCardDetailController",
+        controllerAs: 'ctrl',
         scope: {
           timecard: "="
         }
@@ -21,6 +23,7 @@
       "$mdToast",
       "viewOptions",
       "$routeParams",
+      "timestoreNav",
       TimeCardDetail
     ]);
 
@@ -29,31 +32,37 @@
     timestoredata,
     $mdToast,
     viewOptions,
-    $routeParams
+    $routeParams,
+    timestoreNav
   )
   {
-    $scope.selectedWeekTab = 0;
+    var ctrl = this;
+    ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();
 
-    //$scope.$on('leaveRequestUpdated', function () {
+    //ctrl.$on('leaveRequestUpdated', function () {
     //    updateLeaveRequests();
     //});
-
+    //$scope.$watch('timecard', function (newValue, oldValue, scope)
+    //{
+    //  $scope.timecard = newValue;
+    //  console.log('$scope.watch fired', newValue, oldValue);
+    //});
     $scope.$on("shareTimecardReloaded", function ()
     {
-      $scope.selectedWeekTab = 0;
+      ctrl.selectedWeekTab = 0;
     });
 
-    $scope.SaveHolidays = function ()
+    ctrl.SaveHolidays = function ()
     {
-      if ($scope.timecard.isHolidayInPPD === false)
+      if (ctrl.timecard.isHolidayInPPD === false)
       {
-        $scope.timecard.HolidayHoursChoice = [];
+        ctrl.timecard.HolidayHoursChoice = [];
       } else
       {
-        for (var i = 0; i < $scope.timecard.HolidayHoursChoice.length; i++)
+        for (var i = 0; i < ctrl.timecard.HolidayHoursChoice.length; i++)
         {
-          if ($scope.timecard.HolidayHoursChoice[i].toUpperCase() === "NONE")
+          if (ctrl.timecard.HolidayHoursChoice[i].toUpperCase() === "NONE")
           {
             showToast(
               "You must choose whether to bank or be paid for the holiday(s) in order to save."
@@ -62,21 +71,21 @@
           }
         }
       }
-      if ($scope.BankedHolidaysPaid > $scope.timecard.bankedHoliday)
+      if (ctrl.BankedHolidaysPaid > ctrl.timecard.bankedHoliday)
       {
         alert(
           "You have chosen to be paid for too many Holiday hours.  You have " +
-          $scope.timecard.bankedHoliday +
+          ctrl.timecard.bankedHoliday +
           " hours banked, and are trying to be paid for " +
-          $scope.BankedHoursPaid +
+          ctrl.BankedHoursPaid +
           ".  Please correct this and try again."
         );
         return;
       }
-      switch ($scope.timecard.TelestaffProfileType)
+      switch (ctrl.timecard.TelestaffProfileType)
       {
         case 1:
-          if ($scope.timecard.BankedHoursPaid % 24 > 0)
+          if (ctrl.timecard.BankedHoursPaid % 24 > 0)
           {
             alert(
               "Your Banked Holiday hours must be allocated in groups of 24 hours."
@@ -85,7 +94,7 @@
           }
           break;
         case 4:
-          if ($scope.timecard.BankedHoursPaid % 12 > 0)
+          if (ctrl.timecard.BankedHoursPaid % 12 > 0)
           {
             alert(
               "Your Banked Holiday hours must be allocated in groups of 12 hours."
@@ -95,10 +104,10 @@
           break;
       }
       var hr = {
-        EmployeeID: $scope.timecard.employeeID,
-        PayPeriodStart: $scope.timecard.payPeriodStart,
-        CurrentHolidayChoice: $scope.timecard.HolidayHoursChoice,
-        BankedHolidaysPaid: $scope.timecard.BankedHoursPaid
+        EmployeeID: ctrl.timecard.employeeID,
+        PayPeriodStart: ctrl.timecard.payPeriodStart,
+        CurrentHolidayChoice: ctrl.timecard.HolidayHoursChoice,
+        BankedHolidaysPaid: ctrl.timecard.BankedHoursPaid
       };
       timestoredata.saveHoliday(hr).then(function (data)
       {
@@ -109,44 +118,36 @@
     function onApproval(data)
     {
       showToast(data);
-      viewOptions.approvalUpdated.approvalUpdated = true;
-      viewOptions.approvalUpdated.share();
+      timestoreNav.goHome();
     }
 
-    $scope.toastPosition = {
+    ctrl.toastPosition = {
       bottom: true,
       top: false,
       left: true,
       right: false
     };
+
     function showToast(Message)
     {
       $mdToast.show(
         $mdToast
           .simple()
           .content(Message)
-          .position($scope.getToastPosition())
+          .position(ctrl.getToastPosition())
           .hideDelay(3000)
       );
     }
-    $scope.getToastPosition = function ()
+
+    ctrl.getToastPosition = function ()
     {
-      return Object.keys($scope.toastPosition)
+      return Object.keys(ctrl.toastPosition)
         .filter(function (pos)
         {
-          return $scope.toastPosition[pos];
+          return ctrl.toastPosition[pos];
         })
         .join(" ");
     };
 
-    //function updateLeaveRequests() {
-    //    timestoredata.getLeaveRequestsByEmployee($routeParams.employeeId)
-    //        .then(function (data) {
-    //            _.forEach(data.leaveData, function (l) {
-    //                l.work_date_display = moment(l.work_date).format('M/D/YYYY');
-    //            });
-    //            $scope.leaveRequests = data.leaveData;
-    //        });
-    //}
   }
 })();
