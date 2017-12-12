@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
@@ -2239,45 +2239,50 @@ Public Module ModuleDataAccess
 
   End Function
 
-  Public Function Clear_Saved_Timestore_Data(employeeID As Integer, PayPeriodStart As Date, Optional IgnoreHoliday As Boolean = False) As Integer
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim PayPeriodEnd As Date = PayPeriodStart.AddDays(13)
-    Dim P() As SqlParameter = New SqlParameter() _
-            {
-                New SqlParameter("@EmployeeId", Data.SqlDbType.Int) With {.Value = employeeID},
-                New SqlParameter("@PayPeriodEnding", Data.SqlDbType.Date) With {.Value = PayPeriodEnd}
-            }
-    Dim sbQuery As New StringBuilder
-    With sbQuery
-      .AppendLine("DECLARE @Test INTEGER;")
-      .AppendLine("IF EXISTS(SELECT initial_approval_employeeid FROM Saved_Time ")
-      .AppendLine("WHERE employee_id=@EmployeeId AND pay_period_ending=@PayPeriodEnding ")
-      .AppendLine("AND (initial_approval_employeeid IS NOT NULL OR final_approval_employeeid IS NOT NULL)) ")
-      .AppendLine("BEGIN SET @Test = -1; END")
-      .AppendLine("ELSE")
-      .AppendLine("BEGIN SET @Test = -5; END")
-      .AppendLine("UPDATE Saved_Time SET ")
-      .AppendLine("initial_approval_username=NULL, initial_approval_employeeid=NULL,")
-      .AppendLine("initial_approval_machine_name=NULL, initial_approval_ip_address=NULL, ")
-      .AppendLine("initial_approval_date=NULL, ")
-      .AppendLine("final_approval_username=NULL, final_approval_employeeid=NULL,")
-      .AppendLine("final_approval_machine_name=NULL, final_approval_ip_address=NULL, ")
-      .AppendLine("final_approval_date=NULL WHERE employee_id=@EmployeeId AND pay_period_ending=@PayPeriodEnding;")
-      .Append("DELETE FROM Saved_Time WHERE employee_id=@EmployeeId AND pay_period_ending=@PayPeriodEnding ")
-      If IgnoreHoliday Then
-        .Append("AND paycode NOT IN ('134', '124', '122', '800') ")
-      End If
-      .AppendLine(";")
-      .AppendLine("SELECT @Test;")
-    End With
+  Public Sub Clear_Saved_Timestore_Data(employeeID As Integer,
+                                        PayPeriodStart As Date,
+                                        Optional IgnoreHoliday As Boolean = False)
+    Dim dp As New DynamicParameters
+    dp.Add("@EmployeeId", employeeID)
+    dp.Add("@PayPeriodEnding", PayPeriodStart.AddDays(13))
+    Dim query As String = $"
+      IF EXISTS(
+        SELECT * FROM Saved_Time
+        WHERE employee_id=@EmployeeId
+        AND pay_period_ending=@PayPeriodEnding
+        AND initial_approval_employeeid IS NOT NULL
+      )
+      BEGIN 
+        INSERT INTO notes (employee_id, pay_period_ending, note) 
+        VALUES (@EmployeeId, @PayPeriodEnding, 'Approval Removed, Hours or Payrate has changed.');
+      END
+
+        DELETE 
+        FROM Saved_Time
+        WHERE employee_id=@EmployeeId
+        AND pay_period_ending=@PayPeriodEnding
+        { If(IgnoreHoliday, "AND paycode NOT IN ('134', '124', '122', '800')", "") }
+
+        UPDATE Saved_Time 
+        SET 
+          initial_approval_username=NULL, 
+          initial_approval_employeeid=NULL,
+          initial_approval_machine_name=NULL, 
+          initial_approval_ip_address=NULL, 
+          initial_approval_date=NULL, 
+          final_approval_username=NULL, 
+          final_approval_employeeid=NULL,
+          final_approval_machine_name=NULL, 
+          final_approval_ip_address=NULL, 
+          final_approval_date=NULL 
+        WHERE employee_id=@EmployeeId 
+        AND pay_period_ending=@PayPeriodEnding;"
     Try
-      Dim i As Integer = dbc.ExecuteScalar(sbQuery.ToString, P)
-      Return i
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
     Catch ex As Exception
-      Log(ex)
-      Return -10
+      Dim e As New ErrorLog(ex, query)
     End Try
-  End Function
+  End Sub
 
 End Module
 

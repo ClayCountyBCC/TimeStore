@@ -40,7 +40,7 @@ Namespace Models
     Public Sub New(tctd As TimecardTimeData, tca As Timecard_Access)
       employee_id = tctd.EmployeeID
       dept_id = tctd.DepartmentNumber
-      pay_period_ending = tctd.PPD
+      pay_period_ending = CType(tctd.PPD, Date).AddDays(13)
       work_hours = tctd.WorkHours
       work_date = tctd.WorkDate
       work_times = tctd.WorkTimes

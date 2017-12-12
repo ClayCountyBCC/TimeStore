@@ -1,6 +1,7 @@
 ﻿Imports System.Data.SqlClient
 
 Namespace Models
+
   Public Class TimecardTimeData
     Public Enum TimeCardDataSource
       Timecard = 0
@@ -214,24 +215,55 @@ Namespace Models
       Dim std As New Saved_TimeStore_Data(Me, tca)
       Dim dt As DataTable = PopulateData()
 
-      Dim dp As New DynamicParameters(std)
+      Dim dp As New DynamicParameters()
+
       ' Add an output parameter to find out if the transaction completed.
       ' update the stored procedure and turn it into a transaction that 
       ' can be rolled back.
+      dp.Add("@employee_id", std.employee_id)
+      dp.Add("@dept_id", std.dept_id)
+      dp.Add("@pay_period_ending", std.pay_period_ending)
+      dp.Add("@work_date", std.work_date)
+      dp.Add("@work_times", std.work_times)
+      dp.Add("@disaster_work_times", std.disaster_work_times)
+      dp.Add("@disaster_work_hours", std.disaster_work_hours)
+      dp.Add("@break_credit", std.break_credit)
+      dp.Add("@work_hours", std.work_hours)
+      dp.Add("@holiday", std.holiday)
+      dp.Add("@leave_without_pay", std.leave_without_pay)
+      dp.Add("@total_hours", std.total_hours)
+      dp.Add("@doubletime_hours", std.doubletime_hours)
+      dp.Add("@vehicle", std.vehicle)
+      dp.Add("@comment", std.comment)
+      dp.Add("@out_of_class", std.out_of_class)
+      dp.Add("@by_employeeid", std.by_employeeid)
+      dp.Add("@by_username", std.by_username)
+      dp.Add("@by_machinename", std.by_machinename)
+      dp.Add("@by_ip_address", std.by_ip_address)
+      dp.Add("@result", dbType:=DbType.Int32, direction:=ParameterDirection.Output)
       dp.Add("@HTA", dt.AsTableValuedParameter("HoursToApproveData"))
 
       Try
+
         Using db As IDbConnection = New SqlConnection(GetCS(ConnectionStringType.Timestore))
           Dim i = db.Execute("SaveTimecardDay", dp, commandType:=CommandType.StoredProcedure)
-          Return True
+          Dim result As Integer = dp.Get(Of Integer)("@result")
+          Select Case result
+            'Case 0 ' nothing happened
+            '  Return True
+            'Case -1 ' an error happened
+            '  Return False
+            Case 0, 1 ' the transaction was committed
+              Return True
+            Case Else
+              Dim e As New ErrorLog("TimecardTimeData.Save error", std.employee_id.ToString, std.work_date.ToShortDateString, "", "")
+              Return False
+          End Select
         End Using
       Catch ex As Exception
         Dim e As New ErrorLog(ex, "SaveTimecardDay")
         Return False
       End Try
-
-
-
     End Function
 
     Private Shared Function BuildDataTable() As DataTable
