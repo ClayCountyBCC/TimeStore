@@ -48487,7 +48487,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
                 {
                   _.remove(data.leaveData, function (ld)
                   {
-                    return ld.Approved === false && ld.approval_id !== 0;
+                    return !ld.Approved && ld.Finalized;
                   });
                   var group = [];
                   group.push({ work_date: null, employee_name: 'my_dept', hours_used: 0, comment: '', dept: data.MyDept });
@@ -50398,45 +50398,52 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
 })();
 /* global moment, _ */
-(function () {
+(function ()
+{
   "use strict";
   angular.module('timestoreApp')
-      .directive('existingLeaveRequest', function () {
-        return {
-          restrict: 'E',
-          templateUrl: 'existingLeaveRequest.directive.tmpl.html',
-          scope: {
-            requests: '='
-          },
-          controller: ['$scope', 'timestoredata', 'timestoreNav', '$routeParams', 'datelist',
-          function ($scope, timestoredata, timestoreNav, $routeParams, datelist) {
+    .directive('existingLeaveRequest', function ()
+    {
+      return {
+        restrict: 'E',
+        templateUrl: 'existingLeaveRequest.directive.tmpl.html',
+        scope: {
+          requests: '='
+        },
+        controller: ['$scope', 'timestoredata', 'timestoreNav', '$routeParams', 'datelist',
+          function ($scope, timestoredata, timestoreNav, $routeParams, datelist)
+          {
 
             //$scope.dataList = [];
 
-            $scope.refreshLeaveRequests = function () {
+            $scope.refreshLeaveRequests = function ()
+            {
               timestoredata.getLeaveRequestsByEmployee($routeParams.employeeId)
-                  .then(processData);
-            }
+                .then(processData);
+            };
 
-            function processData(data) {
+            function processData(data)
+            {
               $scope.requests = data;
             }
 
 
 
           }]
-        };
-      });
+      };
+    });
 
 }());
 
-(function () {
+(function ()
+{
   "use strict";
 
   angular.module('timestoreApp')
-      .controller('leaveRequestViewController', ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', LeaveRequestViewController]);
+    .controller('leaveRequestViewController', ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', LeaveRequestViewController]);
 
-  function LeaveRequestViewController($scope, viewOptions, timestoredata, timestoreNav) {
+  function LeaveRequestViewController($scope, viewOptions, timestoredata, timestoreNav)
+  {
     viewOptions.viewOptions.showSearch = false;
     viewOptions.viewOptions.share();
     $scope.leaveRequestListType = 'short';
@@ -50449,48 +50456,60 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.maxDate = m.clone().add(1, 'years').toDate();
     updateLeaveRequests();
 
-    $scope.goHome = function () {
+    $scope.goHome = function ()
+    {
       timestoreNav.goHome();
-    }
+    };
 
-    $scope.refreshData = function () {
+    $scope.refreshData = function ()
+    {
       updateLeaveRequests();
-    }
+    };
 
-    $scope.leaveDateSelected = function () {
+    $scope.leaveDateSelected = function ()
+    {
       var d = moment($scope.selectedDate).format('M/D/YYYY');
       timestoreNav.goAddTime($scope.employeeId, d);
-    }
+    };
 
-    $scope.switchData = function () {
-      if ($scope.leaveRequestListType === 'full') {
+    $scope.switchData = function ()
+    {
+      if ($scope.leaveRequestListType === 'full')
+      {
         $scope.leaveRequests = $scope.allLeaveRequests;
-      } else {
+      } else
+      {
         $scope.leaveRequests = $scope.futureLeaveRequests;
       }
-    }
+    };
 
-    function updateLeaveRequests() {
-      timestoredata.getDefaultEmployeeId().then(function (data) {
+    function updateLeaveRequests()
+    {
+      timestoredata.getDefaultEmployeeId().then(function (data)
+      {
         $scope.employeeId = data;
 
         timestoredata.getLeaveRequestsByEmployee($scope.employeeId)
-            .then(function (data) {
-              console.log('current leave data', data);
-              _.forEach(data.leaveData, function (l) {
-                l.work_date_display = moment(l.work_date).format('M/D/YYYY');
-                l.approval_date_display = moment(l.date_approval_added).format('M/D/YYYY hh:mm A');
-              });
-              $scope.futureLeaveRequests = data.leaveData;
-              $scope.leaveRequests = $scope.futureLeaveRequests;
+          .then(function (data)
+          {
+            console.log('current leave data', data);
+            _.forEach(data.leaveData, function (l)
+            {
+              //l.work_date_display = moment(l.work_date).format('M/D/YYYY');
+              l.approval_date_display = moment(l.date_approval_added).format('M/D/YYYY hh:mm A');
             });
+            $scope.futureLeaveRequests = data.leaveData;
+            $scope.leaveRequests = $scope.futureLeaveRequests;
+          });
         timestoredata.getAllLeaveRequestsByEmployee($scope.employeeId)
-            .then(function (data) {
-              _.forEach(data.leaveData, function (l) {
-                l.work_date_display = moment(l.work_date).format('M/D/YYYY');
-              });
-              $scope.allLeaveRequests = data.leaveData;
+          .then(function (data)
+          {
+            _.forEach(data.leaveData, function (l)
+            {
+              //l.work_date_display = moment(l.work_date).format('M/D/YYYY');
             });
+            $scope.allLeaveRequests = data.leaveData;
+          });
       });
 
     }
@@ -51806,10 +51825,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .getLeaveRequestsByEmployee($routeParams.employeeId)
         .then(function (data)
         {
-          _.forEach(data.leaveData, function (l)
-          {
-            l.work_date_display = moment(l.work_date).format("M/D/YYYY");
-          });
+          //_.forEach(data.leaveData, function (l)
+          //{
+          //  l.work_date_display = moment(l.work_date).format("M/D/YYYY");
+          //});
           $scope.leaveRequests = data.leaveData;
         });
     }
@@ -52750,13 +52769,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
 })();
 /* global moment, _ */
-(function () {
+(function ()
+{
   "use strict";
   angular.module('timestoreApp')
-      .controller('leaveApprovalController', ['$scope', 'timestoredata',
-                                              'viewOptions', LeaveApprovalController]);
+    .controller('leaveApprovalController', ['$scope', 'timestoredata',
+      'viewOptions', LeaveApprovalController]);
 
-  function LeaveApprovalController($scope, timestoredata, viewOptions) {
+  function LeaveApprovalController($scope, timestoredata, viewOptions)
+  {
     $scope.filteredDataList = [];
     $scope.filteredDataByDateAndDeptList = [];
     $scope.dataList = [];
@@ -52770,22 +52791,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     refresh();
 
-    function filterData(data) {
-      if ($scope.filterDept !== 'all') {
-        data = _.filter(data, function (x) {
+    function filterData(data)
+    {
+      if ($scope.filterDept !== 'all')
+      {
+        data = _.filter(data, function (x)
+        {
           return x.dept_id === $scope.filterDept;
         });
       }
-      if ($scope.filterStatus !== 'all') {
-        data = _.filter(data, function (x) {
-          switch ($scope.filterStatus) {
+      if ($scope.filterStatus !== 'all')
+      {
+        data = _.filter(data, function (x)
+        {
+          switch ($scope.filterStatus)
+          {
             case 'undecided':
-              return x.approval_id === 0;
-              break;
+              return !x.Finalized;
             case 'approved':
+              return x.Finalized && x.Approved;
             case 'denied':
-              return x.approval_id !== 0 && x.Approved === ($scope.filterStatus === 'approved');
-              break;
+              return x.Finalized && !x.Approved;
             default:
               return false;
           }
@@ -52794,35 +52820,43 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       return data;
     }
 
-    function filterDataByDateAndDept(workdate, dept, current_id) {
-      return _.filter($scope.dataList, function (x) {
+    function filterDataByDateAndDept(workdate, dept, current_id)
+    {
+      return _.filter($scope.dataList, function (x)
+      {
         return x.work_date_display === workdate && x.dept_id === dept && x.approval_hours_id !== current_id;
       });
     }
 
-    function refresh() {
+    function refresh()
+    {
       $scope.showProgress = true;
       timestoredata.getLeaveRequests()
-          .then(processLeaveRequestData);
+        .then(processLeaveRequestData);
     }
 
-    function resetDetail() {
+    function resetDetail()
+    {
       $scope.selectedIndex = -1;
       $scope.selectedId = -1;
       $scope.filteredDataByDateAndDeptList = [];
     }
 
-    function processLeaveRequestData(data) {
+    function processLeaveRequestData(data)
+    {
       console.log('leave data', data);
-      _.forEach(data.leaveData, function (l) {
-        l.work_date_display = moment(l.work_date).format('M/D/YYYY');
+      _.forEach(data.leaveData, function (l)
+      {
+        //l.work_date_display = moment(l.work_date).format('M/D/YYYY');
         l.approval_date_display = moment(l.date_approval_added).format('M/D/YYYY hh:mm A');
         l.showDetail = false;
-        if ($scope.deptList.indexOf(l.dept_id) === -1) {
+        if ($scope.deptList.indexOf(l.dept_id) === -1)
+        {
           $scope.deptList.push(l.dept_id);
         }
       });
-      if ($scope.deptList.length === 1) {
+      if ($scope.deptList.length === 1)
+      {
         $scope.filterDept = 'all';
       }
       $scope.dataList = data.leaveData;
@@ -52830,24 +52864,28 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.showProgress = false;
     }
 
-    $scope.finalizeLeaveRequest = function (approved, i) {
+    $scope.finalizeLeaveRequest = function (approved, i)
+    {
       $scope.approving = true;
       var n = $scope.filteredDataList[i];
       console.log('approved', approved, 'a id', n.approval_hours_id, 'note', n.note);
 
       timestoredata.finalizeLeaveRequest(n.employee_id, approved, n.approval_hours_id, n.note, n.hours_used, n.work_date_display)
-          .then(onFinalizeSuccess, onFinalizeError);
+        .then(onFinalizeSuccess, onFinalizeError);
     };
 
-    function onFinalizeSuccess(response) {
+    function onFinalizeSuccess(response)
+    {
       $scope.closeDetail();
       refresh();
       $scope.approving = false;
     }
 
-    function onFinalizeError(response) {
-      var m = ''
-      switch (response.status) {
+    function onFinalizeError(response)
+    {
+      var m = '';
+      switch (response.status)
+      {
         case 403:
           m = 'You do not have access to approve this person\'s leave.';
           break;
@@ -52859,41 +52897,48 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           break;
       }
       $scope.approving = false;
-      alert(m);      
+      alert(m);
     }
 
-    $scope.refreshData = function () {
+    $scope.refreshData = function ()
+    {
       refresh();
-    }
+    };
 
-    $scope.showDetail = function (i) {
+    $scope.showDetail = function (i)
+    {
       resetDetail();
-      _.forEach($scope.filteredDataList, function (x) {
+      _.forEach($scope.filteredDataList, function (x)
+      {
         x.showDetail = false;
-      })
+      });
       $scope.filteredDataList[i].showDetail = true;
       console.log('leave data', $scope.filteredDataList[i]);
-      if ($scope.filteredDataList[i].showDetail) {
+      if ($scope.filteredDataList[i].showDetail)
+      {
         $scope.selectedIndex = i;
         var n = $scope.filteredDataList[i];
         $scope.selectedId = n.approval_hours_id;
         $scope.filteredDataByDateAndDeptList = filterDataByDateAndDept(n.work_date_display, n.dept_id, n.approval_hours_id);
       }
-    }
+    };
 
-    $scope.closeDetail = function () {
+    $scope.closeDetail = function ()
+    {
       resetDetail();
-      _.forEach($scope.filteredDataList, function (x) {
+      _.forEach($scope.filteredDataList, function (x)
+      {
         x.showDetail = false;
-      })
-    }
+      });
+    };
 
-    $scope.updateFilter = function () {
+    $scope.updateFilter = function ()
+    {
       $scope.showProgress = true;
       //console.log('filter status', $scope.filterStatus);
       $scope.filteredDataList = filterData($scope.dataList);
       $scope.showProgress = false;
-    }
+    };
   }
 
 })();

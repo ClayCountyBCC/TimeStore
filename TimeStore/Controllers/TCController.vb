@@ -746,7 +746,7 @@ Namespace Controllers
       ' filter by depts later.
       If tca.DepartmentsToApprove.Count > 0 AndAlso deptId.Length > 0 Then deptId = ""
 
-      Dim hta As List(Of TimeStore_Approve_Hours_Display) = Get_Hours_To_Approve(payperiodstart, employeeId, Nothing, deptId)
+      Dim hta As List(Of Hours_To_Approve_Display) = Hours_To_Approve_Display.GetHoursToApproveForDisplay(payperiodstart, employeeId, deptId)
       If employeeId > 0 And tca.EmployeeID = employeeId Then
         ' We are restricting the download to just one EmployeeID,
         ' this is used on the employee's leave request page.
@@ -757,10 +757,21 @@ Namespace Controllers
         Else
           'myLC.leaveData = (From a In hta Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
           '                  a.reports_to = tca.EmployeeID Or a.dept_id = myLC.MyDept) Select a).ToList
-          myLC.leaveData = (From a In hta
-                            Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
-                              tca.ReportsToList.Contains(a.employee_id) Or
-                              a.dept_id = myLC.MyDept) Select a).ToList
+          Select Case myLC.MyDept
+            Case "1805", "3701A"
+              myLC.leaveData = (From a In hta
+                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                  tca.ReportsToList.Contains(a.employee_id) Or
+                                  (a.dept_id = "1805" Or a.dept_id = "3701A"))
+                                Select a).ToList
+            Case Else
+              myLC.leaveData = (From a In hta
+                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                  tca.ReportsToList.Contains(a.employee_id) Or
+                                  a.dept_id = myLC.MyDept) Select a).ToList
+          End Select
+
+
         End If
 
       Else
@@ -843,7 +854,7 @@ Namespace Controllers
     Public Function GetBirthdays() As JsonNetResult
       Dim eid As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim fl As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
-      Dim adl As List(Of AD_EmployeeData) = GetADEmployeeData()
+      Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim jnr As New JsonNetResult
       Try
@@ -852,24 +863,25 @@ Namespace Controllers
         If fl.Count = 1 Then
           Dim dept As String = fl.First.Department
           fl = GetEmployeeDataFromFinPlus()
-          Dim flad = (From f In fl, a In adl Where f.EmployeeId = a.EmployeeID And
-                              Not f.IsTerminated And f.BirthDate <> Date.MinValue
-                      Select f.BirthDate, f.Department, f.EmployeeId, a.Name)
+          Dim flad = (From f In fl
+                      Where Not f.IsTerminated And
+                        f.BirthDate <> Date.MinValue
+                      Select f.BirthDate, f.Department, f.EmployeeId)
           Dim bdayList As List(Of Namedday)
           If tca.DepartmentsToApprove.Contains("ALL") Then
             'bdayList = (From f In flad Select f.Department, f.Name, f.BirthDate)
             bdayList = (From f In flad
-                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
 
           ElseIf tca.DepartmentsToApprove.Count > 0 Then
             bdayList = (From f In flad
                         Where tca.DepartmentsToApprove.Contains(f.Department) And
                         f.Department = dept
-                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
 
           Else
             bdayList = (From f In flad Where f.Department = dept
-                        Select New Namedday(f.Name, f.BirthDate, f.Department)).ToList
+                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
           End If
 
           Dim ndList As New List(Of Namedday)

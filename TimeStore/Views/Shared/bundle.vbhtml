@@ -1059,14 +1059,14 @@
                       flex="25">
                     {{ ::r.hours_used }}
                 </span>
-                <span ng-if="r.approval_id === 0"
+                <span ng-if="!r.Finalized"
                       ng-click="showDetail($index)"
                       flex="25">
                     <span class="undecidedLeave">
                         Undecided
                     </span>
                 </span>
-                <span ng-if="r.approval_id !== 0 && r.Approved"
+                <span ng-if="r.Finalized && r.Approved"
                       ng-click="showDetail($index)"
                       flex="25">
                     <span class="approvedLeave">
@@ -1076,7 +1076,7 @@
                         </md-icon>
                     </span>
                 </span>
-                <span ng-if="r.approval_id !== 0 && !r.Approved"
+                <span ng-if="r.Finalized && !r.Approved"
                       ng-click="showDetail($index)"
                       flex="25">
                     <span class="deniedLeave">
@@ -1118,7 +1118,7 @@
                 </span>
               </div>
               <div style="margin-top: .5em;"
-                   ng-if="r.approval_id !== 0"
+                   ng-if="r.Finalized"
                    layout="row"
                    layout-align="start center"
                    flex="100">
@@ -1132,7 +1132,7 @@
                 </span>
               </div>
               <div style="margin-top: .5em;"
-                   ng-if="r.approval_id !== 0"
+                   ng-if="r.Finalized"
                    layout="row"
                    layout-align="start center"
                    flex="100">
@@ -1821,14 +1821,14 @@
                 flex="10">
             {{ d.hours_used }}
           </span>
-          <span ng-if="d.approval_id === 0"
+          <span ng-if="d.Finalized"
                 ng-click="showDetail($index)"
                 flex="20">
             <span class="undecidedLeave">
               Undecided
             </span>
           </span>
-          <span ng-if="d.approval_id !== 0 && d.Approved"
+          <span ng-if="d.Finalized && d.Approved"
                 ng-click="showDetail($index)"
                 flex="20">
             <span class="approvedLeave">
@@ -1838,7 +1838,7 @@
               </md-icon>
             </span>
           </span>
-          <span ng-if="d.approval_id !== 0 && !d.Approved"
+          <span ng-if="d.Finalized && !d.Approved"
                 ng-click="showDetail($index)"
                 flex="20">
             <span class="deniedLeave">
@@ -1879,7 +1879,7 @@
             </span>
           </div>
           <div style="margin-top: .5em;"
-               ng-if="d.approval_id !== 0"
+               ng-if="d.Finalized"
                layout="row"
                layout-align="start center"
                flex="100">
@@ -1893,7 +1893,7 @@
             </span>
           </div>
           <div style="margin-top: .5em;"
-               ng-if="d.approval_id !== 0"
+               ng-if="d.Finalized"
                layout="row"
                layout-align="start center"
                flex="100">
@@ -1916,7 +1916,7 @@
                layout-wrap
                ng-show="d.showDetail">
 
-            <div ng-show="d.approval_id === 0"
+            <div ng-show="d.Finalized"
                  layout="row"
                  layout-align="center center"
                  flex="100">
@@ -1933,7 +1933,7 @@
               </md-button>
 
             </div>
-            <div ng-if="d.approval_id === 0 && approving"
+            <div ng-if="d.Finalized && approving"
                  layout="row"
                  layout-align="center center"
                  flex="100">
@@ -1942,7 +1942,7 @@
               </md-progress-circular>
               <span>Processing your request, please wait...</span>
             </div>
-            <div ng-show="d.approval_id === 0"
+            <div ng-show="d.Finalized"
                  layout="row"
                  layout-align="center center"
                  flex="100">
@@ -1963,7 +1963,7 @@
                        md-max-length="1000" />
               </md-input-container>
             </div>
-              <div ng-show="d.approval_id !== 0"
+              <div ng-show="d.Finalized"
                    layout="row"
                    layout-align="center center"
                    flex="100">
@@ -2012,13 +2012,13 @@
                 <span flex="10">
                   {{ x.hours_used }}
                 </span>
-                <span ng-if="x.approval_id === 0"
+                <span ng-if="!x.Finalized"
                       flex="20">
                   <span class="undecidedLeave">
                     Undecided
                   </span>
                 </span>
-                <span ng-if="x.approval_id !== 0 && x.Approved"
+                <span ng-if="x.Finalized && x.Approved"
                       flex="20">
                   <span class="approvedLeave">
                     Approved
@@ -2027,7 +2027,7 @@
                     </md-icon>
                   </span>
                 </span>
-                <span ng-if="x.approval_id !== 0 && !x.Approved"
+                <span ng-if="x.Finalized && !x.Approved"
                       flex="20">
                   <span class="deniedLeave">
                     Denied

@@ -101,34 +101,62 @@ Public Module ModuleDataAccess
     End Select
   End Function
 
-  Public Function GetADEmployeeData() As List(Of AD_EmployeeData)
+  Public Function GetADEmployeeData() As Dictionary(Of Integer, AD_EmployeeData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
     Dim key As String = "employee_ad_data"
-    Dim adl As List(Of AD_EmployeeData) = myCache.GetItem(key)
-    Return adl
+    Dim aded As Dictionary(Of Integer, AD_EmployeeData) = myCache.GetItem(key, CIP)
+    Return aded
   End Function
 
+  'Public Function GetADEmployeeData() As List(Of AD_EmployeeData)
+  '  Dim key As String = "employee_ad_data"
+  '  Dim adl As List(Of AD_EmployeeData) = myCache.GetItem(key)
+  '  Return adl
+  'End Function
+
   Public Function GetEmployeeDataFromFinPlus() As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
     Dim key As String = "employeedata" ' & PayPeriodStart.ToShortDateString
-    Dim fdl As List(Of FinanceData) = myCache.GetItem(key)
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
     Return fdl
   End Function
 
   Public Function GetEmployeeDataFromFinPlus(DepartmentList As List(Of String)) As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
     Dim key As String = "employeedata" ' & PayPeriodStart.ToShortDateString
-    Dim fdl As List(Of FinanceData) = myCache.GetItem(key)
-    Return (From f In fdl Where DepartmentList.Contains(f.Department) Select f).ToList
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
+    Return (From f In fdl
+            Where DepartmentList.Contains(f.Department)
+            Select f).ToList
   End Function
 
   Public Function GetEmployeeDataFromFinPlus(EmployeeID As Integer) As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
     Dim key As String = "employeedata" ' & PayPeriodStart.ToShortDateString
-    Dim fdl As List(Of FinanceData) = myCache.GetItem(key)
-    Return (From f In fdl Where f.EmployeeId = EmployeeID Select f).ToList
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
+    Return (From f In fdl
+            Where f.EmployeeId = EmployeeID
+            Select f).ToList
   End Function
 
   Public Function GetEmployeeDataFromFinPlus(DepartmentList As List(Of String), EmployeeID As Integer) As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
     Dim key As String = "employeedata" '& PayPeriodStart.ToShortDateString
-    Dim fdl As List(Of FinanceData) = myCache.GetItem(key)
-    Return (From f In fdl Where DepartmentList.Contains(f.Department) And f.EmployeeId = EmployeeID Select f).ToList
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
+    Return (From f In fdl
+            Where DepartmentList.Contains(f.Department) And
+              f.EmployeeId = EmployeeID
+            Select f).ToList
   End Function
 
   Public Function GetAllEmployeeDataFromFinPlus() As List(Of FinanceData)
@@ -1263,31 +1291,6 @@ Public Module ModuleDataAccess
 
   End Function
 
-  'Public Function Delete_Hours(EmployeeId As Integer,
-  '                             PayPeriodEnding As Date,
-  '                             PayCode As String,
-  '                             PayRate As Double) As Boolean
-
-  '  Dim dp = New DynamicParameters()
-  '  dp.Add("@EmployeeId", EmployeeId)
-  '  dp.Add("@PayPeriodEnding", PayPeriodEnding)
-  '  dp.Add("@PayCode", PayCode)
-  '  dp.Add("@PayRate", Math.Round(PayRate))
-
-  '  Dim sql As String = "
-  '    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-  '    BEGIN TRANSACTION DeleteData;
-  '      USE TimeStore;
-  '      DELETE FROM Saved_Time 
-  '      WHERE 
-  '        employee_id=@EmployeeId AND
-  '        pay_period_ending = @PayPeriodEnding AND 
-  '        paycode = @PayCode AND 
-  '        Payrate = @PayRate;
-  '    COMMIT TRANSACTION DeleteData;"
-  '  Return Exec_Query(sql, dp, ConnectionStringType.Timestore) > 0
-  'End Function
-
   Public Function Save_Hours(EmployeeID As Integer,
                              PayPeriodEnding As Date,
                              PayCode As String,
@@ -1642,56 +1645,7 @@ Public Module ModuleDataAccess
     Return found
   End Function
 
-  Public Function Get_Hours_To_Approve(StartDate As Date, Optional EmployeeID As Integer = 0,
-                                       Optional EndDate As Date? = Nothing, Optional DeptId As String = "") As List(Of TimeStore_Approve_Hours_Display)
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim sbQ As New StringBuilder
-    With sbQ
-      .AppendLine("USE TimeStore;")
-      .AppendLine("SELECT access_type,reports_to, dept_id,employee_id,pay_period_ending,work_date,field_id")
-      .AppendLine(",hours_used,worktimes,payrate,approval_hours_id,approval_id,hours_approved,is_approved")
-      .AppendLine(",date_approval_added,by_employeeid,by_username,by_machinename,by_ip_address, note, comment")
-      .AppendLine("FROM vwApproveHoursDisplay")
-      .Append("WHERE work_date >= '").Append(StartDate.ToShortDateString).Append("' ")
-      If EndDate.HasValue Then
-        .Append("AND work_date <= '").Append(EndDate.Value.ToShortDateString).Append("' ")
-      End If
-      If EmployeeID > 0 Then
-        .Append("AND employee_id = ").Append(EmployeeID)
-      End If
-      If DeptId.Length > 0 Then
-        .Append("AND dept_id = '").Append(DeptId.Trim).Append("' ")
-      End If
-      .AppendLine(" ORDER BY dept_id, employee_id, work_date;")
-    End With
-    Dim dsTmp As DataSet
-    Try
-      dsTmp = dbc.Get_Dataset(sbQ.ToString)
-      Dim adl As List(Of AD_EmployeeData) = GetADEmployeeData()
-      Dim ad As AD_EmployeeData = adl.First
-      Dim t As New List(Of TimeStore_Approve_Hours_Display)
-      For Each d In dsTmp.Tables(0).Rows
-        If ad.EmployeeID <> d("employee_id") Then
-          Dim tmp = (From current In adl Where current.EmployeeID = d("employee_id") Select current)
-          If tmp.Count > 0 Then
-            ad = tmp.First
-            Dim tahd As New TimeStore_Approve_Hours_Display(d, ad.Name)
-            If tahd.field.Requires_Approval Then t.Add(tahd)
-          Else
-            Dim tahd As New TimeStore_Approve_Hours_Display(d, "")
-            If tahd.field.Requires_Approval Then t.Add(tahd)
-          End If
-        Else
-          Dim tahd As New TimeStore_Approve_Hours_Display(d, ad.Name)
-          If tahd.field.Requires_Approval Then t.Add(tahd)
-        End If
-      Next
-      Return t.OrderBy(Function(x) x.dept_id).ThenBy(Function(x) x.employee_name).ToList
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
+
 
   Function Get_All_Cached_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
     Return myCache.GetItem("reportsto")
@@ -1771,115 +1725,54 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  Public Function Remove_Denied_Hours(ApprovalHoursId As Long,
-                                      Hours As Double) As Integer
-
-    ' If the row is denied, we need to reduce their hours to 0 for that row 
-    ' and then insert the info.
-    If Hours = 0 Then Return 0 ' no point in running this to remove no hours.
-    Dim dp As New DynamicParameters()
-    dp.Add("@ApprovalHoursID", ApprovalHoursId)
-    dp.Add("@HoursApproved", Hours)
-    Dim query As String = "
-      UPDATE Work_Hours Set total_hours = total_hours - @HoursApproved 
-      WHERE work_hours_id In (
-        SELECT work_hours_id 
-        FROM Hours_To_Approve 
-        WHERE approval_hours_id=@ApprovalHoursID
-      );
-"
-    Return Exec_Query(query, dp, ConnectionStringType.Timestore)
-
-  End Function
-
   Public Function Finalize_Leave_Request(Approved As Boolean,
                                          ApprovalHoursID As Long,
                                          Hours As Double,
                                          Note As String,
                                          SavingEmployee As Timecard_Access) As Integer
 
-    If Not Approved Then Remove_Denied_Hours(ApprovalHoursID, Hours)
-
     Dim dp As New DynamicParameters()
     dp.Add("@ApprovalHoursID", ApprovalHoursID)
-    'dp.Add("@HoursApproved", Hours)
-    dp.Add("@IsApproved", IIf(Approved, 1, 0))
+    dp.Add("@IsApproved", If(Approved, 1, 0))
     dp.Add("@ByEmployeeID", SavingEmployee.EmployeeID)
     dp.Add("@ByUsername", SavingEmployee.UserName)
     dp.Add("@ByMachinename", SavingEmployee.MachineName)
     dp.Add("@ByIpAddress", SavingEmployee.IPAddress)
     dp.Add("@Note", Note)
     Dim query As String = "
-      USE TimeStore;
-      INSERT INTO Approval_Data (
-        approval_hours_id, 
-        hours_approved, 
-        is_approved, 
-        by_employeeid, 
-        by_username, 
-        by_machinename, 
-        by_ip_address, 
-        note
-      ) 
-      SELECT 
-        approval_hours_id,
-        hours_used,
-        @IsApproved,
-        @ByEmployeeID,
-        @ByUsername,
-        @ByMachinename,
-        @ByIpAddress,
-        @Note
-      FROM Hours_To_Approve
-      WHERE approval_hours_id=@ApprovalHoursID
-"
-    Return Exec_Query(query, dp, ConnectionStringType.Timestore)
+      UPDATE Hours_To_Approve
+      SET 
+        by_employeeid = @ByEmployeeID,
+        by_username = @ByUsername,
+        by_ip_address = @ByIpAddress,
+        by_machinename = @ByMachinename,
+        date_approval_added = GETDATE(),
+        is_approved=@IsApproved,
+        note = @Note
+      WHERE 
+        approval_hours_id=@ApprovalHoursId;
 
-    'Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    'Dim sbQ As New StringBuilder
-    'With sbQ
-    '  .AppendLine("USE TimeStore;")
-    '  .AppendLine("IF EXISTS (SELECT approval_hours_id FROM Hours_To_Approve ")
-    '  .AppendLine("   WHERE approval_hours_id=@ApprovalHoursID)")
-    '  .AppendLine("BEGIN")
-    '  .AppendLine("INSERT INTO Approval_Data (approval_hours_id, hours_approved, is_approved, ")
-    '  .AppendLine("by_employeeid, by_username, by_machinename, by_ip_address, note) ")
-    '  .AppendLine("VALUES (@ApprovalHoursID, @HoursApproved, @IsApproved, ")
-    '  .AppendLine("@ByEmployeeID, @ByUsername, @ByMachinename, @ByIpAddress, @Note);")
-    '  If Not Approved Then
-    '    ' If the row is denied, we need to reduce their hours to 0 for that row and then insert the info.
-    '    .AppendLine("UPDATE Work_Hours SET total_hours = total_hours - @HoursApproved WHERE work_hours_id IN (SELECT work_hours_id FROM Hours_To_Approve WHERE approval_hours_id=@ApprovalHoursID);")
-    '  End If
-    '  .AppendLine("SELECT 1;")
-    '  .AppendLine("END")
-    '  .AppendLine("ELSE ")
-    '  .AppendLine("BEGIN")
-    '  .AppendLine("SELECT -5;")
-    '  .AppendLine("END")
-    'End With
-    'Dim ApproveValue As Integer = IIf(Approved, 1, 0)
+      IF(@IsApproved = 0) 
+      BEGIN
+        DECLARE @work_hours_id BIGINT = (
+          SELECT 
+            work_hours_id 
+          FROM Hours_To_Approve
+          WHERE approval_hours_id = @ApprovalHoursId
+          );
 
-    'Dim P() As SqlParameter
-    'P = {
-    '    New SqlParameter("@ApprovalHoursID", Data.SqlDbType.BigInt) With {.Value = ApprovalHoursID},
-    '    New SqlParameter("@HoursApproved", Data.SqlDbType.Float) With {.Value = Hours},
-    '    New SqlParameter("@IsApproved", Data.SqlDbType.TinyInt) With {.Value = ApproveValue},
-    '    New SqlParameter("@Note", Data.SqlDbType.VarChar, 1024) With {.Value = Note},
-    '    New SqlParameter("@ByEmployeeID", Data.SqlDbType.Int) With {.Value = SavingEmployee.EmployeeID},
-    '    New SqlParameter("@ByUsername", Data.SqlDbType.VarChar, 100) With {.Value = SavingEmployee.UserName},
-    '    New SqlParameter("@ByMachinename", Data.SqlDbType.VarChar, 100) With {.Value = SavingEmployee.MachineName},
-    '    New SqlParameter("@ByIpAddress", Data.SqlDbType.VarChar, 20) With {.Value = SavingEmployee.IPAddress}
-    '}
+        DECLARE @TotalHours FLOAT = dbo.GetTotalHours(@work_hours_id);
 
-    'Dim i As Long = 0
-    'Try
-    '  i = dbc.ExecuteScalar(sbQ.ToString, P)
-    '  Return i
-    'Catch ex As Exception
-    '  Log(ex)
-    '  Return -1
-    'End Try
-
+        UPDATE Work_Hours
+        SET total_hours = @TotalHours
+        WHERE work_hours_id=@work_hours_id;
+      END"
+    Try
+      Return Exec_Query(query, dp, ConnectionStringType.Timestore)
+    Catch ex As Exception
+      Dim e As New ErrorLog(ex, query)
+      Return -1
+    End Try
   End Function
 
   Public Sub Clear_Saved_Timestore_Data(employeeID As Integer,

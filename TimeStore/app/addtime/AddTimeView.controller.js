@@ -42,10 +42,10 @@
         .getLeaveRequestsByEmployee($routeParams.employeeId)
         .then(function (data)
         {
-          _.forEach(data.leaveData, function (l)
-          {
-            l.work_date_display = moment(l.work_date).format("M/D/YYYY");
-          });
+          //_.forEach(data.leaveData, function (l)
+          //{
+          //  l.work_date_display = moment(l.work_date).format("M/D/YYYY");
+          //});
           $scope.leaveRequests = data.leaveData;
         });
     }

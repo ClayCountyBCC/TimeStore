@@ -1,32 +1,37 @@
 ﻿/* global moment, _ */
-(function () {
+(function ()
+{
   "use strict";
   angular.module('timestoreApp')
-      .directive('existingLeaveRequest', function () {
-        return {
-          restrict: 'E',
-          templateUrl: 'existingLeaveRequest.directive.tmpl.html',
-          scope: {
-            requests: '='
-          },
-          controller: ['$scope', 'timestoredata', 'timestoreNav', '$routeParams', 'datelist',
-          function ($scope, timestoredata, timestoreNav, $routeParams, datelist) {
+    .directive('existingLeaveRequest', function ()
+    {
+      return {
+        restrict: 'E',
+        templateUrl: 'existingLeaveRequest.directive.tmpl.html',
+        scope: {
+          requests: '='
+        },
+        controller: ['$scope', 'timestoredata', 'timestoreNav', '$routeParams', 'datelist',
+          function ($scope, timestoredata, timestoreNav, $routeParams, datelist)
+          {
 
             //$scope.dataList = [];
 
-            $scope.refreshLeaveRequests = function () {
+            $scope.refreshLeaveRequests = function ()
+            {
               timestoredata.getLeaveRequestsByEmployee($routeParams.employeeId)
-                  .then(processData);
-            }
+                .then(processData);
+            };
 
-            function processData(data) {
+            function processData(data)
+            {
               $scope.requests = data;
             }
 
 
 
           }]
-        };
-      });
+      };
+    });
 
 }());

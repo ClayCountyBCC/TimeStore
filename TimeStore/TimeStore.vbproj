@@ -453,9 +453,7 @@
     <Compile Include="App_Code\ModuleMain.vb" />
     <Compile Include="Models\Timestore_Field.vb" />
     <Compile Include="Models\Timestore_Field_With_Hours.vb" />
-    <Compile Include="Models\Timestore_Hours_Approve_Display.vb" />
-    <Compile Include="Models\Timestore_Hours_To_Approve.vb" />
-    <Compile Include="Models\Timestore_Work_Hours.vb" />
+    <Compile Include="Models\Hours_Approve_Display.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

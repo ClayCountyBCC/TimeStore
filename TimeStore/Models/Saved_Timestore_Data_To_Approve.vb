@@ -3,7 +3,6 @@ Imports Dapper
 
 Namespace Models
   Public Class Saved_TimeStore_Data_To_Approve
-    Property approval_id As Long = 0
     Property approval_hours_id As Long = 0
     Property work_hours_id As Long = 0
     Property field_id As Integer = 0
@@ -30,24 +29,28 @@ Namespace Models
 
     Private Shared Function GetApprovalHoursQuery() As String
       Dim query As String = "
-        USE TimeStore;
-        SELECT 
-          approval_hours_id,
-          work_hours_id,
-          field_id,
-          worktimes,
-          hours_used, 
-          date_added,
-          approval_id,
-          hours_approved,
-          is_approved is_approved_value,
-          by_employeeid, 
-          by_username,
-          by_machinename,
-          by_ip_address,
-          note,
-          date_approval_added 
-        FROM Approval_Hours"
+        SELECT
+          W.employee_id, 
+          W.work_date, 
+          H.approval_hours_id, 
+          H.work_hours_id, 
+          H.field_id, 
+          H.worktimes, 
+          H.hours_used, 
+          H.date_added, 
+          H.is_approved, 
+          H.by_employeeid, 
+          H.by_username, 
+          H.by_machinename, 
+          H.by_ip_address, 
+          H.note, 
+          H.date_approval_added
+        FROM Hours_To_Approve H 
+        INNER JOIN Work_Hours W ON W.work_hours_id = H.work_hours_id 
+        WHERE 1 = 1
+          AND H.is_approved = 1
+          AND H.hours_used > 0
+"
       Return query ' Approval_Hours is a view.  
     End Function
 
@@ -122,67 +125,14 @@ Namespace Models
       Return dt
     End Function
 
-    'Public Shared Function Save(work_hours_id As Integer, tctd As TimecardTimeData) As Boolean
-
-    '  Dim dt As DataTable = PopulateData(work_hours_id, tctd)
-    '  Dim dp As New DynamicParameters()
-    '  dp.Add("@WorkHoursId", work_hours_id)
-
-    '  Dim query As String = "
-    '    MERGE TimeStore.dbo.Hours_To_Approve WITH (HOLDLOCK) AS HA
-
-    '    USING @HTA AS HTA ON HA.work_hours_id=HTA.work_hours_id 
-    '      AND HTA.field_id=HA.field_id
-
-    '    WHEN MATCHED THEN
-    '      UPDATE
-    '        SET 
-    '          worktimes=HTA.work_times,
-    '          hours_used=HTA.hours_used,
-    '          date_added=GETDATE()
-
-    '    WHEN NOT MATCHED BY TARGET THEN
-    '      INSERT (
-    '        work_hours_id,
-    '        field_id,
-    '        worktimes,
-    '        hours_used
-    '      )
-    '      VALUES (
-    '        HTA.work_hours_id,
-    '        HTA.field_id,
-    '        HTA.work_times,
-    '        HTA.hours_used
-    '      )
-    '    WHEN NOT MATCHED BY SOURCE AND HA.work_hours_id=@WorkHoursId THEN
-    '      UPDATE 
-    '        SET
-    '          hours_used=0,
-    '          date_added=GETDATE();"
-    '  Try
-    '    Using db As IDbConnection = New SqlConnection(GetCS(ConnectionStringType.Timestore))
-    '      Dim i = db.Execute(query, New With {
-    '                         .WorkHoursId = work_hours_id,
-    '                         .HTA = dt
-    '                         })
-    '      Return True
-    '    End Using
-    '  Catch ex As Exception
-    '    Dim e As New ErrorLog(ex, "")
-    '    Return False
-    '  End Try
-
-    'End Function
-
     Public Shared Function GetByEmployeeAndWorkday(WorkDate As Date, EmployeeID As Integer) As Saved_TimeStore_Data_To_Approve
       Dim dp As New DynamicParameters()
       dp.Add("@WorkDate", WorkDate)
       dp.Add("@EmployeeID", EmployeeID)
       Dim query As String = GetApprovalHoursQuery() + "
-        WHERE 
-          employee_id = @EmployeeID
-          AND work_date = @WorkDate
-        ORDER BY work_date ASC, employee_id ASC"
+          AND W.employee_id = @EmployeeID
+          AND W.work_date = @WorkDate
+        ORDER BY W.work_date ASC, W.employee_id ASC"
       Dim l = Get_Data(Of Saved_TimeStore_Data_To_Approve)(query, dp, ConnectionStringType.Timestore)
       Return If(l.Count = 0, New Saved_TimeStore_Data_To_Approve, l.First)
     End Function
@@ -192,9 +142,8 @@ Namespace Models
       dp.Add("@Start", Start)
       dp.Add("@End", EndDate)
       Dim query As String = GetApprovalHoursQuery() + "
-        WHERE 
-          work_date BETWEEN @Start AND @End 
-        ORDER BY work_date ASC, employee_id ASC"
+          W.work_date BETWEEN @Start AND @End 
+        ORDER BY W.work_date ASC, W.employee_id ASC"
       Return Get_Data(Of Saved_TimeStore_Data_To_Approve)(query, dp, ConnectionStringType.Timestore)
     End Function
 
@@ -204,10 +153,9 @@ Namespace Models
       dp.Add("@End", EndDate)
       dp.Add("@EmployeeID", EmployeeID)
       Dim query As String = GetApprovalHoursQuery() + "
-        WHERE 
-          employee_id = @EmployeeID
-          AND work_date BETWEEN @Start AND @End 
-        ORDER BY work_date ASC, employee_id ASC"
+          AND employee_id = @EmployeeID
+          AND W.work_date BETWEEN @Start AND @End 
+        ORDER BY W.work_date ASC, W.employee_id ASC"
       Return Get_Data(Of Saved_TimeStore_Data_To_Approve)(query, dp, ConnectionStringType.Timestore)
     End Function
   End Class

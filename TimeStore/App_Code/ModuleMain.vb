@@ -86,7 +86,12 @@ Public Module ModuleMain
     Select Case vYear
       Case 2014, 2017
         ' Christmas Eve         Dec 24
-        HolidayList.Add(DateSerial(vYear, 12, 26)) ' for 2014 & 2017, the holidays are set to 12/25 and 12/26
+        If MoveDays Then
+          HolidayList.Add(DateSerial(vYear, 12, 26)) ' for 2014 & 2017, the holidays are set to 12/25 and 12/26
+        Else ' for the union employees.
+          HolidayList.Add(DateSerial(vYear, 12, 24)) ' for 2014 & 2017, the holidays are set to 12/25 and 12/26
+        End If
+
       Case Else
         ' Christmas Eve         Dec 24
         HolidayList.Add(DateSerial(vYear, 12, 24))
@@ -169,20 +174,36 @@ Public Module ModuleMain
     Return ppList
   End Function
 
-  Public Function GetEmployeeDataFromAD() As List(Of AD_EmployeeData)
-    Dim adel As New List(Of AD_EmployeeData)
-    Try
-      adel.AddRange(GetEmployeeDataFromAD("LDAP://OU=DomainUsers,DC=CLAYBCC,DC=local"))
-      adel.AddRange(GetEmployeeDataFromAD("LDAP://OU=IFASUF,OU=ExtDepartments,DC=CLAYBCC,DC=local"))
-      Return adel
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
+  Public Function GetEmployeeDataFromAD() As Dictionary(Of Integer, AD_EmployeeData)
+    Dim aded As New Dictionary(Of Integer, AD_EmployeeData)
+    GetEmployeeDataFromAD("LDAP://OU=DomainUsers,DC=CLAYBCC,DC=local", aded)
+    GetEmployeeDataFromAD("LDAP://OU=IFASUF,OU=ExtDepartments,DC=CLAYBCC,DC=local", aded)
+    Return aded
   End Function
 
-  Public Function GetEmployeeDataFromAD(Path As String) As List(Of AD_EmployeeData)
-    Dim adel As New List(Of AD_EmployeeData)
+  Public Function GetEmployeeLookupData() As Dictionary(Of String, Integer)
+    ' this function returns a dictionary to return employee id by username
+    Dim adld As New Dictionary(Of String, Integer)
+    Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetEmployeeDataFromAD()
+    For Each key In aded.Keys
+      adld(aded(key).Username.ToLower) = key
+    Next
+    Return adld
+  End Function
+
+  'Public Function GetEmployeeDataFromAD() As List(Of AD_EmployeeData)
+  '  Dim adel As New List(Of AD_EmployeeData)
+  '  Try
+  '    adel.AddRange(GetEmployeeDataFromAD("LDAP://OU=DomainUsers,DC=CLAYBCC,DC=local"))
+  '    adel.AddRange(GetEmployeeDataFromAD("LDAP://OU=IFASUF,OU=ExtDepartments,DC=CLAYBCC,DC=local"))
+  '    Return adel
+  '  Catch ex As Exception
+  '    Log(ex)
+  '    Return Nothing
+  '  End Try
+  'End Function
+
+  Public Sub GetEmployeeDataFromAD(Path As String, ByRef aded As Dictionary(Of Integer, AD_EmployeeData))
     Try
       Dim de As New DirectoryEntry
       de.AuthenticationType = AuthenticationTypes.Secure
@@ -196,45 +217,62 @@ Public Module ModuleMain
           Dim name As String = GetADProperty_String(s, "displayName")
           Dim mail As String = GetADProperty_String(s, "mail")
           Dim user As String = GetADProperty_String(s, "sAMAccountName")
-          adel.Add(New AD_EmployeeData(eid, name, mail, user.ToLower))
+          Dim pwLastChangedDate = DateTime.MaxValue
+          Try
+            Dim rawvalue As String = GetADProperty_String(s, "pwdLastSet")
+            If rawvalue.Length > 0 Then
+              pwLastChangedDate = DateTime.FromFileTimeUtc(rawvalue)
+            End If
+          Catch ex As Exception
+            Log(ex)
+          End Try
+          aded(eid) = New AD_EmployeeData(eid, name, mail, user.ToLower, pwLastChangedDate)
         End If
       Next
-      Return adel
     Catch ex As Exception
       Log(ex)
-      Return Nothing
     End Try
-  End Function
+  End Sub
+
+  'Public Function GetEmployeeDataFromAD(Path As String) As List(Of AD_EmployeeData)
+  '  Dim adel As New List(Of AD_EmployeeData)
+  '  Try
+  '    Dim de As New DirectoryEntry
+  '    de.AuthenticationType = AuthenticationTypes.Secure
+  '    de.Path = Path
+  '    Dim ds As New DirectorySearcher(de)
+  '    ds.Filter = "(&(objectClass=user)(employeeID=*))"
+  '    Dim src As SearchResultCollection = ds.FindAll()
+  '    For Each s As SearchResult In src
+  '      Dim eid As Integer = GetADProperty(s, "employeeID")
+  '      If eid > 0 Then
+  '        Dim name As String = GetADProperty_String(s, "displayName")
+  '        Dim mail As String = GetADProperty_String(s, "mail")
+  '        Dim user As String = GetADProperty_String(s, "sAMAccountName")
+  '        Dim pwLastChangedDate = DateTime.MaxValue
+  '        Try
+  '          Dim rawvalue As String = GetADProperty_String(s, "pwdLastSet")
+  '          If rawvalue.Length > 0 Then
+  '            pwLastChangedDate = DateTime.FromFileTimeUtc(rawvalue)
+  '          End If
+  '        Catch ex As Exception
+  '          Log(ex)
+  '        End Try
+  '        adel.Add(New AD_EmployeeData(eid, name, mail, user.ToLower, pwLastChangedDate))
+  '      End If
+  '    Next
+  '    Return adel
+  '  Catch ex As Exception
+  '    Log(ex)
+  '    Return Nothing
+  '  End Try
+  'End Function
 
   Public Function GetEmployeeIDFromAD(UserName As String) As Integer
     If UserName.Contains("\") Then UserName = UserName.Split("\")(1).ToLower
-    Dim f = (From a In GetADEmployeeData() Where a.Username = UserName
-             Select a)
-    If f.Count > 0 Then
-      Return f.First.EmployeeID
-    Else
-      Return 0
-    End If
-    'Dim adel As List(Of AD_EmployeeData) = GetADEmployeeData()
-
-
-    'Dim EID As Integer = SearchAD(UserName, "LDAP://OU=DomainUsers,DC=CLAYBCC,DC=local")
-    'If EID = 0 Then
-    '  SearchAD(UserName, "LDAP://OU=ExDepartments,OU=IFASUF,DC=CLAYBCC,DC=local")
-    'End If
-
-    'Return EID
+    Dim adld As Dictionary(Of String, Integer) = myCache.GetItem("employee_lookup_data")
+    Return adld(UserName)
   End Function
-
-  'Private Function SearchAD(UserName As String, OU As String) As Integer
-  '      Dim de As New DirectoryEntry
-  '      de.AuthenticationType = AuthenticationTypes.Secure
-  '      de.Path = OU
-  '      Dim myDS As New DirectorySearcher(de)
-  '      myDS.Filter = "(sAMAccountName=" & UserName & ")"
-  '      Dim sr As SearchResult = myDS.FindOne
-  '      Return GetADProperty(sr, "employeeid")
-  '  End Function
 
   Private Function GetADProperty(ByRef sr As SearchResult, propertyName As String) As Integer
     If sr Is Nothing Then Return 0
@@ -585,7 +623,9 @@ Public Module ModuleMain
   End Function
 
   Public Function Get_Cached_Timestore_Fields_By_ID() As Dictionary(Of Integer, Timestore_Field)
-    Return myCache.GetItem("timestorefields_by_id")
+    Dim CIP As New CacheItemPolicy
+    CIP.AbsoluteExpiration = Now.AddHours(12)
+    Return myCache.GetItem("timestorefields_by_id", CIP)
   End Function
 
   Public Function Get_TimeStore_Fields_By_ID() As Dictionary(Of Integer, Timestore_Field)
@@ -597,7 +637,9 @@ Public Module ModuleMain
   End Function
 
   Public Function Get_Cached_Timestore_Fields_By_Name() As Dictionary(Of String, Timestore_Field)
-    Return myCache.GetItem("timestorefields_by_name")
+    Dim CIP As New CacheItemPolicy
+    CIP.AbsoluteExpiration = Now.AddHours(12)
+    Return myCache.GetItem("timestorefields_by_name", CIP)
   End Function
 
   Public Function Get_TimeStore_Fields_By_Name() As Dictionary(Of String, Timestore_Field)

@@ -51,6 +51,8 @@ Namespace Models
           Return Incentive.Get_All_Incentive_Data()
         Case "employee_ad_data"
           Return GetEmployeeDataFromAD()
+        Case "employee_lookup_data"
+          Return GetEmployeeLookupData()
         Case "employeedata"
           'Dim payperiodstart As Date = s(1)
           Return GetAllEmployeeDataFromFinPlus()

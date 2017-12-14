@@ -122,7 +122,7 @@
                 {
                   _.remove(data.leaveData, function (ld)
                   {
-                    return ld.Approved === false && ld.approval_id !== 0;
+                    return !ld.Approved && ld.Finalized;
                   });
                   var group = [];
                   group.push({ work_date: null, employee_name: 'my_dept', hours_used: 0, comment: '', dept: data.MyDept });
