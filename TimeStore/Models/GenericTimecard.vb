@@ -762,7 +762,7 @@
     End Property
 
     Public Sub New(ByVal Username As String)
-      Dim eid As Integer = GetEmployeeIDFromAD(Username)
+      Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Username)
       payPeriodStart = GetPayPeriodStart(Today)
       Load_EmployeeData(eid)
     End Sub
@@ -807,7 +807,7 @@
 
     Public Sub New(StartDate As Date, Username As String)
       payPeriodStart = GetPayPeriodStart(StartDate)
-      Dim eid As Integer = GetEmployeeIDFromAD(Username)
+      Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Username)
       Load_EmployeeData(eid)
     End Sub
 

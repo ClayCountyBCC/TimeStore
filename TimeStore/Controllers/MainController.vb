@@ -17,7 +17,7 @@ Namespace Controllers
     End Function
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
-      Return GetTimeCardAccess(GetEmployeeIDFromAD(UserName))
+      Return GetTimeCardAccess(AD_EmployeeData.GetEmployeeIDFromAD(UserName))
     End Function
 
     ' GET: Main

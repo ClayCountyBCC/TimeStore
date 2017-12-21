@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
@@ -730,13 +730,15 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
-  Public Function Approve_Payperiod(ByRef Req As System.Web.HttpRequestBase, EmployeeId As Integer,
-                                    PayPeriodEnding As Date, ApprovalType As String) As Boolean
+  Public Function Approve_Payperiod(ByRef Req As HttpRequestBase,
+                                    EmployeeId As Integer,
+                                    PayPeriodEnding As Date,
+                                    ApprovalType As String) As Boolean
 
     Dim Machinename As String = Req.UserHostName
     Dim Username As String = Req.LogonUserIdentity.Name
     Dim IPAddress As String = Req.UserHostAddress
-    Dim MyEID As Integer = GetEmployeeIDFromAD(Username)
+    Dim MyEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Username)
     Return Approve_Payperiod(Username, MyEID, Machinename, IPAddress, EmployeeId, PayPeriodEnding, ApprovalType)
 
   End Function
@@ -1732,7 +1734,7 @@ Public Module ModuleDataAccess
                                          SavingEmployee As Timecard_Access) As Integer
 
     Dim dp As New DynamicParameters()
-    dp.Add("@ApprovalHoursID", ApprovalHoursID)
+    dp.Add("@ApprovalHoursId", ApprovalHoursID)
     dp.Add("@IsApproved", If(Approved, 1, 0))
     dp.Add("@ByEmployeeID", SavingEmployee.EmployeeID)
     dp.Add("@ByUsername", SavingEmployee.UserName)
@@ -1767,6 +1769,34 @@ Public Module ModuleDataAccess
         SET total_hours = @TotalHours
         WHERE work_hours_id=@work_hours_id;
       END"
+    Try
+      Return Exec_Query(query, dp, ConnectionStringType.Timestore)
+    Catch ex As Exception
+      Dim e As New ErrorLog(ex, query)
+      Return -1
+    End Try
+  End Function
+
+  Public Function Bulk_Approve_Leave_Requests(Ids As List(Of Long),
+                                              SavingEmployee As Timecard_Access) As Integer
+
+    Dim dp As New DynamicParameters()
+    dp.Add("@ApprovalHoursIds", Ids)
+    dp.Add("@ByEmployeeID", SavingEmployee.EmployeeID)
+    dp.Add("@ByUsername", SavingEmployee.UserName)
+    dp.Add("@ByMachinename", SavingEmployee.MachineName)
+    dp.Add("@ByIpAddress", SavingEmployee.IPAddress)
+    Dim query As String = "
+      UPDATE Hours_To_Approve
+      SET 
+        by_employeeid = @ByEmployeeID,
+        by_username = @ByUsername,
+        by_ip_address = @ByIpAddress,
+        by_machinename = @ByMachinename,
+        date_approval_added = GETDATE(),
+        is_approved=1
+      WHERE 
+        approval_hours_id IN (@ApprovalHoursIds);"
     Try
       Return Exec_Query(query, dp, ConnectionStringType.Timestore)
     Catch ex As Exception

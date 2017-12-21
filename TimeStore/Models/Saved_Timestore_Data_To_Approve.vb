@@ -13,13 +13,13 @@ Namespace Models
     Public ReadOnly Property is_approved As Boolean
       Get
         If Get_TimeStore_Fields_By_ID()(field_id).Requires_Approval Then
-          Return is_approved_value
+          Return approved_by_employee_id > 0
         Else
           Return True
         End If
       End Get
     End Property
-    Property is_approved_value As Boolean
+    'Property is_approved_value As Boolean
     Property approved_by_employee_id As Integer = 0
     Property approved_by_username As String = ""
     Property approved_by_machinename As String = ""
@@ -39,10 +39,10 @@ Namespace Models
           H.hours_used, 
           H.date_added, 
           H.is_approved, 
-          H.by_employeeid, 
-          H.by_username, 
-          H.by_machinename, 
-          H.by_ip_address, 
+          H.by_employeeid approved_by_employee_id, 
+          H.by_username approved_by_username, 
+          H.by_machinename approved_by_machinename, 
+          H.by_ip_address approved_by_ip_address, 
           H.note, 
           H.date_approval_added
         FROM Hours_To_Approve H 
@@ -142,7 +142,7 @@ Namespace Models
       dp.Add("@Start", Start)
       dp.Add("@End", EndDate)
       Dim query As String = GetApprovalHoursQuery() + "
-          W.work_date BETWEEN @Start AND @End 
+          AND W.work_date BETWEEN @Start AND @End 
         ORDER BY W.work_date ASC, W.employee_id ASC"
       Return Get_Data(Of Saved_TimeStore_Data_To_Approve)(query, dp, ConnectionStringType.Timestore)
     End Function

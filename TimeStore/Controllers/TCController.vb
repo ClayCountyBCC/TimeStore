@@ -27,7 +27,7 @@ Namespace Controllers
     End Function
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
-      Dim EID As Integer = GetEmployeeIDFromAD(UserName)
+      Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
       Dim myCookie As New HttpCookie("employeeid", EID.ToString)
       myCookie.Expires = Today.AddYears(1)
       myCookie.HttpOnly = False
@@ -47,7 +47,7 @@ Namespace Controllers
     <HttpPost>
     <OutputCache(VaryByParam:="*", Duration:=0, NoStore:=True)>
     Function CurrentEmployee() As JsonNetResult
-      Return Employee(GetEmployeeIDFromAD(Request.LogonUserIdentity.Name), 0)
+      Return Employee(AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name), 0)
     End Function
 
     Private Function Check_Access_To_EmployeeId(AccessByEID As Integer, AccessToEID As Integer) As Boolean
@@ -104,7 +104,7 @@ Namespace Controllers
       'End If
       Dim jnr As New JsonNetResult
       Try
-        Dim eidToUse As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
         If Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         Dim x As New GenericTimecard(ppd, eidToUse)
 
@@ -300,7 +300,7 @@ Namespace Controllers
       ' If this is a final approval, we should check their access to make sure they have
       ' the authority to approve this timecard.  
 
-      Dim myEID As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+      Dim myEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim myTca As New Timecard_Access(myEID, Request)
 
       Dim jnr As New JsonNetResult
@@ -641,7 +641,7 @@ Namespace Controllers
       If IsItPastCutoffDate(SavedTCTD.WorkDate) Then
         Return New HttpStatusCodeResult(403)
       Else
-        Dim myEID As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        Dim myEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
         Dim myTca As New Timecard_Access(myEID, Request)
         If Not SavedTCTD.Validate() Then Return New HttpStatusCodeResult(400)
         If Check_Access_To_EmployeeId(myEID, SavedTCTD.EmployeeID) Then
@@ -670,7 +670,7 @@ Namespace Controllers
       If IsItPastCutoffDate(PayPeriodEnding) Then
         Return New HttpStatusCodeResult(403)
       Else
-        Dim myEID As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        Dim myEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
         Dim myTca As New Timecard_Access(myEID, Request)
         If Check_Access_To_EmployeeId(myEID, EmployeeID) Then
           If myTca.EmployeeID <> EmployeeID AndAlso
@@ -704,7 +704,7 @@ Namespace Controllers
 
     <HttpPost>
     Public Function Leave_Requests_By_Department() As JsonNetResult
-      Dim eid As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+      Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
       If f.Count = 1 Then
         Dim dept As String = f.First.Department
@@ -817,7 +817,7 @@ Namespace Controllers
         Return New HttpStatusCodeResult(403)
       Else
 
-        Dim myEID As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        Dim myEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
         Dim myTca As New Timecard_Access(myEID, Request)
         If employeeId = myTca.EmployeeID OrElse myTca.DepartmentsToApprove.Contains("VIEW") Then Return New HttpStatusCodeResult(403)
         If Check_Access_To_EmployeeId(myEID, employeeId) Then
@@ -838,6 +838,40 @@ Namespace Controllers
 
     End Function
 
+    'Public Function Approve_Bulk_Leave_Requests(ids As List(Of Long)) As ActionResult
+    '  ' This function will take some information from the browser based on the user's choices
+    '  ' and approve a leave request, provided the user has access.  
+    '  ' HTTP Status codes used to return:
+    '  ' 200 - Everything working as expected
+    '  ' 403 - You don't have access to approve this person's leave.
+    '  ' 500 - An unknown error occurred
+    '  ' 501 - The hours have changed or the leave requests no longer exists.
+    '  ' If the leave request is denied, we will also look up the user's timecard to force an hours recalculation.
+    '  If IsItPastCutoffDate(workdate) Then
+    '    Return New HttpStatusCodeResult(403)
+    '  Else
+
+    '    Dim myEID As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+    '    Dim myTca As New Timecard_Access(myEID, Request)
+    '    If employeeId = myTca.EmployeeID OrElse myTca.DepartmentsToApprove.Contains("VIEW") Then Return New HttpStatusCodeResult(403)
+    '    If Check_Access_To_EmployeeId(myEID, employeeId) Then
+    '      Select Case Finalize_Leave_Request(approved, id, hours, Note, myTca)
+    '        'Case -5
+    '        '  Return New HttpStatusCodeResult(501)
+    '        Case > 0
+    '          If Not approved AndAlso workdate < GetPayPeriodStart(Today).AddDays(14) Then Dim tc As New GenericTimecard(employeeId)
+    '          Return New HttpStatusCodeResult(200)
+    '        Case Else ' includes -1 for sql errors
+    '          Return New HttpStatusCodeResult(500)
+    '      End Select
+    '    Else
+    '      Return New HttpStatusCodeResult(403)
+    '    End If
+
+    '  End If
+
+    'End Function
+
     <HttpPost>
     Public Function GetHolidays() As JsonNetResult
       Dim dList As New List(Of Date)
@@ -852,13 +886,28 @@ Namespace Controllers
 
     <HttpPost>
     Public Function GetBirthdays() As JsonNetResult
-      Dim eid As Integer = GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+      Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim fl As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
       Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim jnr As New JsonNetResult
       Try
-
+        'Dim s As String = ""
+        'Try
+        '  Dim tmpfl = From f In GetEmployeeDataFromFinPlus()
+        '              Where Not f.IsTerminated
+        '              Select f
+        '  For Each f In tmpfl
+        '    If Not aded.ContainsKey(f.EmployeeId) Then
+        '      s &= f.EmployeeName & vbTab & f.EmployeeId.ToString & vbTab & f.DepartmentName & vbTab & f.JobTitle & vbCrLf
+        '    End If
+        '  Next
+        '  If s.Length > 0 Then
+        '    Dim e As New ErrorLog("Missing Employees from AD", s, "", "", "")
+        '  End If
+        'Catch ex As Exception
+        '  Dim e As New ErrorLog(ex, "")
+        'End Try
 
         If fl.Count = 1 Then
           Dim dept As String = fl.First.Department
@@ -870,6 +919,7 @@ Namespace Controllers
           Dim bdayList As List(Of Namedday)
           If tca.DepartmentsToApprove.Contains("ALL") Then
             'bdayList = (From f In flad Select f.Department, f.Name, f.BirthDate)
+
             bdayList = (From f In flad
                         Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
 

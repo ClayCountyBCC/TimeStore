@@ -52905,6 +52905,17 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       refresh();
     };
 
+    $scope.approveAll = function ()
+    {
+      console.log('currently shown?', $scope.filteredDataList);
+      $scope.approving = true;
+      var n = $scope.filteredDataList[i];
+      console.log('approved', approved, 'a id', n.approval_hours_id, 'note', n.note);
+
+      timestoredata.finalizeLeaveRequest(n.employee_id, approved, n.approval_hours_id, n.note, n.hours_used, n.work_date_display)
+        .then(onFinalizeSuccess, onFinalizeError);
+    };
+
     $scope.showDetail = function (i)
     {
       resetDetail();

@@ -1758,6 +1758,12 @@
                    class="md-primary md-raised">
           Refresh Data
         </md-button>
+        <span flex="5"></span>
+        <md-button ng-show="filteredDataList.length > 0 && filterStatus==='undecided'"
+                   ng-click="approveAll()"
+                   class="md-warn md-raised">
+          Approve All
+        </md-button>
       </div>
       <div ng-show="filteredDataList.length > 0"
            layout="row"
@@ -1821,7 +1827,7 @@
                 flex="10">
             {{ d.hours_used }}
           </span>
-          <span ng-if="d.Finalized"
+          <span ng-if="!d.Finalized"
                 ng-click="showDetail($index)"
                 flex="20">
             <span class="undecidedLeave">
@@ -1916,7 +1922,7 @@
                layout-wrap
                ng-show="d.showDetail">
 
-            <div ng-show="d.Finalized"
+            <div ng-show="!d.Finalized"
                  layout="row"
                  layout-align="center center"
                  flex="100">
@@ -1933,7 +1939,7 @@
               </md-button>
 
             </div>
-            <div ng-if="d.Finalized && approving"
+            <div ng-if="!d.Finalized && approving"
                  layout="row"
                  layout-align="center center"
                  flex="100">
@@ -1942,7 +1948,7 @@
               </md-progress-circular>
               <span>Processing your request, please wait...</span>
             </div>
-            <div ng-show="d.Finalized"
+            <div ng-show="!d.Finalized"
                  layout="row"
                  layout-align="center center"
                  flex="100">
