@@ -46,6 +46,7 @@
     Property Swap As Double = 0
     Property MWI As Double = 0
     Property StepUp As Double = 0
+    Property ShiftTrade As Double = 0
     'Property AdminNonWorking As Double = 0
     Property HonorGuard As Double = 0
     Property LeaveWithoutPay As Double = 0
@@ -123,7 +124,7 @@
           Vacation = ttd.WorkHours
         Case "H", "DH", "HS"
           Holiday = ttd.WorkHours
-        Case "S", "SS", "DSL", "SLOT" ' Dispatch Sick Leave
+        Case "S", "SS", "DSL" ' Dispatch Sick Leave
           Sick = ttd.WorkHours
         Case "AA", "ADM", "ADMNSWAP", "ADWG", "ADMG" ' Also counts as regular hours
           Admin = ttd.WorkHours
@@ -139,14 +140,18 @@
           AdminMilitaryLeave = ttd.WorkHours ' Also counts as regular hours
         Case "OJI" ' This is admin leave while injured.
           AdminWorkersComp = ttd.WorkHours
-        Case "OT10", "OT12", "SU10", "SU12", "ST10", "ST12", ' Also counts as regular hours
-             "OTLC10", "OTLC12", "OTLR10", "OTLR12", "SUE",
-             "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "SUO",
-             "SUBC", "OTSUO", "OTSUO", "OTSUBC", "OTMSUO",
-             "OTMSUBC", "OTLCSUO", "OTLCSUBC", "OTLRSUO",
-             "OLTRSUBC", "STE", "STO", "STBC", "OTSUED", "OTSUOD"
 
+        Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12",
+             "OTLR10", "OTM10", "SU10", "OT10", "OTLC10",
+             "OTLR10", "SUE", "OTSUE", "OTMSUE", "OTLCSUE",
+             "OTLRSUE", "OTSUED", "SUEG", "SUO", "OTSUO", "OTMSUO",
+             "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUBC",
+             "OTSUBC", "OTMSUBC", "OLTRSUBC", "OTLCSUBC",
+             "OTSUBCD", "SUBCG"
           StepUp = ttd.WorkHours
+        Case "ST10", "ST12", "STE", "STO", "STBC"
+          ShiftTrade = ttd.WorkHours
+
         Case "SDOT"
           DoubleTime = ttd.WorkHours
         Case "SLWP"
@@ -161,7 +166,7 @@
           AdminBereavement = ttd.WorkHours
         Case "JD" ' Also counts as regular hours
           AdminJuryDuty = ttd.WorkHours
-        Case Else
+        Case Else ' missing "SLOT"
           RegularWork = ttd.WorkHours
       End Select
     End Sub

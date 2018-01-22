@@ -115,8 +115,14 @@
 
     Public Shared Function GetEmployeeIDFromAD(UserName As String) As Integer
       If UserName.Contains("\") Then UserName = UserName.Split("\")(1).ToLower
-      Dim adld As Dictionary(Of String, Integer) = myCache.GetItem("employee_lookup_data")
-      Return adld(UserName)
+      Try
+        Dim adld As Dictionary(Of String, Integer) = myCache.GetItem("employee_lookup_data")
+        Return adld(UserName)
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, UserName)
+        Return -1
+      End Try
+
     End Function
 
     Private Shared Function GetADProperty(ByRef sr As SearchResult, propertyName As String) As Integer

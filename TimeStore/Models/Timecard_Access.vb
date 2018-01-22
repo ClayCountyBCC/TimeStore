@@ -1,5 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports Tools
+Imports System.Web
 
 Namespace Models
   Public Class Timecard_Access
@@ -22,7 +23,16 @@ Namespace Models
     Public Property ReportsToList As New List(Of Integer)
     Public Property PayPeriodDisplayDate As String = ""
     Public Property ReportsTo As Integer = 0
-    Public Property DepartmentsToApprove As New List(Of String)
+    Private Property RawDepartmentsToApprove As String = ""
+    Public ReadOnly Property DepartmentsToApprove As List(Of String)
+      Get
+        If RawDepartmentsToApprove.Length > 0 Then
+          Return RawDepartmentsToApprove.Split(" ").ToList()
+        Else
+          Return New List(Of String)
+        End If
+      End Get
+    End Property
     Public Property RequiresApproval As Boolean = True
     Public Property EmployeeID As Integer = 0
     Public Property CanChangeAccess As Boolean = False
@@ -63,69 +73,83 @@ Namespace Models
       End Get
     End Property
 
-    Private Sub Load_TCA_From_Datarow(dr As DataRow)
-      EmployeeID = dr("employee_id")
-      Data_Type = dr("data_type").ToString
-      Set_Access_Type(dr("access_type"))
-      RequiresApproval = dr("requires_approval")
-      CanChangeAccess = dr("can_change_access")
-      Dim rt = Get_All_Cached_ReportsTo()
-      If rt.ContainsKey(EmployeeID) Then
-        ReportsToList.AddRange(rt(EmployeeID))
-      End If
-      If Not IsDBNull(dr("reports_to")) AndAlso dr("reports_to") <> 0 Then
-        ReportsTo = dr("reports_to")
+    Public Sub New()
 
-      End If
-
-      If Not IsDBNull(dr("dept_approval_list")) Then
-        If dr("dept_approval_list").ToString.Trim.Length > 0 Then
-          DepartmentsToApprove.AddRange(dr("dept_approval_list").ToString.Split(" ").ToList)
-        Else
-          DepartmentsToApprove.Clear()
-        End If
-      End If
-
-      'If Not IsDBNull(dr("dept_access_list")) Then
-      '    DepartmentsToView.AddRange(dr("dept_access_list").ToString.Split(" ").ToList)
-      'End If
-
-      Backend_Reports_Access = dr("backend_reports_access")
     End Sub
 
-    Public Sub New(dr As DataRow)
-      Load_TCA_From_Datarow(dr)
-    End Sub
+    'Private Sub Load_TCA_From_Datarow(dr As DataRow)
+    '  EmployeeID = dr("employee_id")
+    '  Data_Type = dr("data_type").ToString
+    '  Set_Access_Type(dr("access_type"))
+    '  RequiresApproval = dr("requires_approval")
+    '  CanChangeAccess = dr("can_change_access")
+    '  Dim rt = Get_All_Cached_ReportsTo()
+    '  If rt.ContainsKey(EmployeeID) Then
+    '    ReportsToList.AddRange(rt(EmployeeID))
+    '  End If
+    '  If Not IsDBNull(dr("reports_to")) AndAlso dr("reports_to") <> 0 Then
+    '    ReportsTo = dr("reports_to")
 
-    Public Sub New(NewEmployeeID As Integer, Request As HttpRequestBase) ' If the user wasn't found in the access table
-      If NewEmployeeID = 0 Then
-        _Access = Access_Types.No_Access
-      Else
-        If Not Request Is Nothing Then
-          UserName = Request.LogonUserIdentity.Name
-          MachineName = Request.UserHostName
-          IPAddress = Request.UserHostAddress
-        End If
-        Dim ds As DataSet = GetTimeStoreAccess(NewEmployeeID)
-        If ds.Tables(0).Rows.Count > 0 Then
-          Load_TCA_From_Datarow(ds.Tables(0).Rows(0))
-        Else
-          EmployeeID = NewEmployeeID
-          Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(EmployeeID)
-          If f.Count = 1 Then
-            Dim fd As FinanceData = f(0)
-            Select Case fd.Department
-              Case "1703", "2103" '"2102" ' Telestaff
-                Data_Type = "telestaff"
-              Case Else ' Going to try the timecard database for everything else.
-                Data_Type = "timecard"
-            End Select
-          Else
-            _Access = Access_Types.No_Access
-            Logging.Log("Found user with no access to Timestore", EmployeeID.ToString, "", "", "", LogType.Database)
-          End If
-        End If
-      End If
+    '  End If
+
+    '  If Not IsDBNull(dr("dept_approval_list")) Then
+    '    If dr("dept_approval_list").ToString.Trim.Length > 0 Then
+    '      DepartmentsToApprove.AddRange(dr("dept_approval_list").ToString.Split(" ").ToList)
+    '    Else
+    '      DepartmentsToApprove.Clear()
+    '    End If
+    '  End If
+
+    '  'If Not IsDBNull(dr("dept_access_list")) Then
+    '  '    DepartmentsToView.AddRange(dr("dept_access_list").ToString.Split(" ").ToList)
+    '  'End If
+
+    '  Backend_Reports_Access = dr("backend_reports_access")
+    'End Sub
+
+    'Public Sub New(dr As DataRow)
+    '  Load_TCA_From_Datarow(dr)
+    'End Sub
+
+    'Public Sub New(NewEmployeeID As Integer, Request As HttpRequestBase) ' If the user wasn't found in the access table
+    '  If NewEmployeeID = 0 Then
+    '    _Access = Access_Types.No_Access
+    '  Else
+    '    If Not Request Is Nothing Then
+    '      UserName = Request.LogonUserIdentity.Name
+    '      MachineName = Request.UserHostName
+    '      IPAddress = Request.UserHostAddress
+    '    End If
+    '    Dim ds As DataSet = GetTimeStoreAccess(NewEmployeeID)
+    '    If ds.Tables(0).Rows.Count > 0 Then
+    '      Load_TCA_From_Datarow(ds.Tables(0).Rows(0))
+    '    Else
+    '      EmployeeID = NewEmployeeID
+    '      Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(EmployeeID)
+    '      If f.Count = 1 Then
+    '        Dim fd As FinanceData = f(0)
+    '        Select Case fd.Department
+    '          Case "1703", "2103" '"2102" ' Telestaff
+    '            Data_Type = "telestaff"
+    '          Case Else ' Going to try the timecard database for everything else.
+    '            Data_Type = "timecard"
+    '        End Select
+    '      Else
+    '        _Access = Access_Types.No_Access
+    '        Logging.Log("Found user with no access to Timestore", EmployeeID.ToString, "", "", "", LogType.Database)
+    '      End If
+    '    End If
+    '  End If
+    'End Sub
+
+    Public Sub New(EID As Integer, dept As String)
+      EmployeeID = EID
+      Select Case dept
+        Case "2103", "1703"
+          Data_Type = "telestaff"
+        Case Else
+          Data_Type = "timecard"
+      End Select
     End Sub
 
     Public Sub New(rawTCA As Raw_Timecard_Access, Request As HttpRequestBase)
@@ -147,7 +171,7 @@ Namespace Models
       ' This function will take a raw timecard access object and then insert it into the 
       ' access table if no row already exists for that user,
       ' otherwise it will update the row.
-      Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
+      Dim dbc As New DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
       ' first let's see if it exists
       Dim query As String = "SELECT COUNT(*) AS CNT FROM Access WHERE employee_id=" & EmployeeID
       Dim sbQ As New StringBuilder
@@ -185,6 +209,205 @@ Namespace Models
       End Try
 
     End Function
+
+    Public Shared Function GetAllAccess_Dict() As Dictionary(Of Integer, Timecard_Access)
+      Dim tcal = Get_All_Cached_Access_List()
+      Try
+        Dim d = tcal.ToDictionary(Function(x) x.EmployeeID, Function(x) x)
+        Return d
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
+        Return Nothing
+      End Try
+    End Function
+
+    Public Shared Function GetAllAccess_List() As List(Of Timecard_Access)
+      Dim query As String = "
+        SELECT
+          employee_id EmployeeID,
+          data_type,
+          access_type _Access,
+          can_change_access CanChangeAccess,
+          requires_approval RequiresApproval,
+          ISNULL(reports_to, 0) ReportsTo,
+          dept_approval_list RawDepartmentsToApprove,
+          backend_reports_access
+        FROM Access"
+      Dim al As List(Of Timecard_Access) = Get_Data(Of Timecard_Access)(query, ConnectionStringType.Timestore)
+      Dim eidlist = (From a In al
+                     Select a.EmployeeID).ToList
+      Dim fl As List(Of FinanceData) = GetCachedEmployeeDataFromFinplus()
+      For Each f In fl
+        If Not eidlist.Contains(f.EmployeeId) Then
+          al.Add(New Timecard_Access(f.EmployeeId, f.Department))
+        End If
+      Next
+      Return al
+    End Function
+
+    'Public Shared Function Get_All_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
+    '  Dim query As String = "
+    '    SELECT
+    '      L1.employee_id,
+    '      L1.reports_to L1,
+    '      ISNULL(L2.reports_to, 0) L2,
+    '      ISNULL(L3.reports_to, 0) L3,
+    '      ISNULL(L4.reports_to, 0) L4,
+    '      ISNULL(L5.reports_to, 0) L5,
+    '      ISNULL(L6.reports_to, 0) L6
+    '    FROM Access L1
+    '    LEFT OUTER JOIN Access L2 ON L1.reports_to = L2.employee_id
+    '    LEFT OUTER JOIN Access L3 ON L2.reports_to = L3.employee_id
+    '    LEFT OUTER JOIN Access L4 ON L3.reports_to = L4.employee_id
+    '    LEFT OUTER JOIN Access L5 ON L4.reports_to = L5.employee_id
+    '    LEFT OUTER JOIN Access L6 ON L5.reports_to = L6.employee_id
+    '    WHERE L1.reports_to > 0
+    '    ORDER BY employee_id ASC"
+    '  Dim d As New Dictionary(Of Integer, List(Of Integer))
+    '  Try
+
+    '    Using db As IDbConnection = New SqlConnection(GetCS(ConnectionStringType.Timestore))
+    '      Dim xl = db.Query(query)
+    '      For Each x In xl
+    '        Dim li = New List(Of Integer) From {
+    '          x.L1,
+    '          x.L2,
+    '          x.L3,
+    '          x.L4,
+    '          x.L5,
+    '          x.L6
+    '        }
+    '        li.RemoveAll(Function(j) j = 0)
+    '        d(x.employee_id) = li
+    '      Next
+    '      Return d
+    '    End Using
+    '  Catch ex As Exception
+    '    Dim e As New ErrorLog(ex, query)
+    '    Return d
+    '  End Try
+
+    'End Function
+
+    Public Shared Function Get_All_Cached_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
+      Dim cip As New Runtime.Caching.CacheItemPolicy
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      Return myCache.GetItem("reportsto", cip)
+    End Function
+
+    Public Shared Function Get_All_Cached_Access_Dict() As Dictionary(Of Integer, Timecard_Access)
+      Dim cip As New Runtime.Caching.CacheItemPolicy
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      Return myCache.GetItem("allaccessdict", cip)
+    End Function
+
+    Public Shared Function Get_All_Cached_Access_List() As List(Of Timecard_Access)
+      Dim cip As New Runtime.Caching.CacheItemPolicy
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      Return myCache.GetItem("allaccesslist", cip)
+    End Function
+
+    Public Shared Function Get_All_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
+      Dim dbc As New DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
+      Dim query As String = "SELECT employee_id, reports_to FROM Access WHERE reports_to <> 0"
+      Dim ds As DataSet = dbc.Get_Dataset(query)
+      Dim reportsTo As New Dictionary(Of Integer, List(Of Integer))
+      Try
+        Dim tmp = (From d In ds.Tables(0).AsEnumerable
+                   Select New ReportsTo With {.eId = d("employee_id"),
+                  .rTo = d("reports_to")}).ToList
+        For Each t In tmp
+          Get_ReportsTo_Main(t.rTo, t.rTo, tmp, reportsTo)
+        Next
+        Return reportsTo
+      Catch ex As Exception
+        Log(ex)
+        Return Nothing
+      End Try
+    End Function
+
+    Private Shared Sub Get_ReportsTo_Main(base_EmployeeId As Integer,
+                    reportsTo_EmployeeId As Integer,
+                    ByRef ReportsToList As List(Of ReportsTo),
+                    ByRef ReportsTo As Dictionary(Of Integer, List(Of Integer)))
+
+      Dim found = (From r In ReportsToList
+                   Where r.rTo = reportsTo_EmployeeId
+                   Select r.eId).ToList
+
+      If found.Count > 0 Then
+        If Not ReportsTo.ContainsKey(base_EmployeeId) Then
+          ReportsTo(base_EmployeeId) = New List(Of Integer)
+        End If
+        '  ReportsTo(base_EmployeeId).AddRange(found)
+        For Each f In found
+          If Not ReportsTo(base_EmployeeId).Contains(f) Then ReportsTo(base_EmployeeId).Add(f)
+          Get_ReportsTo_Main(base_EmployeeId, f, ReportsToList, ReportsTo)
+        Next
+      End If
+
+    End Sub
+
+    Public Shared Function Check_Access_To_EmployeeId(AccessBy As Integer, AccessTo As Integer) As Boolean
+      Dim tca As Timecard_Access = GetTimeCardAccess(AccessBy)
+      Return tca.Check_Access_To_EmployeeId(AccessTo)
+    End Function
+
+    Public Function Check_Access_To_EmployeeId(AccessToEID As Integer) As Boolean
+      ', Optional ForApproval As Boolean = False ' removed 6/29/2015
+      If EmployeeID = AccessToEID Then Return True
+      Dim AccessTo As Timecard_Access = GetTimeCardAccess(AccessToEID)
+
+      ' Added this line, if someone is trying to approve someone that is higher than they are, they 
+      ' should not be allowed.
+      If Raw_Access_Type = Timecard_Access.Access_Types.All_Access Then
+        Return True
+      ElseIf CType(AccessTo.Raw_Access_Type, Integer) >= CType(Raw_Access_Type, Integer) Then
+        ' This will throw out any access requests to people with greater or equal access
+        Return False
+      End If
+
+      Select Case Raw_Access_Type
+        Case Timecard_Access.Access_Types.All_Access
+          Return True
+
+        Case Timecard_Access.Access_Types.Department_1, Timecard_Access.Access_Types.Department_2,
+            Timecard_Access.Access_Types.Department_3, Timecard_Access.Access_Types.Department_4,
+            Timecard_Access.Access_Types.Department_5
+
+          If DepartmentsToApprove.Count > 0 Then
+            If DepartmentsToApprove.Contains("ALL") Then
+              Return True
+            Else
+              If Not DepartmentsToApprove.Contains("VIEW") And Not DepartmentsToApprove.Contains("LEAVE") Then
+                Dim edl As List(Of Employee_Data) = myCache.GetItem("employeeList")
+                Dim dept As String = (From e In edl Where e.EmployeeID = AccessToEID Select e.DepartmentID).First
+                If DepartmentsToApprove.Contains(dept) Then Return True
+              End If
+            End If
+          End If
+
+      End Select
+      ' If we've gone through the dept check and they still don't have access to this person, we
+      ' want to check to see if the user they are trying to load is set to report to them.
+      'Dim AccessTo As New Timecard_Access(AccessToEID)
+      Return ReportsToList.Contains(AccessTo.EmployeeID)
+      '(AccessTo.ReportsToList.Contains(AccessBy.EmployeeID))
+    End Function
+
+    Public Shared Function GetTimeCardAccess(Username As String) As Timecard_Access
+      Return Get_All_Cached_Access_Dict()(AD_EmployeeData.GetEmployeeIDFromAD(Username))
+      'Dim key As String = "tca," & EmployeeId
+      'Return myCache.GetItem(key)
+    End Function
+
+    Public Shared Function GetTimeCardAccess(EmployeeId As Integer) As Timecard_Access
+      Return Get_All_Cached_Access_Dict()(EmployeeId)
+      'Dim key As String = "tca," & EmployeeId
+      'Return myCache.GetItem(key)
+    End Function
+
+
 
   End Class
 End Namespace

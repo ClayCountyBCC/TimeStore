@@ -12,7 +12,7 @@ Namespace Controllers
 
     ' GET: Reports
     Function Index() As ActionResult
-      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+      Dim tca As Timecard_Access = Timecard_Access.GetTimeCardAccess(Request.LogonUserIdentity.Name)
       If Not tca.Backend_Reports_Access Then Return New HttpUnauthorizedResult
       Return View()
     End Function
@@ -20,7 +20,7 @@ Namespace Controllers
     <HttpPost>
     Public Function GetGenericData(StartDate As Date, EndDate As Date, Fields As List(Of String)) As JsonNetResult
       Dim jnr As New JsonNetResult
-      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+      Dim tca As Timecard_Access = Timecard_Access.GetTimeCardAccess(Request.LogonUserIdentity.Name)
       If Not tca.Backend_Reports_Access Then
         jnr.Data = "Error: Unauthorized"
       Else
@@ -45,15 +45,15 @@ Namespace Controllers
     '    Return jnr
     'End Function
 
-    Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
-      Return GetTimeCardAccess(AD_EmployeeData.GetEmployeeIDFromAD(UserName))
-    End Function
+    'Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
+    '  Return GetTimeCardAccess(AD_EmployeeData.GetEmployeeIDFromAD(UserName))
+    'End Function
 
-    Private Function GetTimeCardAccess(EmployeeId As Integer) As Timecard_Access
-      Dim key As String = "tca," & EmployeeId
-      defaultCIP.AbsoluteExpiration = Now.AddHours(12)
-      Return myCache.GetItem(key, defaultCIP)
-    End Function
+    'Private Function GetTimeCardAccess(EmployeeId As Integer) As Timecard_Access
+    '  Dim key As String = "tca," & EmployeeId
+    '  defaultCIP.AbsoluteExpiration = Now.AddHours(12)
+    '  Return myCache.GetItem(key, defaultCIP)
+    'End Function
 
   End Class
 End Namespace

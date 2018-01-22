@@ -5,7 +5,7 @@ End Code
 
 <div layout-wrap
      layout="row"
-     layout-align="center center"
+     layout-align="center start"
      flex="100" 
      ng-controller="ReportController">
 
@@ -16,7 +16,7 @@ End Code
         </md-progress-linear>
 
 
-        <div flex="90">
+        <div>
 
             <div style="margin-top: .5em;"                 
                  layout="row"
@@ -26,7 +26,7 @@ End Code
                 <div flex="40"
                      class="short-toolbar my-accent"
                      layout="row"
-                     layout-align="center center">
+                     layout-align="center start">
                     <h5>
                         Search Fields
                     </h5>
@@ -70,20 +70,20 @@ End Code
             <div class="md-whiteframe-z1"
                  style="margin-top: .5em; margin-bottom: .5em;"
                  layout="row"
-                 layout-align="center center"
+                 layout-align="center start"
                  layout-wrap
                  flex="100">
                 <div flex="100"
                      class="short-toolbar my-accent"
                      layout="row"
-                     layout-align="center center">
+                     layout-align="center start">
                     <h5>
                         Search Criteria
                     </h5>
                 </div>
                 <div flex="100"
                      layout="row"
-                     layout-align="center center">
+                     layout-align="center start">
                     Choose Your Date Range:
                     <md-datepicker md-min-date="minDate" 
                                    md-max-date="maxDate"
@@ -98,13 +98,12 @@ End Code
                         Search
                     </md-button>
                     <span flex="5"></span>
-                    <md-button download="{{csvFilename}}"
-                               ng-href="{{csvUrl}}"
-                               ng-show="timeData.length > 0"
-                               class="md-primary md-fab md-raised">
-                        <md-icon md-svg-src="/TimeStore/images/ic_file_download_24px.svg">
-                        </md-icon>
-                    </md-button>
+                    <a ng-show="dataToView.length > 0"
+                       id="download"
+                       download="customreport.csv" 
+                       href="">
+                      Download
+                    </a>
 
                 </div>
             </div>
@@ -148,7 +147,7 @@ End Code
         </div>
     </div>
     <div layout="row"
-         layout-align="center center"
+         layout-align="center start"
          ng-if="message.length > 0">
         {{ message }}
     </div>

@@ -45,8 +45,26 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "allaccessdict"
+          Return Timecard_Access.GetAllAccess_Dict()
+        Case "allaccesslist"
+          Return Timecard_Access.GetAllAccess_List()
         Case "reportsto"
-          Return Get_All_ReportsTo()
+          'Dim rtOld = Timecard_Access.Get_All_ReportsTo_Old()
+          'Dim rt = Timecard_Access.Get_All_ReportsTo()
+          'For Each key In rtOld.Keys
+          '  If Not rt.ContainsKey(key) Then
+          '    ' we have a problem
+          '    Dim iii As Integer = 0
+          '  End If
+          '  For Each id In rtOld(key)
+          '    If Not rt(key).Contains(id) Then
+          '      Dim idnotfound As Integer = id
+          '    End If
+          '  Next
+
+          'Next
+          Return Timecard_Access.Get_All_ReportsTo()
         Case "incentive"
           Return Incentive.Get_All_Incentive_Data()
         Case "employee_ad_data"
@@ -56,9 +74,9 @@ Namespace Models
         Case "employeedata"
           'Dim payperiodstart As Date = s(1)
           Return GetAllEmployeeDataFromFinPlus()
-        Case "tca"
-          Dim eid As Integer = s(1)
-          Return New Timecard_Access(eid, Nothing)
+        'Case "tca"
+        '  Dim eid As Integer = s(1)
+        '  Return New Timecard_Access(eid, Nothing)
         Case "employeelist"
           Return GetEmployeeListFromFinPlus()
         Case "departmentlist"

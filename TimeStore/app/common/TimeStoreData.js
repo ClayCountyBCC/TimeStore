@@ -40,6 +40,20 @@
           });
       }
 
+      var finalizeAllLeaveRequests = function (ids)
+      {
+        var data = { ids: ids };
+        return $http
+          .post("TC/Approve_Bulk_Leave_Requests", data, {
+            cache: false,
+            handleError: true
+          })
+          .then(function (response)
+          {
+            return response;
+          });
+      };
+
       var finalizeLeaveRequest = function (
         eId,
         approved,
@@ -522,6 +536,7 @@
 
       return {
         finalizeLeaveRequest: finalizeLeaveRequest,
+        finalizeAllLeaveRequests: finalizeAllLeaveRequests,
         getPayPeriodIndex: getPayPeriodIndex,
         getDefaultEmployeeId: getDefaultEmployeeId,
         getPayPeriodEnd: getPayPeriodEnd,

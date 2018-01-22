@@ -116,7 +116,7 @@ Public Module ModuleDataAccess
   '  Return adl
   'End Function
 
-  Public Function GetEmployeeDataFromFinPlus() As List(Of FinanceData)
+  Public Function GetCachedEmployeeDataFromFinplus() As List(Of FinanceData)
     Dim CIP As New CacheItemPolicy With {
       .AbsoluteExpiration = Now.AddHours(12)
     }
@@ -250,7 +250,7 @@ Public Module ModuleDataAccess
     If EmployeeID = 0 Then
       Return New List(Of TimecardTimeData)
     End If
-    Dim tctdl As List(Of TimecardTimeData) = 
+    Dim tctdl As List(Of TimecardTimeData) =
       GetEmployeeDataFromTimeStore(Startdate, Startdate.AddDays(13), EmployeeID)
     If tctdl.Count = 0 Then
       Return GetEmployeeDataFromTimecard(Startdate, EmployeeID)
@@ -364,7 +364,12 @@ Public Module ModuleDataAccess
     ' This function will query the Access table in the Timestore database to return a list of all of the users set to 
     ' Report to employeeId
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim query As String = "USE TimeStore; SELECT employee_id FROM Access WHERE reports_to=" & employeeId
+    Dim query As String = "
+USE TimeStore; 
+SELECT 
+  employee_id 
+FROM Access 
+WHERE reports_to=" & employeeId
     Try
       'Dim ilist As New List(Of Integer)
       Dim ds As DataSet = dbc.Get_Dataset(query)
@@ -380,9 +385,13 @@ Public Module ModuleDataAccess
     ' This function will query the Access table in the Timestore database to return a list of all of the users set to 
     ' Report to employeeId
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim query As String = "USE TimeStore; SELECT employee_id FROM Access WHERE access_type >= " & accessType
+    Dim query As String = "
+USE TimeStore; 
+SELECT 
+  employee_id 
+FROM Access 
+WHERE access_type >= " & accessType
     Try
-      'Dim ilist As New List(Of Integer)
       Dim ds As DataSet = dbc.Get_Dataset(query)
       Dim iList As List(Of Integer) = (From d In ds.Tables(0).AsEnumerable Select CType(d("employee_id"), Integer)).ToList
       Return iList
@@ -856,7 +865,7 @@ Public Module ModuleDataAccess
 
     ' Let's pare down the employee list to just those that are not terminated, 
     ' or those that were terminated in the pay period.
-    Dim employeeList As List(Of FinanceData) = (From el In GetEmployeeDataFromFinPlus()
+    Dim employeeList As List(Of FinanceData) = (From el In GetCachedEmployeeDataFromFinplus()
                                                 Order By el.Department, el.EmployeeLastName
                                                 Where el.TerminationDate > PayPeriodStart And Not PublicWorks.Contains(el.Department)
                                                 Select el).ToList
@@ -912,7 +921,7 @@ Public Module ModuleDataAccess
   Public Function GetCrosstabData(payPeriodStart As Date) As List(Of Crosstab)
     Dim ppEnd As Date = payPeriodStart.AddDays(13)
     Dim PublicWorks() As String = {"3701", "3709", "3711", "3712"} ' for these two departments.
-    Dim employeeList As List(Of FinanceData) = (From el In GetEmployeeDataFromFinPlus()
+    Dim employeeList As List(Of FinanceData) = (From el In GetCachedEmployeeDataFromFinplus()
                                                 Order By el.Department, el.EmployeeLastName
                                                 Where (el.TerminationDate = Date.MaxValue Or
                                                 (el.TerminationDate > payPeriodStart And
@@ -998,7 +1007,7 @@ Public Module ModuleDataAccess
     ' If the paycode and pay rate match, we update the hours
     ' then we loop through the saved_time data and insert everything else.
     ' If the paycode and payrate exists in the Finplus Timecard data, we update.  Otherwise we insert.
-    Dim employeeData As List(Of FinanceData) = GetEmployeeDataFromFinPlus()
+    Dim employeeData As List(Of FinanceData) = GetCachedEmployeeDataFromFinplus()
     Dim fds As DataSet = GetRawFinplusTimecardData(UseProduction)
     If fds.Tables(0).Rows.Count > 0 Then
       Dim payrun As String = (From f In fds.Tables(0).AsEnumerable Where Not IsDBNull(f("pay_run")) Select f("pay_run")).FirstOrDefault
@@ -1062,7 +1071,7 @@ Public Module ModuleDataAccess
         ' at the end here, we need to add a row updating the project code for
         ' any disaster hours.
         ' HI-09/17 Irma project code
-        .AppendLine("UPDATE timecard SET proj='HI-09/17' WHERE pay_code IN ('299', '300', '301', '302', '303');")
+        '.AppendLine("UPDATE timecard SET proj='HI-09/17' WHERE pay_code IN ('299', '300', '301', '302', '303');")
       End With
       Try
 
@@ -1411,44 +1420,7 @@ Public Module ModuleDataAccess
     'End Try
   End Function
 
-  Public Function Get_Telestaff_Profile_By_Date(EmployeeID As Integer,
-                                                DateToCheck As Date) As DataRow
 
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Telestaff), toolsAppId, toolsDBError)
-    Dim sbQ As New StringBuilder
-
-    With sbQ
-      .AppendLine("USE Telestaff;")
-      .AppendLine("SELECT R.rsc_hourwage_db, R.PayInfo_No_In FROM Resource_Tbl R")
-      .AppendLine("INNER JOIN Resource_Master_Tbl RMT ON R.RscMaster_No_In = RMT.RscMaster_No_In")
-      .AppendLine("WHERE RMT.RscMaster_EmployeeID_Ch=@EmployeeId")
-      .AppendLine("AND R.Rsc_From_Da <= @DateToCheck AND ISNULL(R.Rsc_Thru_Da, @DateToCheck) >= @DateToCheck")
-      ' Removed this bit so that after the holidays are saved, no matter what, they will 
-      ' have to reapprove their time.
-      ' AND paycode IN ('124', '134', '122');")
-    End With
-
-    Dim P(1) As SqlParameter
-    P(0) = New SqlParameter("@EmployeeId", Data.SqlDbType.VarChar, 30) With {.Value = EmployeeID.ToString}
-    P(1) = New SqlParameter("@DateToCheck", Data.SqlDbType.Date) With {.Value = DateToCheck}
-    Dim ds As DataSet
-    Try
-      ds = dbc.Get_Dataset(sbQ.ToString, P)
-      If ds.Tables(0).Rows.Count > 1 Then
-        Log("Too many Telestaff profiles found on date for Employee " & EmployeeID.ToString, EmployeeID.ToString, DateToCheck.ToShortDateString, ds.Tables(0).Rows.Count.ToString)
-        Return Nothing
-      ElseIf ds.Tables(0).Rows.Count = 1 Then
-        Return ds.Tables(0).Rows(0)
-      Else
-        'Log("No Telestaff profiles found on date for Employee " & EmployeeID.ToString, EmployeeID.ToString, DateToCheck.ToShortDateString, ds.Tables(0).Rows.Count.ToString)
-        Return Nothing
-      End If
-
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
 
   Public Function Update_Holiday_Data(HolidayChoice() As String, HolidayBankHoursPaid As Double,
                                       ByRef tc As GenericTimecard, UpdateBy As String) As Boolean
@@ -1592,7 +1564,11 @@ Public Module ModuleDataAccess
   End Function
 
   Public Function GetGenericTimeData(StartDate As Date, EndDate As Date, Fields As List(Of String)) As List(Of GenericTimeData)
-    Dim fdl As List(Of FinanceData) = (From fd In GetAllEmployeeDataFromFinPlus() Where (fd.TerminationDate = Date.MaxValue Or (fd.TerminationDate >= StartDate And fd.TerminationDate <= EndDate)) Select fd).ToList
+    Dim fdl As List(Of FinanceData) = (From fd In GetAllEmployeeDataFromFinPlus()
+                                       Where (fd.TerminationDate = Date.MaxValue Or
+                                         (fd.TerminationDate >= StartDate And
+                                         fd.TerminationDate <= EndDate))
+                                       Select fd).ToList
     Dim teledl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(StartDate, "", EndDate)
     Dim tcl As List(Of TimecardTimeData) = GetEmployeeDataFromTimecard(StartDate, 0, EndDate)
     Dim tsl As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(StartDate, EndDate)
@@ -1600,7 +1576,7 @@ Public Module ModuleDataAccess
     Dim gtdl As New List(Of GenericTimeData)
     For Each f In fdl
       Select Case f.Department
-        Case "1703", "2103", "2102" ' public safety
+        Case "1703", "2103" ' public safety ' removed 2102, they are apart of timestore now.
           For Each t In (From tele In teledl
                          Where tele.EmployeeId = f.EmployeeId
                          Select tele).ToList
@@ -1614,8 +1590,14 @@ Public Module ModuleDataAccess
           ' Here we're going to look in the timecard system first.  If they have any
           ' data there, we're going to use that and ignore the timestore data.
           ' Only if they don't have any timecard data do we even look for the timestore data.
-          Dim tc = (From timecard In tcl Where timecard.EmployeeID = f.EmployeeId Select timecard).ToList
-          If tc.Count = 0 Then tc = (From timestore In tsl Where timestore.EmployeeID = f.EmployeeId Select timestore).ToList
+          Dim tc = (From timecard In tcl
+                    Where timecard.EmployeeID = f.EmployeeId
+                    Select timecard).ToList
+          If tc.Count = 0 Then
+            tc = (From timestore In tsl
+                  Where timestore.EmployeeID = f.EmployeeId
+                  Select timestore).ToList
+          End If
           For Each t In tc
             gtdl.Add(New GenericTimeData(t, f))
           Next
@@ -1649,49 +1631,8 @@ Public Module ModuleDataAccess
 
 
 
-  Function Get_All_Cached_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
-    Return myCache.GetItem("reportsto")
-  End Function
 
-  Function Get_All_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
-    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim query As String = "SELECT employee_id, reports_to FROM Access WHERE reports_to <> 0"
-    Dim ds As DataSet = dbc.Get_Dataset(query)
-    Dim reportsTo As New Dictionary(Of Integer, List(Of Integer))
-    Try
-      Dim tmp = (From d In ds.Tables(0).AsEnumerable
-                 Select New ReportsTo With {.eId = d("employee_id"),
-                  .rTo = d("reports_to")}).ToList
-      For Each t In tmp
-        Get_ReportsTo(t.rTo, t.rTo, tmp, reportsTo)
-      Next
-      Return reportsTo
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
 
-  Sub Get_ReportsTo(base_EmployeeId As Integer,
-                    reportsTo_EmployeeId As Integer,
-                    ByRef ReportsToList As List(Of ReportsTo),
-                    ByRef ReportsTo As Dictionary(Of Integer, List(Of Integer)))
-    Dim found = (From r In ReportsToList
-                 Where r.rTo = reportsTo_EmployeeId
-                 Select r.eId).ToList
-
-    If found.Count > 0 Then
-      If Not ReportsTo.ContainsKey(base_EmployeeId) Then
-        ReportsTo(base_EmployeeId) = New List(Of Integer)
-      End If
-      '  ReportsTo(base_EmployeeId).AddRange(found)
-      For Each f In found
-        If Not ReportsTo(base_EmployeeId).Contains(f) Then ReportsTo(base_EmployeeId).Add(f)
-        Get_ReportsTo(base_EmployeeId, f, ReportsToList, ReportsTo)
-      Next
-    End If
-
-  End Sub
 
   Function Save_Comp_Time_Earned(EmployeeID As Integer, PayPeriodEnding As Date, Week1 As Double, Week2 As Double,
                                  SavingEmployee As Timecard_Access) As Boolean
@@ -1777,6 +1718,25 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
+  Public Function Get_Leave_Request_EmployeeIds(Ids As List(Of Long)) As List(Of Integer)
+    Dim dp As New DynamicParameters
+    dp.Add("@Ids", Ids)
+    Dim query As String = "
+      SELECT DISTINCT
+        W.employee_id
+      FROM Hours_To_Approve H
+      INNER JOIN Work_Hours W ON W.work_hours_id = H.work_hours_id
+      INNER JOIN Timestore_Fields F ON H.field_id = F.field_id AND F.requires_approval = 1
+      WHERE H.approval_hours_id IN @Ids
+      AND H.by_employeeid IS NULL
+      AND H.hours_used > 0
+      AND is_approved = 1
+      AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE()" ' this is how we handle the pay period cutoff.
+    ' any leave requests after the pay period ends will be ignored.
+    Return Get_Data(Of Integer)(query, dp, ConnectionStringType.Timestore)
+  End Function
+
+
   Public Function Bulk_Approve_Leave_Requests(Ids As List(Of Long),
                                               SavingEmployee As Timecard_Access) As Integer
 
@@ -1787,16 +1747,23 @@ Public Module ModuleDataAccess
     dp.Add("@ByMachinename", SavingEmployee.MachineName)
     dp.Add("@ByIpAddress", SavingEmployee.IPAddress)
     Dim query As String = "
-      UPDATE Hours_To_Approve
+      UPDATE H
       SET 
         by_employeeid = @ByEmployeeID,
         by_username = @ByUsername,
         by_ip_address = @ByIpAddress,
         by_machinename = @ByMachinename,
-        date_approval_added = GETDATE(),
-        is_approved=1
+        date_approval_added = GETDATE()
+      FROM Hours_To_Approve H
+      INNER JOIN Work_Hours W ON W.work_hours_id = H.work_hours_id
+      INNER JOIN Timestore_Fields F ON H.field_id = F.field_id 
+        AND F.requires_approval = 1
       WHERE 
-        approval_hours_id IN (@ApprovalHoursIds);"
+        H.approval_hours_id IN @ApprovalHoursIds
+        AND H.by_employeeid IS NULL
+        AND H.hours_used > 0
+        AND H.is_approved = 1
+        AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE();"
     Try
       Return Exec_Query(query, dp, ConnectionStringType.Timestore)
     Catch ex As Exception

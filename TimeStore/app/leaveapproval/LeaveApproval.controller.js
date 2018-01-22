@@ -137,12 +137,17 @@
 
     $scope.approveAll = function ()
     {
-      console.log('currently shown?', $scope.filteredDataList);
+      if ($scope.filteredDataList.length === 0)
+      {
+        alert('No leave requests to approve!');
+        return;
+      }
+      var ids = $scope.filteredDataList.map(function (j)
+      {
+        return j.approval_hours_id;
+      });
       $scope.approving = true;
-      var n = $scope.filteredDataList[i];
-      console.log('approved', approved, 'a id', n.approval_hours_id, 'note', n.note);
-
-      timestoredata.finalizeLeaveRequest(n.employee_id, approved, n.approval_hours_id, n.note, n.hours_used, n.work_date_display)
+      timestoredata.finalizeAllLeaveRequests(ids)
         .then(onFinalizeSuccess, onFinalizeError);
     };
 
@@ -154,7 +159,6 @@
         x.showDetail = false;
       });
       $scope.filteredDataList[i].showDetail = true;
-      console.log('leave data', $scope.filteredDataList[i]);
       if ($scope.filteredDataList[i].showDetail)
       {
         $scope.selectedIndex = i;

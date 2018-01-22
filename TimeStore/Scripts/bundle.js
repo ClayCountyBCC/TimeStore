@@ -48584,6 +48584,20 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       }
 
+      var finalizeAllLeaveRequests = function (ids)
+      {
+        var data = { ids: ids };
+        return $http
+          .post("TC/Approve_Bulk_Leave_Requests", data, {
+            cache: false,
+            handleError: true
+          })
+          .then(function (response)
+          {
+            return response;
+          });
+      };
+
       var finalizeLeaveRequest = function (
         eId,
         approved,
@@ -49066,6 +49080,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       return {
         finalizeLeaveRequest: finalizeLeaveRequest,
+        finalizeAllLeaveRequests: finalizeAllLeaveRequests,
         getPayPeriodIndex: getPayPeriodIndex,
         getDefaultEmployeeId: getDefaultEmployeeId,
         getPayPeriodEnd: getPayPeriodEnd,
@@ -52239,13 +52254,22 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 })();
 
 /* global _ */
-(function () {
+(function ()
+{
   "use strict";
-  angular.module('timestoreApp')
-      .controller('ReportController', ['$scope', 'timestoredata', 'viewOptions', '$mdToast', MainReport]);
+  angular
+    .module("timestoreApp")
+    .controller("ReportController", [
+      "$scope",
+      "timestoredata",
+      "viewOptions",
+      "$mdToast",
+      MainReport
+    ]);
 
-  function MainReport($scope, timestoredata, viewOptions, $mdToast) {
-    $scope.message = '';
+  function MainReport($scope, timestoredata, viewOptions, $mdToast)
+  {
+    $scope.message = "";
     $scope.showProgress = false;
     $scope.timeData = [];
     $scope.dataToView = [];
@@ -52253,29 +52277,55 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.showSettings = true;
     $scope.showFilters = false;
     $scope.showFields = true;
-    $scope.searchText = '';
+    $scope.searchText = "";
     $scope.selectedFields = [];
     $scope.selectedItem = null;
-    $scope.minDate = moment('1/1/2015', 'M/D/YYYY').toDate();
-    $scope.maxDate = moment().add(1, 'years').toDate();
+    $scope.minDate = moment("1/1/2015", "M/D/YYYY").toDate();
+    $scope.maxDate = moment().add(1, "years").toDate();
     $scope.dateFrom = null;
     $scope.dateTo = null;
-    $scope.csvUrl = '';
-    $scope.csvFilename = 'CustomReport.csv';
+    $scope.csvUrl = "";
+    $scope.csvFilename = "CustomReport.csv";
 
-    $scope.fieldList = ['Vacation', 'Holiday', 'Sick', 'CompTimeEarned', 'CompTimeUsed', 'Admin',
-        'AdminBereavement', 'AdminDisaster', 'AdminWorkersComp', 'AdminJuryDuty', 'AdminMilitaryLeave', 'AdminOther', 'SickFamilyLeave',
-        'SickLeavePool', 'AdminEducation', 'Swap', 'MWI', 'StepUp', 'HonorGuard', 'LWOPSuspension', 'LWOPScheduled',
-        'LeaveWithoutPay', 'SickLeaveWithoutPay', 'BreakCredit', 'DoubleTime', 'CallMin', 'Vehicle',
-        'WorkersComp', 'OnCallTotalHours', 'OnCallWorkHours', 'OnCallMinimumHours', 'UnionTimePool'];
-
+    $scope.fieldList = [
+      "Vacation",
+      "Holiday",
+      "Sick",
+      "CompTimeEarned",
+      "CompTimeUsed",
+      "Admin",
+      "AdminBereavement",
+      "AdminDisaster",
+      "AdminWorkersComp",
+      "AdminJuryDuty",
+      "AdminMilitaryLeave",
+      "AdminOther",
+      "SickFamilyLeave",
+      "SickLeavePool",
+      "AdminEducation",
+      "Swap",
+      "MWI",
+      "StepUp",
+      "HonorGuard",
+      "LWOPSuspension",
+      "LWOPScheduled",
+      "LeaveWithoutPay",
+      "SickLeaveWithoutPay",
+      "BreakCredit",
+      "DoubleTime",
+      "CallMin",
+      "Vehicle",
+      "WorkersComp",
+      "OnCallTotalHours",
+      "OnCallWorkHours",
+      "OnCallMinimumHours",
+      "UnionTimePool"
+    ];
 
     //timestoredata.getGenericTimeDataDateless().then(ProcessData, function () { });
     //timestoredata.getDepartments().then(function (data) {
     //    $scope.departmentList = data;
     //}, function () { });
-
-
 
     //$scope.querySearch = function (query) {
     //    var results = query ? $scope.fieldList.filter(createFilterFor(query)) : [];
@@ -52289,81 +52339,104 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     //    };
     //}
 
-    function ProcessData(data) {
+    function ProcessData(data)
+    {
       $scope.timeData = data;
       convertToCSV(data);
-      console.log('timedata', $scope.timeData);
-      if (data.length === 0) {
-        $scope.message = 'No records were found for that criteria.';
-      } else {
+      console.log("timedata", $scope.timeData);
+      if (data.length === 0)
+      {
+        $scope.message = "No records were found for that criteria.";
+      } else
+      {
         updateReport();
       }
       $scope.showProgress = false;
     }
 
-    $scope.Search = function () {
+    $scope.Search = function ()
+    {
       // Will need to check to make sure that both dates are selected.
-      $scope.message = '';
-      if ($scope.dateFrom === null || $scope.dateTo === null) {
-        $scope.message = 'You must enter a Start Date and an End Date to search.';
+      $scope.message = "";
+      if ($scope.dateFrom === null || $scope.dateTo === null)
+      {
+        $scope.message =
+          "You must enter a Start Date and an End Date to search.";
         return;
       }
       $scope.showProgress = true;
-      timestoredata.getGenericTimeData($scope.dateFrom, $scope.dateTo, $scope.selectedFields)
-          .then(ProcessData, function () { });
+      timestoredata
+        .getGenericTimeData(
+        $scope.dateFrom,
+        $scope.dateTo,
+        $scope.selectedFields
+        )
+        .then(ProcessData, function () { });
     };
 
-    $scope.addDisplay = function (d) {
+    $scope.addDisplay = function (d)
+    {
       $scope.dataToView = [];
       var i = $scope.selectedFields.indexOf(d);
-      if (i > -1) {
+      if (i > -1)
+      {
         $scope.selectedFields.splice(i, 1);
-      } else {
+      } else
+      {
         $scope.selectedFields.push(d);
       }
     };
 
-    $scope.updateFieldSelections = function () {
+    $scope.updateFieldSelections = function ()
+    {
       $scope.timeData = [];
       $scope.dataToView = [];
       $scope.csvUrl = null;
-      $scope.csvFilename = '';
+      $scope.csvFilename = "";
       //console.log('selected fields', $scope.selectedFields);
-    }
+    };
 
-    function updateReport() {
+    function updateReport()
+    {
       //$scope.timeData = [];
       $scope.dataToView = [];
       $scope.csvUrl = null;
-      $scope.csvFilename = '';
+      $scope.csvFilename = "";
       // Go through each item in the timeData array
-      // if the object has a property that's in fieldsToDisplay that's got a value > 0 
+      // if the object has a property that's in fieldsToDisplay that's got a value > 0
       // then convert it into the data object below and add it to the dataToView array.
       // Or check if one already exists for that person and the find that and add the values.
       // set up the ng-repeat with track by eid
-      _.each($scope.timeData, function (t) {
+      _.each($scope.timeData, function (t)
+      {
         processReportData(t);
       });
       addTotals();
     }
 
-    function processReportData(d) {
+    function processReportData(d)
+    {
       var fl = $scope.selectedFields;
-      for (var i = 0; i < fl.length; i++) {
-        if (d[fl[i]] > 0) {
+      for (var i = 0; i < fl.length; i++)
+      {
+        if (d[fl[i]] > 0)
+        {
           addData(d);
           return;
         }
       }
     }
 
-    function addData(d) {
+    function addData(d)
+    {
       var fl = $scope.selectedFields;
-      var index = _.findIndex($scope.dataToView, function (b) {
+      var index = _.findIndex($scope.dataToView, function (b)
+      {
         return b.eid === d.EmployeeID;
       });
       var data;
-      if (index === -1) {
+      if (index === -1)
+      {
         data = {
           eid: d.EmployeeID,
           dept: d.DepartmentID,
@@ -52371,24 +52444,37 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           values: []
         };
         data.values = _.fill(Array(fl.length), 0);
-      } else {
+      } else
+      {
         data = $scope.dataToView[index];
       }
-      for (var i = 0; i < fl.length; i++) {
-        if (d[fl[i]] > 0) {
+      for (var i = 0; i < fl.length; i++)
+      {
+        if (d[fl[i]] > 0)
+        {
           data.values[i] += d[fl[i]];
         }
       }
-      if (index === -1) {
+      if (index === -1)
+      {
         $scope.dataToView.push(data);
       }
     }
 
-    function addTotals() {
-      _.each($scope.dataToView, function (n) {
-        n.values.push(_.reduce(n.values, function (total, i) {
-          return total + i;
-        }, 0));
+    function addTotals()
+    {
+      _.each($scope.dataToView, function (n)
+      {
+        n.values.push(
+          _.reduce(
+            n.values,
+            function (total, i)
+            {
+              return total + i;
+            },
+            0
+          )
+        );
       });
     }
 
@@ -52402,43 +52488,54 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     //    $scope.showFields = !$scope.showFields;
     //};
 
-    function convertToCSV(data) {
-      console.log('converttocsv function called');
+    function convertToCSV(data)
+    {
+      console.log("converttocsv function called");
       if (data.length === 0) return;
       var fields = Object.keys(data[0]);
 
       //var csv = fields.join(',') + '\r\n'; // header row
 
-      var csv = data.map(function (row) {
-        var m = fields.map(function (fieldName) {
-          switch (fieldName) {
-            case 'WorkDate':
-            case 'TerminationDate':
-            case 'HireDate':
-              return moment(row[fieldName]).format('M/D/YYYY HH:mm A');
-              //break;
+      var csv = data.map(function (row)
+      {
+        var m = fields.map(function (fieldName)
+        {
+          switch (fieldName)
+          {
+            case "WorkDate":
+            case "TerminationDate":
+            case "HireDate":
+              return moment(row[fieldName]).format("M/D/YYYY HH:mm A");
+            //break;
             default:
-              return row[fieldName] || '';
+              return row[fieldName] || "";
           }
-
         });
-        m = m.slice(0, -1).join(',');
-        console.log('row', m);
+        m = m.slice(0, -1).join(",");
+        //console.log("row", m);
         return m;
       });
-      csv.unshift(fields.join(','));
+      csv.unshift(fields.join(","));
       //console.log('csv', csv);
-      var blob = new Blob([csv.join('\r\n')], { type: 'text/csv' });
-      $scope.csvUrl = URL.createObjectURL(blob);
-      console.log('csv url', $scope.csvUrl);
-      $scope.csvFilename = 'Custom Report - ' + $scope.selectedFields.join(' ') + ' ' + moment().format('M-D-YYYY HHmmss') + '.csv';
-      console.log('filename', $scope.csvFilename);
+      var blob = new Blob([csv.join("\r\n")], { type: "text/csv" });
+      var url = window.URL || window.webkitURL;
+      var link = document.getElementById("download");
+      link.href = url.createObjectURL(blob);
 
+      //$scope.csvUrl = 
+
+      //console.log("csv url", $scope.csvUrl);
+      //$scope.csvFilename =
+      //  "Custom Report - " +
+      //  $scope.selectedFields.join(" ") +
+      //  " " +
+      //  moment().format("M-D-YYYY HHmmss") +
+      //  ".csv";
+      //console.log("filename", $scope.csvFilename);
     }
-
   }
-
 })();
+
 /* global _, moment */
 (function () {
     "use strict";
@@ -52907,12 +53004,17 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     $scope.approveAll = function ()
     {
-      console.log('currently shown?', $scope.filteredDataList);
+      if ($scope.filteredDataList.length === 0)
+      {
+        alert('No leave requests to approve!');
+        return;
+      }
+      var ids = $scope.filteredDataList.map(function (j)
+      {
+        return j.approval_hours_id;
+      });
       $scope.approving = true;
-      var n = $scope.filteredDataList[i];
-      console.log('approved', approved, 'a id', n.approval_hours_id, 'note', n.note);
-
-      timestoredata.finalizeLeaveRequest(n.employee_id, approved, n.approval_hours_id, n.note, n.hours_used, n.work_date_display)
+      timestoredata.finalizeAllLeaveRequests(ids)
         .then(onFinalizeSuccess, onFinalizeError);
     };
 
@@ -52924,7 +53026,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         x.showDetail = false;
       });
       $scope.filteredDataList[i].showDetail = true;
-      console.log('leave data', $scope.filteredDataList[i]);
       if ($scope.filteredDataList[i].showDetail)
       {
         $scope.selectedIndex = i;
@@ -53232,7 +53333,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     function GroupsByPayPeriod()
     {
-      return [{ "ppe": "9/19/2017", "employees": [1012, 1019, 1028, 1030, 1031, 1043, 1063, 1064, 1065, 1066, 1067, 1073, 1074, 1075, 1076, 1078, 1079, 1080, 1114, 1117, 1121, 1124, 1125, 1127, 1140, 1151, 1157, 1159, 1167, 1168, 1181, 1182, 1184, 1187, 1191, 1204, 1212, 1216, 1217, 1222, 1229, 1235, 1241, 1245, 1255, 1266, 1267, 1277, 1281, 1291, 1303, 1304, 1306, 1308, 1313, 1324, 1326, 1327, 1328, 1335, 1337, 1340, 1341, 1344, 1347, 1349, 1361, 1369, 1377, 1384, 1387, 1389, 1397, 1398, 1408, 1414, 1420, 1433, 1436, 1445, 1451, 1452, 1459, 1460, 1461, 1474, 1480, 1492, 1501, 1521, 1549, 1563, 1567, 1569, 1707, 1719, 1721, 1729, 1759, 1789, 1808, 1824, 1848, 1849, 1863, 1887, 1889, 1892, 1896, 1963, 1969, 1978, 1987, 1989, 2008, 2009, 2018, 2019, 2022, 2033, 2037, 2057, 2070, 2081, 2082, 2097, 2127, 2163, 2191, 2192, 2196, 2206, 2216, 2220, 2225, 2229, 2258, 2262, 2264, 2266, 2273, 2375, 2377, 2399, 2410, 2427, 2439, 2445, 2457, 2459, 2469, 2471, 2474, 2493, 2497, 2500, 2512, 2516, 2530, 2532, 2535, 2541, 2542, 2549, 2551, 2553, 2554, 2555, 2558, 2559, 2563, 2570, 2572, 2576, 2605, 2617, 2619, 2633, 2634, 2641, 2644, 2648, 2650, 2652, 2659, 2675, 2679, 2681, 2684, 2695, 2696, 2701, 2704, 2710, 2711, 2714, 2722, 2736, 2737, 2739, 2745, 2747, 2753, 2754, 2755, 2756, 2761, 2768, 2769, 2772, 2774, 2782, 2783, 2784, 2786, 2791, 2793, 2794, 2797, 2808, 2810, 2811, 2813, 2814, 2815, 2816, 2819, 2826, 2832, 2837, 2838, 2839, 2846, 2847, 2849, 2850, 2851, 2857, 2858, 2860, 2861] }];
+      return [{ "ppe": "12/13/2016", "employees": [1383, 1883] },
+        { "ppe": "10/18/2016", "employees": [1190] },
+        { "ppe": "12/27/2016", "employees": [1169, 1182] },
+        { "ppe": "11/29/2016", "employees": [1289, 1134] },
+        { "ppe": "1/10/2017", "employees": [1830] },
+        { "ppe": "1/24/2017", "employees": [1241] },
+      ];
     }
     // Hurricane Irma Data
 
