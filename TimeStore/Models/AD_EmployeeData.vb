@@ -5,6 +5,14 @@
     Property EmailAddress As String = ""
     Property Username As String = ""
     Property DatePasswordChanged As DateTime = DateTime.MaxValue
+    Public ReadOnly Property PasswordExpiring As Boolean
+      Get
+        If DatePasswordChanged = DateTime.MaxValue Then Return False
+        Dim expiration As Date = DatePasswordChanged.AddDays(180)
+        Return expiration.Subtract(DateTime.Today).TotalDays < 16
+      End Get
+    End Property
+
 
     Public Sub New(EID As Integer,
                    EmployeeName As String,

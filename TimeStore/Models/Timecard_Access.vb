@@ -234,6 +234,12 @@ Namespace Models
           backend_reports_access
         FROM Access"
       Dim al As List(Of Timecard_Access) = Get_Data(Of Timecard_Access)(query, ConnectionStringType.Timestore)
+      Dim rt = Get_All_Cached_ReportsTo()
+      For Each a In al
+        If rt.ContainsKey(a.EmployeeID) Then
+          a.ReportsToList = rt(a.EmployeeID)
+        End If
+      Next
       Dim eidlist = (From a In al
                      Select a.EmployeeID).ToList
       Dim fl As List(Of FinanceData) = GetCachedEmployeeDataFromFinplus()

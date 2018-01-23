@@ -75,7 +75,7 @@ Namespace Controllers
 
     Public Function EmployeeList() As JsonNetResult
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
-      Dim edl As List(Of Employee_Data) = myCache.GetItem("employeeList") 'HttpContext.Cache("employeeList")
+      Dim edl As List(Of Employee_Data) = myCache.GetItem("employeelist") 'HttpContext.Cache("employeeList")
       Dim jnr As New JsonNetResult
       jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
       Dim il As List(Of Integer) = Get_Reporting_Users(tca.EmployeeID)
@@ -857,22 +857,22 @@ Namespace Controllers
       ' This section of code is for finding active employees that are in Finplus
       ' but aren't in Active Directory.
       Try
-        '  Dim s As String = ""
-        '  Try
-        '    Dim tmpfl = From f In GetCachedEmployeeDataFromFinplus()
-        '                Where Not f.IsTerminated
-        '                Select f
-        '    For Each f In tmpfl
-        '      If Not aded.ContainsKey(f.EmployeeId) Then
-        '        s &= f.EmployeeName & "," & f.EmployeeId.ToString & "," & f.DepartmentName & "," & f.JobTitle & vbCrLf
-        '      End If
-        '    Next
-        '    If s.Length > 0 Then
-        '      Dim e As New ErrorLog("Missing Employees from AD", s, "", "", "")
+        'Dim s As String = ""
+        'Try
+        '  Dim tmpfl = From f In GetCachedEmployeeDataFromFinplus()
+        '              Where Not f.IsTerminated
+        '              Select f
+        '  For Each f In tmpfl
+        '    If Not aded.ContainsKey(f.EmployeeId) Then
+        '      s &= f.EmployeeName & "," & f.EmployeeId.ToString & "," & f.DepartmentName & "," & f.JobTitle & vbCrLf
         '    End If
-        '  Catch ex As Exception
-        '    Dim e As New ErrorLog(ex, "")
-        '  End Try
+        '  Next
+        '  If s.Length > 0 Then
+        '    Dim e As New ErrorLog("Missing Employees from AD", s, "", "", "")
+        '  End If
+        'Catch ex As Exception
+        '  Dim e As New ErrorLog(ex, "")
+        'End Try
 
         If fl.Count = 1 Then
           Dim dept As String = fl.First.Department

@@ -652,10 +652,11 @@ WHERE access_type >= " & accessType
     '    Log(ex)
     '    Return Nothing
     'End Try
-    Dim key As String = "employeedata," & GetPayPeriodStart(Today).ToShortDateString
+    Dim key As String = "employeedata" ' & GetPayPeriodStart(Today).ToShortDateString
     Dim fdl As List(Of FinanceData) = myCache.GetItem(key)
     Return (From f In fdl
-            Where f.TerminationDate = Date.MaxValue Or f.TerminationDate > Date.Parse("1/1/2015")
+            Where f.TerminationDate = Date.MaxValue Or
+              f.TerminationDate > Date.Parse("1/1/2015")
             Select New Employee_Data(f)).ToList()
     'Select New Employee_Data With {
     '  .DepartmentID = f.Department,
