@@ -95,9 +95,22 @@
       Try
         Dim ld = Get_Data(Of Hours_To_Approve_Display)(query, dp, ConnectionStringType.Timestore)
         Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
+        Dim fl = GetCachedEmployeeDataFromFinplus()
         Dim tsf As Dictionary(Of Integer, Timestore_Field) = Get_TimeStore_Fields_By_ID()
         For Each l In ld
-          l.employee_name = aded(l.employee_id).Name
+          If aded.ContainsKey(l.employee_id) Then
+            l.employee_name = aded(l.employee_id).Name
+          Else
+            Dim found = (From f In fl
+                         Where f.EmployeeId = l.employee_id
+                         Select f.EmployeeName).ToList()
+            If found.Count > 0 Then
+              l.employee_name = found.First
+            Else
+              l.employee_name = "Employee # " & l.employee_id.ToString
+            End If
+          End If
+
           l.field = tsf(l.field_id)
         Next
         Return ld.OrderBy(Function(x) x.dept_id).ThenBy(Function(x) x.employee_name).ToList

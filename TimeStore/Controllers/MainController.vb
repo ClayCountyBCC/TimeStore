@@ -10,14 +10,8 @@ Namespace Controllers
     Private cache As myCache
     Private defaultCIP As New CacheItemPolicy()
 
-    Private Function GetTimeCardAccess(EmployeeId As Integer) As Timecard_Access
-      Dim key As String = "tca," & EmployeeId
-      defaultCIP.AbsoluteExpiration = Now.AddHours(12)
-      Return myCache.GetItem(key, defaultCIP)
-    End Function
-
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
-      Return GetTimeCardAccess(AD_EmployeeData.GetEmployeeIDFromAD(UserName))
+      Return Timecard_Access.GetTimeCardAccess(AD_EmployeeData.GetEmployeeIDFromAD(UserName))
     End Function
 
     ' GET: Main
@@ -96,7 +90,7 @@ Namespace Controllers
         Add_Timestore_Note(tca.EmployeeID, ppe, "Started the Post to Finance Process", Request.LogonUserIdentity.Name)
         Dim UseProduction As Boolean = False
         Select Case Environment.MachineName.ToUpper
-          Case "CLAYBCCDV10", "MISLL03", "MISML01"
+          Case "CLAYBCCDV10", "MISLL03"
             UseProduction = False
           Case "CLAYBCCIIS01"
             UseProduction = True

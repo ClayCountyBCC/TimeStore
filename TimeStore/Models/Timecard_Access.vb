@@ -150,6 +150,9 @@ Namespace Models
         Case Else
           Data_Type = "timecard"
       End Select
+      If EID = -1 Then
+        Set_Access_Type(Access_Types.No_Access)
+      End If
     End Sub
 
     Public Sub New(rawTCA As Raw_Timecard_Access, Request As HttpRequestBase)
@@ -248,6 +251,7 @@ Namespace Models
           al.Add(New Timecard_Access(f.EmployeeId, f.Department))
         End If
       Next
+      al.Add(New Timecard_Access(-1, ""))
       Return al
     End Function
 

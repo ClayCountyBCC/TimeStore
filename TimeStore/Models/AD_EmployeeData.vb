@@ -31,6 +31,7 @@
       Dim aded As New Dictionary(Of Integer, AD_EmployeeData)
       GetEmployeeDataFromAD("LDAP://OU=DomainUsers,DC=CLAYBCC,DC=local", aded)
       GetEmployeeDataFromAD("LDAP://OU=IFASUF,OU=ExtDepartments,DC=CLAYBCC,DC=local", aded)
+      GetEmployeeDataFromAD("LDAP://OU=DisabledUsers,DC=CLAYBCC,DC=local", aded)
       Return aded
     End Function
 
@@ -125,7 +126,11 @@
       If UserName.Contains("\") Then UserName = UserName.Split("\")(1).ToLower
       Try
         Dim adld As Dictionary(Of String, Integer) = myCache.GetItem("employee_lookup_data")
-        Return adld(UserName)
+        If adld.ContainsKey(UserName) Then
+          Return adld(UserName)
+        Else
+          Return -1
+        End If
       Catch ex As Exception
         Dim e As New ErrorLog(ex, UserName)
         Return -1

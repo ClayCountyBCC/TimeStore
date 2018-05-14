@@ -346,8 +346,14 @@ Namespace Controllers
         payperiodstart = GetPayPeriodStart(Today.AddDays(ppdIndex * 14))
       End If
       Dim payperiodend As Date = payperiodstart.AddDays(13)
-
+      ' DEBUG LINE TO BE REMOVED
+#If DEBUG Then
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+#Else
+      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+#End If
+
+      'Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
 
       Dim tmpTC As List(Of GenericTimecard) = GetTimeCards(payperiodstart)
 
@@ -879,7 +885,8 @@ Namespace Controllers
           fl = GetCachedEmployeeDataFromFinplus()
           Dim flad = (From f In fl
                       Where Not f.IsTerminated And
-                        f.BirthDate <> Date.MinValue
+                        f.BirthDate <> Date.MinValue And
+                        aded.ContainsKey(f.EmployeeId)
                       Select f.BirthDate, f.Department, f.EmployeeId)
           Dim bdayList As List(Of Namedday)
           If tca.DepartmentsToApprove.Contains("ALL") Then

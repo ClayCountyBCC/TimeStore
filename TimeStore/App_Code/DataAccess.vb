@@ -48,7 +48,7 @@ Public Module ModuleDataAccess
     ' MSIL03, CLAYBCCDV10 = Development / Testing
     ' CLAYBCCIIS01 = Production
     Select Case Environment.MachineName.ToUpper
-      Case "MISML01", "CLAYBCCDV10" ' QA
+      Case "CLAYBCCDV10", "MISSL01" ' QA
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
@@ -1146,6 +1146,9 @@ WHERE access_type >= " & accessType
       Else
         .AppendLine("USE trnfinplus50;")
       End If
+      ' Here we're looping through each employee in pentamation.
+      ' this helps us reconcile because  if we don't have any hours for them
+      ' in timestore, we can still do something with that information.
       For Each f In fds.Tables(0).Rows
         Dim eid As Integer = f("empl_no")
         Dim paycode As String = f("pay_code")
@@ -1156,9 +1159,22 @@ WHERE access_type >= " & accessType
                    Where t("employee_id") = eid And
                      t("paycode") = paycode And
                      t("payrate") = rndPayrate Select t)
-        If tmp.Count = 0 Then
-          ' We don't have any rows with this payrate/paycode for this employee so we need to 0 out this row, if this user exists in our data.
+        If tmp.Count = 0 Then ' No rows found for this employee at this payrate.
+
+          ' Here, if the user has no hours in Timestore for this employee at the payrate we found in pentamation
+          ' We make a couple of choices.
+
+
+          ' Now before, we were matching the employee and the payrate to the information we have in timestore.
+          ' With this IF statement, we are asking "Ok, so this employee doesn't have any hours at that payrate,
+          ' do they have any hours at all at any payrate?" 
           If (From t In tsds.Tables(0).AsEnumerable Where t("employee_id") = eid Select t).Count > 0 Then
+            ' If we end up here, they do have hours in Timestore at a payrate other than what we expect in 
+            ' Pentamation.  This happens for Public Safety employees regularly because Telestaff is kept
+            ' up to date more than pentamation is, as far as payrates go.
+            ' So if we do have data for them, we get rid of the hours found in the pentamation timecard at the 
+            ' different payrate.  We will insert the hours we do have at the payrate we have in a later step.
+
             '.Append("UPDATE timecard SET hours=0, amount=0 WHERE empl_no='")
             '.Append(eid).Append("' AND pay_code='").Append(paycode)
             '.Append("' AND payrate=").Append(payrate).AppendLine(";")
@@ -1166,6 +1182,9 @@ WHERE access_type >= " & accessType
             .Append(eid).Append("' AND pay_code='").Append(paycode)
             .Append("' AND payrate=").Append(rndPayrate).AppendLine(";")
           Else
+            ' So this person doesn't have any time at all in timestore, for this pay period.
+            ' As of today 5/14/2018, this process will leave the time in pentamation alone, so their default hours will remain.
+
             nomatch += 1
           End If
 

@@ -1,3 +1,0 @@
-﻿Namespace Models
-
-End Namespace

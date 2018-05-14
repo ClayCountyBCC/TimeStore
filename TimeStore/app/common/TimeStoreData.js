@@ -255,6 +255,7 @@
       var classShiftTen = function ()
       {
         return [
+          { class: "1002", shiftLength: 10 },
           { class: "0051", shiftLength: 10 },
           { class: "0540", shiftLength: 10.5 },
           { class: "0810", shiftLength: 10.5 },
@@ -262,7 +263,15 @@
           { class: "1262", shiftLength: 10.5 },
           { class: "1330", shiftLength: 10.5 },
           { class: "0840", shiftLength: 10 },
-          { class: "1055", shiftLength: 10 } // added Programmer to the 10 hour shift classes.
+          { class: "0880", shiftLength: 10 }, // Animal Services Kennel Attendant
+          { class: "1055", shiftLength: 10 }, // added Programmer to the 10 hour shift classes.
+          { class: '0980', shiftLength: 10 }, // Library associate 1
+          { class: '0981', shiftLength: 10 }, // library associate 2
+          { class: '0982', shiftLength: 10 }, // library associate 3
+          { class: '0986', shiftLength: 10 }, // librarian 1
+          { class: '0170', shiftLength: 10 }, // branch manager 1
+          { class: '0171', shiftLength: 10 }, // branch manager 2
+          { class: '0990', shiftLength: 10 } // library branch supervisor 1 // this is an error, this person should be a branch manager
         ];
       };
 

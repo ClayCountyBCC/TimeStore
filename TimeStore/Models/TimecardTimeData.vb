@@ -51,6 +51,13 @@ Namespace Models
     Property TerminationDate As Date = Date.MaxValue
     Property IsApproved As Boolean = True
     Property OutOfClass As New Out_Of_Class
+    ReadOnly Property Total_Non_Working_Hours As Double
+      Get
+        Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed + AdminHours +
+          AdminBereavement + AdminDisaster + AdminWorkersComp + AdminJuryDuty + AdminMilitaryLeave +
+          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours
+      End Get
+    End Property
 
     Public Function To_Saved_TimeStore_Data() As Saved_TimeStore_Data
       If EmployeeID = 0 Then

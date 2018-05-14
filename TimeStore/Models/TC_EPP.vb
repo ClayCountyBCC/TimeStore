@@ -668,9 +668,16 @@
       Dim shiftMax As Double = 8
       If shiftTen.Contains(EmployeeData.Classify) Then shiftMax = 10
       For Each t In TL
-        ' More than 8 hours recorded when using Sick / Vacation / Admin
 
-        If t.TotalHours > shiftMax And (t.SickHours > 0 Or t.AdminHours > 0 Or t.VacationHours > 0) Then
+        If t.WorkHours < 7.5 Then
+          If t.Total_Non_Working_Hours > 0 Then
+            If t.WorkHours + t.Total_Non_Working_Hours < 8 Then
+              ErrorList.Add("Not enough hours entered on " & t.WorkDate.ToShortDateString & ". You must have 8 total hours if you are using any leave hours.")
+            End If
+          End If
+        End If
+        ' More than 8 hours recorded when using Sick / Vacation / Admin
+        If t.TotalHours > shiftMax And (t.Total_Non_Working_Hours > 0) Then
           ErrorList.Add("Too many hours recorded on " & t.WorkDate.ToShortDateString & ". You only need to record 8 hours total when you are using Sick / Vacation / Admin leave.")
         End If
         ' Hours in OT / Double OT / Comp Time / 
