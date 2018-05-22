@@ -729,6 +729,12 @@ Namespace Controllers
                                   tca.ReportsToList.Contains(a.employee_id) Or
                                   (a.dept_id = "1805" Or a.dept_id = "3701A"))
                                 Select a).ToList
+            Case "1804", "1803"
+              myLC.leaveData = (From a In hta
+                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                  tca.ReportsToList.Contains(a.employee_id) Or
+                                  (a.dept_id = "1804" Or a.dept_id = "1803"))
+                                Select a).ToList
             Case Else
               myLC.leaveData = (From a In hta
                                 Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or

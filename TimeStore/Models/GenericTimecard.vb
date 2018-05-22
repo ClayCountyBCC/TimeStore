@@ -1125,6 +1125,12 @@
 
               calculatedTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, p))
               calculatedTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, p))
+
+              If e.Holiday_Time_Used.TotalHours > 0 Then
+                timeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, p))
+                calculatedTimeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, p))
+              End If
+
           End Select
         Else
           calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
