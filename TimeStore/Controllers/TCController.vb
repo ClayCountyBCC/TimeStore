@@ -669,10 +669,16 @@ Namespace Controllers
 
     <HttpPost>
     Public Function Leave_Requests_By_Department() As JsonNetResult
+      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
       If f.Count = 1 Then
         Dim dept As String = f.First.Department
+        If tca.Raw_Access_Type > Timecard_Access.Access_Types.User_Only Then
+          If tca.DepartmentsToApprove.Count = 0 Then
+            Return get_leave_requests(tca.EmployeeID, dept, Nothing, True)
+          End If
+        End If
         Return get_leave_requests(0, dept)
 
       Else
@@ -690,7 +696,8 @@ Namespace Controllers
 
     Private Function get_leave_requests(Optional employeeId As Integer = 0,
                                         Optional deptId As String = "",
-                                        Optional StartDate As Date = Nothing) As JsonNetResult
+                                        Optional StartDate As Date = Nothing,
+                                        Optional IncludeReportsTo As Boolean = False) As JsonNetResult
 
       Dim payperiodstart As Date
       If StartDate > Date.MinValue Then
@@ -711,7 +718,7 @@ Namespace Controllers
       ' filter by depts later.
       If tca.DepartmentsToApprove.Count > 0 AndAlso deptId.Length > 0 Then deptId = ""
 
-      Dim hta As List(Of Hours_To_Approve_Display) = Hours_To_Approve_Display.GetHoursToApproveForDisplay(payperiodstart, employeeId, deptId)
+      Dim hta As List(Of Hours_To_Approve_Display) = Hours_To_Approve_Display.GetHoursToApproveForDisplay(payperiodstart, employeeId, deptId, IncludeReportsTo)
       If employeeId > 0 And tca.EmployeeID = employeeId Then
         ' We are restricting the download to just one EmployeeID,
         ' this is used on the employee's leave request page.

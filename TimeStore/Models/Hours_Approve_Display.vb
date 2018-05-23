@@ -45,7 +45,8 @@
 
     Public Shared Function GetHoursToApproveForDisplay(StartDate As Date,
                                                        Optional EmployeeID As Integer = 0,
-                                                       Optional DeptId As String = "") As List(Of Hours_To_Approve_Display)
+                                                       Optional DeptId As String = "",
+                                                       Optional IncludeReportsTo As Boolean = False) As List(Of Hours_To_Approve_Display)
 
       Dim dp As New DynamicParameters
       dp.Add("@Start", StartDate)
@@ -89,8 +90,12 @@
           AND TF.requires_approval = 1
           AND H.hours_used > 0
           AND work_date >= @Start
-          { If(DeptId.Length > 0, " AND W.dept_id=@DeptId ", "") }
-          { If(EmployeeID > 0, " AND W.employee_id=@EmployeeId ", "") }
+          { If(DeptId.Length > 0,
+              If(IncludeReportsTo And EmployeeID > 0,
+                " AND (W.dept_id=@DeptId OR A.reports_to=@EmployeeId) ",
+                " AND W.dept_id=@DeptId "),
+            "") }
+          { If(EmployeeID > 0 And DeptId.Length = 0, " AND W.employee_id=@EmployeeId ", "") }
           ORDER BY dept_id, employee_id, work_date;"
       Try
         Dim ld = Get_Data(Of Hours_To_Approve_Display)(query, dp, ConnectionStringType.Timestore)
