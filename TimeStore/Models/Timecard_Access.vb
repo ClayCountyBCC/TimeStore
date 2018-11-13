@@ -77,71 +77,6 @@ Namespace Models
 
     End Sub
 
-    'Private Sub Load_TCA_From_Datarow(dr As DataRow)
-    '  EmployeeID = dr("employee_id")
-    '  Data_Type = dr("data_type").ToString
-    '  Set_Access_Type(dr("access_type"))
-    '  RequiresApproval = dr("requires_approval")
-    '  CanChangeAccess = dr("can_change_access")
-    '  Dim rt = Get_All_Cached_ReportsTo()
-    '  If rt.ContainsKey(EmployeeID) Then
-    '    ReportsToList.AddRange(rt(EmployeeID))
-    '  End If
-    '  If Not IsDBNull(dr("reports_to")) AndAlso dr("reports_to") <> 0 Then
-    '    ReportsTo = dr("reports_to")
-
-    '  End If
-
-    '  If Not IsDBNull(dr("dept_approval_list")) Then
-    '    If dr("dept_approval_list").ToString.Trim.Length > 0 Then
-    '      DepartmentsToApprove.AddRange(dr("dept_approval_list").ToString.Split(" ").ToList)
-    '    Else
-    '      DepartmentsToApprove.Clear()
-    '    End If
-    '  End If
-
-    '  'If Not IsDBNull(dr("dept_access_list")) Then
-    '  '    DepartmentsToView.AddRange(dr("dept_access_list").ToString.Split(" ").ToList)
-    '  'End If
-
-    '  Backend_Reports_Access = dr("backend_reports_access")
-    'End Sub
-
-    'Public Sub New(dr As DataRow)
-    '  Load_TCA_From_Datarow(dr)
-    'End Sub
-
-    'Public Sub New(NewEmployeeID As Integer, Request As HttpRequestBase) ' If the user wasn't found in the access table
-    '  If NewEmployeeID = 0 Then
-    '    _Access = Access_Types.No_Access
-    '  Else
-    '    If Not Request Is Nothing Then
-    '      UserName = Request.LogonUserIdentity.Name
-    '      MachineName = Request.UserHostName
-    '      IPAddress = Request.UserHostAddress
-    '    End If
-    '    Dim ds As DataSet = GetTimeStoreAccess(NewEmployeeID)
-    '    If ds.Tables(0).Rows.Count > 0 Then
-    '      Load_TCA_From_Datarow(ds.Tables(0).Rows(0))
-    '    Else
-    '      EmployeeID = NewEmployeeID
-    '      Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(EmployeeID)
-    '      If f.Count = 1 Then
-    '        Dim fd As FinanceData = f(0)
-    '        Select Case fd.Department
-    '          Case "1703", "2103" '"2102" ' Telestaff
-    '            Data_Type = "telestaff"
-    '          Case Else ' Going to try the timecard database for everything else.
-    '            Data_Type = "timecard"
-    '        End Select
-    '      Else
-    '        _Access = Access_Types.No_Access
-    '        Logging.Log("Found user with no access to Timestore", EmployeeID.ToString, "", "", "", LogType.Database)
-    '      End If
-    '    End If
-    '  End If
-    'End Sub
-
     Public Sub New(EID As Integer, dept As String)
       EmployeeID = EID
       Select Case dept
@@ -164,7 +99,8 @@ Namespace Models
       Backend_Reports_Access = rawTCA.BackendReportsAccess
       CanChangeAccess = rawTCA.CanChangeAccess
       If rawTCA.DepartmentsToApprove Is Nothing Then rawTCA.DepartmentsToApprove = New List(Of String)
-      DepartmentsToApprove.AddRange(rawTCA.DepartmentsToApprove)
+      RawDepartmentsToApprove = String.Join(" ", rawTCA.DepartmentsToApprove)
+      'DepartmentsToApprove.AddRange(rawTCA.DepartmentsToApprove)
       EmployeeID = rawTCA.EmployeeId
       ReportsTo = rawTCA.ReportsTo
       RequiresApproval = rawTCA.RequiresApproval
@@ -254,50 +190,6 @@ Namespace Models
       al.Add(New Timecard_Access(-1, ""))
       Return al
     End Function
-
-    'Public Shared Function Get_All_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
-    '  Dim query As String = "
-    '    SELECT
-    '      L1.employee_id,
-    '      L1.reports_to L1,
-    '      ISNULL(L2.reports_to, 0) L2,
-    '      ISNULL(L3.reports_to, 0) L3,
-    '      ISNULL(L4.reports_to, 0) L4,
-    '      ISNULL(L5.reports_to, 0) L5,
-    '      ISNULL(L6.reports_to, 0) L6
-    '    FROM Access L1
-    '    LEFT OUTER JOIN Access L2 ON L1.reports_to = L2.employee_id
-    '    LEFT OUTER JOIN Access L3 ON L2.reports_to = L3.employee_id
-    '    LEFT OUTER JOIN Access L4 ON L3.reports_to = L4.employee_id
-    '    LEFT OUTER JOIN Access L5 ON L4.reports_to = L5.employee_id
-    '    LEFT OUTER JOIN Access L6 ON L5.reports_to = L6.employee_id
-    '    WHERE L1.reports_to > 0
-    '    ORDER BY employee_id ASC"
-    '  Dim d As New Dictionary(Of Integer, List(Of Integer))
-    '  Try
-
-    '    Using db As IDbConnection = New SqlConnection(GetCS(ConnectionStringType.Timestore))
-    '      Dim xl = db.Query(query)
-    '      For Each x In xl
-    '        Dim li = New List(Of Integer) From {
-    '          x.L1,
-    '          x.L2,
-    '          x.L3,
-    '          x.L4,
-    '          x.L5,
-    '          x.L6
-    '        }
-    '        li.RemoveAll(Function(j) j = 0)
-    '        d(x.employee_id) = li
-    '      Next
-    '      Return d
-    '    End Using
-    '  Catch ex As Exception
-    '    Dim e As New ErrorLog(ex, query)
-    '    Return d
-    '  End Try
-
-    'End Function
 
     Public Shared Function Get_All_Cached_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
       Dim cip As New Runtime.Caching.CacheItemPolicy

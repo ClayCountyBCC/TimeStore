@@ -19,6 +19,7 @@ Namespace Models
     Property DisasterPeriodType As Integer = 0
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
+    Property DisasterWorkType As String = ""
     Property DisasterRule As Integer = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
@@ -50,7 +51,7 @@ Namespace Models
     Property TermHours As Double = 0
     Property TerminationDate As Date = Date.MaxValue
     Property IsApproved As Boolean = True
-    Property OutOfClass As New Out_Of_Class
+    Property OutOfClass As Boolean = False
     ReadOnly Property Total_Non_Working_Hours As Double
       Get
         Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed + AdminHours +
@@ -96,7 +97,9 @@ Namespace Models
       DisasterPeriodType = STD.disaster_period_type
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
+      DisasterWorkType = STD.disaster_work_type
       DisasterRule = STD.disaster_rule
+      OutOfClass = STD.out_of_class
     End Sub
 
     Private Sub Load_Hours_To_Approve(STDTA As List(Of Saved_TimeStore_Data_To_Approve))
@@ -194,18 +197,26 @@ Namespace Models
       Return d
     End Function
 
-    Public Function CreateTimesOutput() As Dictionary(Of String, String)
-      Dim d As New Dictionary(Of String, String)
-      d.Add("OnCallWorkTimes", OnCallWorkTimes)
-      d.Add("WorkTimes", WorkTimes)
-      Return d
-    End Function
+    'Public Function CreateTimesOutput() As Dictionary(Of String, String)
+    '  Dim d As New Dictionary(Of String, String)
+    '  d.Add("OnCallWorkTimes", OnCallWorkTimes)
+    '  d.Add("WorkTimes", WorkTimes)
+    '  Return d
+    'End Function
 
-    Public Function Validate() As Boolean
+    Public Function Validate(myTca As Timecard_Access, Username As String) As Boolean
       If DisasterWorkTimes Is Nothing Then DisasterWorkTimes = ""
+      If DisasterWorkType Is Nothing Then DisasterWorkType = ""
       If Comment Is Nothing Then Comment = ""
       If WorkTimes Is Nothing Then WorkTimes = ""
       If OnCallWorkTimes Is Nothing Then OnCallWorkTimes = ""
+      Select Case DepartmentNumber
+        Case "3701", "3711", "3712"
+        Case Else
+          OutOfClass = False
+      End Select
+      'If DepartmentNumber <> "3701" Then OutOfClass = False
+
       If Vehicle <> 0 AndAlso Vehicle <> 1 Then
         Return False
       End If
@@ -214,6 +225,24 @@ Namespace Models
         If kvp.Value.Field_Hours > 24 Or kvp.Value.Field_Hours < 0 Then Return False
       Next
       If EmployeeID = 0 Then Return False
+      Select Case DepartmentNumber
+        Case "3701", "3711", "3712"
+          Dim std = Saved_TimeStore_Data.GetByEmployeeAndWorkday(WorkDate, EmployeeID)
+          If OutOfClass Or std.out_of_class Then
+            ' let's check the current value of this in the db
+            ' if we are changing it, let's add a note
+            If OutOfClass <> std.out_of_class And myTca.Raw_Access_Type > 1 Then
+              Dim ppe = GetPayPeriodStart(WorkDate).AddDays(13)
+              Dim note = ""
+              If OutOfClass Then
+                note = "Added Out of Class Pay for " & WorkDate.ToShortDateString & "."
+              Else
+                note = "Removed Out of Class Pay for " & WorkDate.ToShortDateString & "."
+              End If
+              Add_Timestore_Note(EmployeeID, ppe, note, Username)
+            End If
+          End If
+      End Select
       Return True
     End Function
 
@@ -234,6 +263,7 @@ Namespace Models
       dp.Add("@work_times", std.work_times)
       dp.Add("@disaster_work_times", std.disaster_work_times)
       dp.Add("@disaster_work_hours", std.disaster_work_hours)
+      dp.Add("@disaster_work_type", std.disaster_work_type)
       dp.Add("@break_credit", std.break_credit)
       dp.Add("@work_hours", std.work_hours)
       dp.Add("@holiday", std.holiday)

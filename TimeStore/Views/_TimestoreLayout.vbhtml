@@ -1,6 +1,6 @@
 ﻿@*@Modeltype TimeStore.Models.Timecard_Access*@
 @code
-  Dim LatestVer As String = "V20180531024"
+  Dim LatestVer As String = "V201809051807"
   Dim MaterialVer As String = "1.4" ' was 1.1
   Dim AngularVer As String = "1.5.11" ' was 1.4.2
 
@@ -175,6 +175,11 @@ end code
           <md-list-item>
             <md-button ng-click="viewSignatureRequired()">
               View Signature Required
+            </md-button>
+          </md-list-item>
+          <md-list-item>
+            <md-button ng-click="viewTimeclockData()">
+              Timeclock Daily View
             </md-button>
           </md-list-item>
           <md-list-item ng-if="myAccess.Data_Type==='telestaff' || myAccess.Raw_Access_Type > 6">

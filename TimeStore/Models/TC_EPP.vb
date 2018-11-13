@@ -39,9 +39,6 @@
           End If
         End If
       End If
-      'If TL.Count > 0 Then
-      '    PayPeriodStart = GetPayPeriodStart((From t In TL Select t.WorkDate).First)
-      'End If
       Catch_Exceptions()
     End Sub
 
@@ -137,7 +134,8 @@
       Get
         Select Case Week
           Case 1, 2
-            Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
+            Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) -
+              DisasterOverTime(Week) - DisasterStraightTime(Week)
             ' Introducing change to handle people who are exempt and work less than 40 hours per week.
             'If val > 40 Then val = 40
             'If EmployeeData.EmployeeType = "E" And val > 0 And val < 40 Then val = 40
@@ -164,7 +162,7 @@
 
             val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
               LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) -
-              Calculated_DisasterRegular(Week) - DisasterAdminLeave(Week)
+              Calculated_DisasterRegular(Week) - DisasterAdminLeave(Week) - Out_Of_Class(Week)
             If val < 0 Then val = 0
             Return val
           Case Else
@@ -173,6 +171,23 @@
 
       End Get
     End Property
+
+    Public ReadOnly Property Out_Of_Class(Week As Integer) As Double
+      Get
+        Select Case Week
+          Case 1, 2
+            Dim PubWorksDepartments() As String = {"3701", "3711", "3712"}
+            Return (From t In Week_TL(Week)
+                    Where t.OutOfClass And PubWorksDepartments.Contains(t.DepartmentNumber)
+                    Select t.WorkHours).Sum
+
+          Case Else
+            Return Out_Of_Class(1) + Out_Of_Class(2)
+        End Select
+
+      End Get
+    End Property
+
 
     Public ReadOnly Property DisasterRegular(week As Integer) As Double
       Get
@@ -456,7 +471,9 @@
           'newDiff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40 - Non_Working_Paid_Time(Week)
           Select Case Week
             Case 1, 2
-              Diff = Regular(Week) + DisasterRegular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - DisasterDoubleTime(Week) - 40
+              Diff = Regular(Week) + DisasterRegular(Week) -
+                Double_Time(Week) - Comp_Time_Earned(Week) -
+                DisasterDoubleTime(Week) - 40
               Return Math.Max(Diff, 0)
             Case Else
               Return Overtime(1) + Overtime(2)

@@ -308,9 +308,9 @@
         ];
       };
 
-      var financePostProcess = function (ppdIndex)
+      var financePostProcess = function (ppdIndex, serverType)
       {
-        var ppd = { ppdIndex: ppdIndex };
+        var ppd = { ppdIndex: ppdIndex, serverType: serverType };
         return $http
           .post("Main/UploadFinanceData", ppd)
           .then(function (response)
@@ -456,6 +456,16 @@
           });
       };
 
+      var timeclockData = function (workDate)
+      {
+        return $http
+          .post("TC/TimeclockData", workDate)
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
       var getReportsTo = function ()
       {
         return $http
@@ -544,6 +554,7 @@
       };
 
       return {
+        timeclockData: timeclockData,
         finalizeLeaveRequest: finalizeLeaveRequest,
         finalizeAllLeaveRequests: finalizeAllLeaveRequests,
         getPayPeriodIndex: getPayPeriodIndex,

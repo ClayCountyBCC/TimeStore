@@ -100,7 +100,13 @@
     End Property
     Public ReadOnly Property isPubWorks As Boolean
       Get
-        Return department = "3701"
+        Select Case departmentNumber
+          Case "3701", "3711", "3712"
+            Return True
+          Case Else
+            Return False
+        End Select
+        'Return departmentNumber = "3701" Or departmentNumber = "3711" Or departmentNumber = "3712"
       End Get
     End Property
     Property employeeID As String
@@ -1150,62 +1156,6 @@
       Next
 
       timeList.RemoveAll(Function(x) x.hours = 0)
-
-      ' The Paid Non Working list is going to be used during Final Approval to tell how many Paid Non Working hours 
-      ' the employee has received over the course of the pay period.
-      'Dim adminCheck = (From t In e.Timelist Where t.WorkTypeAbrv = "ADM"
-      '                  Group By workDate = t.WorkDate Into adminGroup = Group,
-      '                                        totalAdmin = Sum(t.WorkHours)
-      '                  Select New With {workDate, totalAdmin})
-
-      ''Dim wtl = (From t In e.Timelist
-      ''           Where w.Contains(t.WorkTypeAbrv)
-      ''           Group By WorkTypeAbrv = t.WorkTypeAbrv Into WorkTypeGroup = Group,
-      ''             totalHours = Sum(t.WorkHours)
-      ''           Select New With {WorkTypeAbrv, totalHours})
-      ''pnw = 0
-      ''For Each t In wtl
-      ''  approvalTimeList.Add(New WorkType(t.WorkTypeAbrv, t.totalHours, 0, "002"))
-      ''  pnw += t.totalHours
-      ''Next
-
-      'Dim wtl As List(Of TelestaffTimeData) = (From t In e.Timelist
-      '                                         Where w.Contains(t.WorkTypeAbrv)
-      '                                         Select t).ToList
-      'pnw = 0
-      'For Each t In wtl
-      '  approvalTimeList.Add(New WorkType(t.WorkType, t.WorkHours, 0, "002"))
-      '  pnw += t.WorkHours
-      'Next
-      ''If Not e.IsExempt Then
-      ''  approvalTimeList.Add(New WorkType("Regular Work", e.Regular.TotalHours - pnw, 0, "002"))
-      ''  approvalTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5))
-      ''  approvalTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1))
-      ''  approvalTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7))
-      ''  approvalTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8))
-      ''  approvalTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9))
-      ''  Select Case e.TelestaffProfileType
-      ''    Case TelestaffProfileType.Dispatch, TelestaffProfileType.Field
-      ''      approvalTimeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6))
-      ''      approvalTimeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10))
-      ''      approvalTimeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11))
-
-      ''    Case TelestaffProfileType.Office
-
-      ''      approvalTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10))
-      ''      approvalTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11))
-      ''  End Select
-      ''Else
-      ''  tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours - pnw
-      ''  approvalTimeList.Add(New WorkType("Regular Work", tmp, 0, "002"))
-      ''End If
-      ''If e.Union_Time_Pool.TotalHours() > 0 Then
-      ''approvalTimeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12))
-      ''End If
-      ''approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours, 2))
-      ''approvalTimeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2))
-      ''approvalTimeList.Add(New WorkType("Vacation", e.Vacation, 3))
-      ''approvalTimeList.Add(New WorkType("Sick", e.Sick, 4))
       approvalTimeList.Clear()
       approvalTimeList.AddRange(calculatedTimeList)
       approvalTimeList.RemoveAll(Function(x) x.hours = 0)
@@ -1241,6 +1191,9 @@
       approvalTimeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110", Payrate))
 
       calculatedTimeList.Add(New WorkType("Regular", e.Calculated_Regular(0), 0, "002", Payrate))
+      If e.Out_Of_Class(0) > 0 Then
+        calculatedTimeList.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", Payrate * 1.05))
+      End If
       calculatedTimeList.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(0), 0, "299", Payrate))
       calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", Payrate))
       calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", Payrate))
@@ -1293,6 +1246,9 @@
           Select Case a
             Case 1, 2
               c.Add(New WorkType("Regular", e.Calculated_Regular(a), 0, "002", Payrate))
+              If e.Out_Of_Class(0) > 0 Then
+                c.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", Payrate * 1.05))
+              End If
               c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", Payrate))
               c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", Payrate))
               c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", Payrate))

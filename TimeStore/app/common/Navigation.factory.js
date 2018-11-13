@@ -7,6 +7,7 @@
       function ($route, $http, $location, timestoredata, $window)
       {
         return {
+          goTimeclockView: goTimeclockView,
           goHome: goHome,
           goDefaultEmployee: goDefaultEmployee,
           goEmployeeByPPD: goEmployeeByPPD,
@@ -31,6 +32,11 @@
         {
           // going to use moment to navigate to the current year and month
           go('/LeaveCalendar/');
+        }
+
+        function goTimeclockView()
+        {
+          go('/timeclockview/day/' + moment().format("YYYYMMDD"));
         }
 
         function goLeaveRequest()

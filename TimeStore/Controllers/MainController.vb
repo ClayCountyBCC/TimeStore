@@ -53,7 +53,7 @@ Namespace Controllers
             Dim depts() As String = {"1703", "2103"} ' Removed 2102
             telist = (From t In telist Where depts.Contains(t.Department) Select t).ToList
           Case "PW"
-            Dim depts() As String = {"3701A"} ' To be revised
+            Dim depts() As String = {"3701A", "3701", "3711", "3712"} ' To be revised
             telist = (From t In telist Where depts.Contains(t.Department) Select t).ToList
           Case "TC"
             Dim depts() As String = {"1703", "2103"} ' Removed 2102
@@ -78,7 +78,18 @@ Namespace Controllers
       Return View(cl)
     End Function
 
-    Function UploadFinanceData(ppdIndex As Integer) As JsonNetResult
+    Function UploadFinanceData(ppdIndex As Integer, serverType As String) As JsonNetResult
+      Dim cst As ConnectionStringType
+      Select Case serverType
+        Case "training"
+          cst = ConnectionStringType.FinplusTraining
+        Case "normal"
+          cst = ConnectionStringType.FinPlus
+        Case "new"
+          cst = ConnectionStringType.FinplusNew
+        Case Else
+          cst = ConnectionStringType.FinplusTraining
+      End Select
       Dim ppe As Date = GetPayPeriodStart(Today.AddDays(ppdIndex * 14)).AddDays(13)
       Dim jnr As New JsonNetResult
       jnr.JsonRequestBehavior = JsonRequestBehavior.DenyGet
@@ -88,14 +99,15 @@ Namespace Controllers
         Add_Timestore_Note(tca.EmployeeID, ppe, "This user attempted to use the UploadFinanceData function.", Request.LogonUserIdentity.Name)
       Else
         Add_Timestore_Note(tca.EmployeeID, ppe, "Started the Post to Finance Process", Request.LogonUserIdentity.Name)
-        Dim UseProduction As Boolean = False
-        Select Case Environment.MachineName.ToUpper
-          Case "CLAYBCCDV10", "MISLL03"
-            UseProduction = False
-          Case "CLAYBCCIIS01"
-            UseProduction = True
-        End Select
-        Dim t As Boolean = SavedTimeToFinplusProcess(ppe, UseProduction)
+
+        'Dim UseProduction As Boolean = False
+        'Select Case Environment.MachineName.ToUpper
+        '  Case "CLAYBCCDV10", "MISLL03"
+        '    UseProduction = False
+        '  Case "CLAYBCCIIS01"
+        '    UseProduction = True
+        'End Select
+        Dim t As Boolean = SavedTimeToFinplusProcess(ppe, cst)
         'Dim t As Boolean = False
         If t Then
           jnr.Data = "Success"

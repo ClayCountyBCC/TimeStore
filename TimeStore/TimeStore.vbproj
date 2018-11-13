@@ -254,6 +254,8 @@
     <Content Include="app\timecard\TimeList.tmpl.min.html">
       <DependentUpon>TimeList.directive.tmpl.html</DependentUpon>
     </Content>
+    <Content Include="app\timeclockview\TimeclockView.controller.js" />
+    <Content Include="app\timeclockview\TimeclockView.controller.tmpl.html" />
     <Content Include="CSS\angular-material.1.1.0.css" />
     <Content Include="CSS\angular-material.1.1.4.min.css" />
     <Content Include="CSS\angular-material.11.2.css" />
@@ -432,7 +434,6 @@
     <Compile Include="Models\myCache.vb" />
     <Compile Include="Models\Namedday.vb" />
     <Compile Include="Models\Note.vb" />
-    <Compile Include="Models\Out_Of_Class.vb" />
     <Compile Include="Models\PayPeriodList.vb" />
     <Compile Include="Models\Raw_Timecard_Access.vb" />
     <Compile Include="Models\Saved_Timecard_Data.vb" />
@@ -447,6 +448,7 @@
     <Compile Include="Models\TimecardTimeData.vb" />
     <Compile Include="Models\TimecardTimeException.vb" />
     <Compile Include="Models\Timecard_Access.vb" />
+    <Compile Include="Models\Timeclock_Data.vb" />
     <Compile Include="Models\TimeExceptions.vb" />
     <Compile Include="Models\MockEmployeePayPeriodData.vb" />
     <Compile Include="App_Code\ModuleMain.vb" />

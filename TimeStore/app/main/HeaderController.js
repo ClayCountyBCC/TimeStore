@@ -100,6 +100,12 @@
       timestoreNav.goUnapproved();
     };
 
+    $scope.viewTimeclockData = function ()
+    {
+      $mdSidenav('approvalRight').toggle();
+      timestoreNav.goTimeclockView();
+    };
+
     $scope.viewFema = function ()
     {
       $mdSidenav('adminRight').toggle();

@@ -136,8 +136,7 @@
     };
 
     $scope.getApprovalText = function (al, l) {
-      //t.Approval_Level < 1 ? 'Unapproved' : 'Needs Final Approval';
-      console.log('approval level', al, 'isleaveapproved', l)      
+      //t.Approval_Level < 1 ? 'Unapproved' : 'Needs Final Approval';      
       if (!l) {
         return 'Leave Requires Approval';
       } else {

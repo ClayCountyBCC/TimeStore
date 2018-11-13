@@ -55,6 +55,26 @@
             }]
           }
         })
+        .when('/timeclockview/day/:workDate', {
+          controller: 'TimeclockViewController',
+          templateUrl: 'TimeclockView.controller.tmpl.html',
+          resolve: {
+            timeclockdata: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              //var workDate = moment(new Date(), 'M/D/YYYY');
+              var wd = moment($route.current.params.workDate, 'YYYYMMDD');
+              var workdate = {
+                WorkDate: wd.format('M/D/YYYY')
+              };
+              return timestoredata.timeclockData(workdate)
+                .then(function (data)
+                {
+                  console.log('timeclock data', data);
+                  return data;
+                });
+            }]
+          }
+        })
         .when('/fema/', {
           controller: 'FemaViewController',
           templateUrl: 'FemaView.tmpl.html' 

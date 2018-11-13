@@ -15,6 +15,7 @@ Namespace Models
     Property disaster_work_times As String = ""
     Property disaster_work_hours As Double = 0
     Property disaster_name As String = ""
+    Property disaster_work_type As String = ""
     Property disaster_period_type As Integer = 0 ' used by the client to determine how we should ask for disaster hours.  1 = always ask, 2 = don't ask but allow disaster hours to be entered. 0 = no disaster hours should be entered.
     Property disaster_rule As Integer = 0
     Property break_credit As Double = 0
@@ -22,7 +23,7 @@ Namespace Models
     Property holiday As Double = 0
     Property leave_without_pay As Double = 0
     Property total_hours As Double = 0
-    Property out_of_class As Integer = 0
+    Property out_of_class As Boolean = False
     Property doubletime_hours As Double = 0
     Property vehicle As Integer = 0
     Property comment As String = ""
@@ -48,6 +49,7 @@ Namespace Models
       disaster_work_hours = tctd.DisasterWorkHours
       disaster_name = tctd.DisasterName
       disaster_period_type = tctd.DisasterPeriodType
+      disaster_work_type = tctd.DisasterWorkType
       break_credit = tctd.BreakCreditHours
       holiday = tctd.HolidayHours
       leave_without_pay = tctd.LWOPHours
@@ -55,7 +57,7 @@ Namespace Models
       doubletime_hours = tctd.DoubleTimeHours
       vehicle = tctd.Vehicle
       comment = tctd.Comment
-      out_of_class = tctd.OutOfClass.Active
+      out_of_class = tctd.OutOfClass
       by_employeeid = tca.EmployeeID
       by_username = tca.UserName
       by_machinename = tca.MachineName
@@ -77,6 +79,7 @@ Namespace Models
           ISNULL(D.Name, '') disaster_name,
           ISNULL(DPR.rule_applied, 0) disaster_rule,
           ISNULL(D.Period_Type, 0) disaster_period_type,
+          ISNULL(disaster_work_type, '') disaster_work_type,
           break_credit,
           work_hours,
           holiday,
@@ -84,6 +87,7 @@ Namespace Models
           total_hours,
           vehicle,
           comment,
+          out_of_class,
           date_added,
           date_last_updated date_updated,
           by_employeeid,

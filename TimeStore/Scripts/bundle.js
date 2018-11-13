@@ -48420,6 +48420,26 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             }]
           }
         })
+        .when('/timeclockview/day/:workDate', {
+          controller: 'TimeclockViewController',
+          templateUrl: 'TimeclockView.controller.tmpl.html',
+          resolve: {
+            timeclockdata: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              //var workDate = moment(new Date(), 'M/D/YYYY');
+              var wd = moment($route.current.params.workDate, 'YYYYMMDD');
+              var workdate = {
+                WorkDate: wd.format('M/D/YYYY')
+              };
+              return timestoredata.timeclockData(workdate)
+                .then(function (data)
+                {
+                  console.log('timeclock data', data);
+                  return data;
+                });
+            }]
+          }
+        })
         .when('/fema/', {
           controller: 'FemaViewController',
           templateUrl: 'FemaView.tmpl.html' 
@@ -48852,9 +48872,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         ];
       };
 
-      var financePostProcess = function (ppdIndex)
+      var financePostProcess = function (ppdIndex, serverType)
       {
-        var ppd = { ppdIndex: ppdIndex };
+        var ppd = { ppdIndex: ppdIndex, serverType: serverType };
         return $http
           .post("Main/UploadFinanceData", ppd)
           .then(function (response)
@@ -49000,6 +49020,16 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
+      var timeclockData = function (workDate)
+      {
+        return $http
+          .post("TC/TimeclockData", workDate)
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
       var getReportsTo = function ()
       {
         return $http
@@ -49088,6 +49118,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       };
 
       return {
+        timeclockData: timeclockData,
         finalizeLeaveRequest: finalizeLeaveRequest,
         finalizeAllLeaveRequests: finalizeAllLeaveRequests,
         getPayPeriodIndex: getPayPeriodIndex,
@@ -49190,6 +49221,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function ($route, $http, $location, timestoredata, $window)
       {
         return {
+          goTimeclockView: goTimeclockView,
           goHome: goHome,
           goDefaultEmployee: goDefaultEmployee,
           goEmployeeByPPD: goEmployeeByPPD,
@@ -49214,6 +49246,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           // going to use moment to navigate to the current year and month
           go('/LeaveCalendar/');
+        }
+
+        function goTimeclockView()
+        {
+          go('/timeclockview/day/' + moment().format("YYYYMMDD"));
         }
 
         function goLeaveRequest()
@@ -49464,7 +49501,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           // if there are atleast 3 elements, we should check to see if the last two are only 2 apart.
           // if there are more than 4 elements, we want to just quit and leave it blank
           // that means that their time is more than just "clock in, go to lunch, come back from lunch, and clock out"
-          var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
+          var pubWorksDepartments = ["3701", "3711", "3712"];
+          var lunchDuration = pubWorksDepartments.indexOf(tctd.DepartmentNumber) !== -1 ? 2 : 4;
+          //var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
           if (tctd.selectedTimes[2] - tctd.selectedTimes[1] === lunchDuration)
           {
             tctd.SelectedLunchTime = tctd.selectedTimes[1];
@@ -49479,6 +49518,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         tctd.Comment = rawtctd.Comment;
         tctd.DisasterName = rawtctd.DisasterName;
         tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        tctd.DisasterWorkType = rawtctd.DisasterWorkType;
+        tctd.OutOfClass = rawtctd.OutOfClass;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -49613,15 +49654,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
       {
+        
         var wd = moment(workDate, "M/D/YYYY");
         var hd = moment(hireDate);
         return wd.diff(hd, "days") > 90;
+        
         // this function returns true if the person's hire date is more than
         // 90 days away from the work date.
       }
 
       function resetTCTD(tc, workDate)
       {
+        console.log("reset tctd", workDate, tc);
         // resetTCTD provides a 0'd out TCTD that conforms to the user's min/max / visibility for their classification
         var isExempt = tc.exemptStatus === "Exempt";
         populateConstants(isExempt, tc.classify);
@@ -49641,6 +49685,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           DisasterName: "",
           DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
+          DisasterWorkType: "",
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
           OnCallWorkHours: getDefaultHoursNoMax("On Call Hours Worked"),
@@ -49648,6 +49693,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           OnCallTotalHours: getDefaultHoursNoMax("Total On Call Hours"),
           OnCallSelectedTimesDisplay: "",
           OnCallSelectedTimes: [],
+          OutOfClass: false,
           SelectedLunchTime: null,
           LastSelectedLunchTime: null,
           HolidayHours: getDefaultHolidayHours(tc, workDate),
@@ -49696,6 +49742,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function getBaseTCTD(tctd, tc)
       {
+        console.log("getbasetctd", tctd, tc);
         return {
           EmployeeID: tc.employeeID,
           DepartmentNumber: tc.departmentNumber,
@@ -49704,6 +49751,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkHours: getValue(tctd.WorkHours.value),
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
+          DisasterWorkType: tctd.DisasterWorkType,
           DisasterName: "",
           DisasterPeriodType: 0,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
@@ -49736,6 +49784,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           OnCallWorkHours: getValue(tctd.OnCallWorkHours.value),
           OnCallWorkTimes: tctd.OnCallSelectedTimesDisplay,
           OnCallTotalHours: getValue(tctd.OnCallTotalHours.value),
+          OutOfClass: tctd.OutOfClass,
           SelectedLunchTime: null,
           LastSelectedLunchTime: null,
           TerminationDate: null
@@ -49918,6 +49967,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         }
       }
+
       function calculateWeek(pps, d)
       {
         // assumes pps and d are both moment objects already
@@ -50058,7 +50108,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         }
         if (tctd.SelectedLunchTime)
         {
-          var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
+          var pubWorksDepartments = ["3701", "3711", "3712"];
+          var lunchDuration = pubWorksDepartments.indexOf(tctd.DepartmentNumber) !== -1 ? 2 : 4;
+          //var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
 
           if (parseInt(tctd.SelectedLunchTime) === -1)
           {
@@ -50242,8 +50294,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         }
         tctd.DisasterWorkTimes = times.join(" ");
         tctd.DisasterWorkHours.value = workHours;
-        console.log('d wt', tctd.DisasterWorkTimes);
-        console.log('d wh', tctd.DisasterWorkHours);
         tctd.disasterSelectedTimesDisplay = timeDisplay;
         
       }
@@ -50312,38 +50362,46 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 })();
 
 /* global moment, _ */
-(function () {
-    angular.module('timestoreApp')
-        .factory('commonFunctions', function () {
+(function ()
+{
+  angular.module('timestoreApp')
+    .factory('commonFunctions', function ()
+    {
 
-            return {
-                getGroupsByShortPayRate: getGroupsByShortPayRate,
-                getTotalHours: getTotalHours
-            }
+      return {
+        getGroupsByShortPayRate: getGroupsByShortPayRate,
+        getTotalHours: getTotalHours
+      };
 
-            function getTotalHours(tl) {
-                if (tl === undefined) {
-                    return 0;
-                }
-                var total = 0;
-                for (var i = 0; i < tl.length; i++) {
-                    total += tl[i].hours;
-                }
-                return total;
-            }
+      function getTotalHours(tl)
+      {
+        if (tl === undefined)
+        {
+          return 0;
+        }
+        var total = 0;
+        for (var i = 0; i < tl.length; i++)
+        {
+          total += tl[i].hours;
+        }
+        return total;
+      }
 
-            function getGroupsByShortPayRate(tl) {
-                var groupArray = [];
+      function getGroupsByShortPayRate(tl)
+      {
+        var groupArray = [];
 
-                angular.forEach(tl, function (item, idx) {
-                    if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1) {
-                        groupArray.push(parseFloat(item.shortPayRate));
-                    }
-                });
-                return groupArray;
-            }
-
+        angular.forEach(tl, function (item, idx)
+        {
+          if (groupArray.indexOf(parseFloat(item.shortPayRate)) === -1)
+          {
+            groupArray.push(parseFloat(item.shortPayRate));
+          }
         });
+        return groupArray;
+      }
+
+    });
 
 })();
 (function () {
@@ -50785,6 +50843,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       timestoreNav.goUnapproved();
     };
 
+    $scope.viewTimeclockData = function ()
+    {
+      $mdSidenav('approvalRight').toggle();
+      timestoreNav.goTimeclockView();
+    };
+
     $scope.viewFema = function ()
     {
       $mdSidenav('adminRight').toggle();
@@ -50854,191 +50918,223 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
 }());
 /* global _ */
-(function () {
-    "use strict";
-    
-    angular.module('timestoreApp')    
-        .controller('AccessController', ['$scope', '$mdToast', 'timestoredata', 'viewOptions', ControlAccess]);
+(function ()
+{
+  "use strict";
 
-    function ControlAccess($scope, $mdToast, timestoredata, viewOptions) {
-        viewOptions.viewOptions.showSearch = false;
-        viewOptions.viewOptions.share();
-        $scope.employeeList = [];
-        $scope.departmentList = [];
-        $scope.reportsToList = [];
-        $scope.employee = null;
-        $scope.employeeMapV = null;
-        $scope.timecardAccess = null;
-        $scope.dataTypes = ["timecard", "telestaff"];        
+  angular.module('timestoreApp')
+    .controller('AccessController', ['$scope', '$mdToast', 'timestoredata', 'viewOptions', ControlAccess]);
 
-        $scope.accessLevels = ["None", "User Only", "Dept Level 1", "Dept Level 2",
-                                "Dept Level 3", "Dept Level 4", "Dept Level 5", "All"];
+  function ControlAccess($scope, $mdToast, timestoredata, viewOptions)
+  {
+    viewOptions.viewOptions.showSearch = false;
+    viewOptions.viewOptions.share();
+    $scope.employeeList = [];
+    $scope.departmentList = [];
+    $scope.reportsToList = [];
+    $scope.employee = null;
+    $scope.employeeMapV = null;
+    $scope.timecardAccess = null;
+    $scope.dataTypes = ["timecard", "telestaff"];
 
-        
+    $scope.accessLevels = ["None", "User Only", "Dept Level 1", "Dept Level 2",
+      "Dept Level 3", "Dept Level 4", "Dept Level 5", "All"];
 
-        $scope.toastPosition = {
-            bottom: true,
-            top: false,
-            left: true,
-            right: false
-        };
 
-        $scope.querySearch = function (query, aMap) {
-            var results = query ? aMap.filter(createFilterFor(query)) : [];
-            return results;
-        };
 
-        function createFilterFor(query) {
-            var lowercaseQuery = angular.lowercase(query);
-            return function filterFn(item) {
-                return (item.displayLower.indexOf(lowercaseQuery) >= 0);
-            };
-        }
-
-        timestoredata.getEmployees().then(function (data) {
-            $scope.employeeList = data;
-            $scope.employeeMapV = $scope.employeeList.map(function (employeeMap) {
-                return {
-                    value: employeeMap,
-                    displayLower: angular.lowercase(employeeMap.EmployeeDisplay),
-                    display: employeeMap.EmployeeDisplay
-                };
-            });
-        }, function () { });
-
-        $scope.viewApproveAllChanged = function () {
-            approveAllChanged();
-        }
-
-        function approveAllChanged() {
-            $scope.departmentList[0].disabled = $scope.timecardAccess.approveAll;
-            $scope.departmentList[1].disabled = $scope.timecardAccess.approveAll;
-        }
-
-        timestoredata.getDepartments().then(function (data) {            
-            $scope.departmentList = data;
-            console.log('department list', data);
-            $scope.departmentList.unshift(
-                {
-                    Department: 'View Only - Add Departments or Reports To',
-                    DepartmentNumber: 'VIEW',
-                    DepartmentDisplay: 'View Only - Add Departments or Reports To'
-                },
-                {
-                    Department: 'Approve Leave Only - Add Departments or Reports To',
-                    DepartmentNumber: 'LEAVE',
-                    DepartmentDisplay: 'Approve Leave Only - Add Departments or Reports To'
-                });
-            console.log('updated department list', $scope.departmentList);
-        }, function () { });
-
-        timestoredata.getReportsTo().then(function (data) {
-            $scope.reportsToList = data;
-        }, function () { });
-
-        $scope.selectedEmployeeChanged = function (employee) {
-            if (employee === undefined) {
-                $scope.employee = null;
-                $scope.timecardAccess = null;
-            } else {
-                $scope.employee = employee;
-                timestoredata.getAccess(employee.value.EmployeeID).then(function (data) {
-                    $scope.timecardAccess = data;
-                    updateDepartmentList();
-                });
-                // Load Access for this user.
-            }
-        };
-
-        function updateDepartmentList() {
-            var tca = $scope.timecardAccess;
-            tca.viewAll = (tca.DepartmentsToApprove.indexOf('VIEW') > -1);
-            tca.approveAll = (tca.DepartmentsToApprove.indexOf('ALL') > -1);
-            for (var i = 0; i < $scope.departmentList.length; i++) {
-                var dept = $scope.departmentList[i];
-                dept.selected = false;
-                if (tca.DepartmentsToApprove.indexOf(dept.DepartmentNumber) > -1) {
-                    dept.selected = true;
-                }
-            }
-            approveAllChanged();
-        }
-
-        $scope.GetEmployeeDisplay = function () {
-            var rtl = $scope.reportsToList;
-            if ($scope.timecardAccess === null || $scope.timecardAccess.ReportsTo === 0 || $scope.reportsToList.length === 0) {
-                return '';
-            }
-            var index = _.findIndex(rtl, { 'EmployeeID': $scope.timecardAccess.ReportsTo });
-            if (index === -1) {
-                return '';
-            } else {
-                return rtl[index].EmployeeDisplay;
-            }
-        };
-
-        $scope.saveTimecardAccess = function () {
-            var rawTCA = {
-                Access_Type: $scope.timecardAccess.Raw_Access_Type,
-                EmployeeId: $scope.timecardAccess.EmployeeID,
-                ReportsTo: $scope.timecardAccess.ReportsTo,
-                RequiresApproval: $scope.timecardAccess.RequiresApproval,
-                BackendReportsAccess: $scope.timecardAccess.Backend_Reports_Access,
-                DepartmentsToApprove: getSelectedDepartmentList(),
-                DataType: $scope.timecardAccess.Data_Type,
-                CanChangeAccess: $scope.timecardAccess.CanChangeAccess
-            };
-
-            timestoredata.saveAccess(rawTCA).then(function (data) {
-                if (data === 'Success') {
-                    showToast('Access Saved...');
-                } else {
-                    showToast('Error attempting to save access, please contact MIS.');
-                }
-            });
-        };
-        
-        function getSelectedDepartmentList() {
-            var selDepts = [];
-            if ($scope.timecardAccess.Raw_Access_Type < 2) { // They don't have any dept level access if they only 1 or 0.
-                return selDepts;
-
-            } else if ($scope.timecardAccess.viewAll) {
-                selDepts.push('VIEW');
-                return selDepts;
-
-            } else if ($scope.timecardAccess.approveAll) {
-                selDepts.push('ALL');
-                //return selDepts;
-
-            } //else {
-            for (var i = 0; i < $scope.departmentList.length; i++) {
-                var dl = $scope.departmentList[i];
-                if (dl.selected) {
-                    selDepts.push(dl.DepartmentNumber);
-                }
-            }
-            return selDepts;
-            //}
-
-        }
-
-        function showToast(Message) {
-            $mdToast.show(
-              $mdToast.simple()
-                .content(Message)
-                .position($scope.getToastPosition())
-                .hideDelay(3000)
-            );
-        }
-
-        $scope.getToastPosition = function () {
-            return Object.keys($scope.toastPosition)
-              .filter(function (pos) { return $scope.toastPosition[pos]; })
-              .join(' ');
-        };
-
+    $scope.toastPosition = {
+      bottom: true,
+      top: false,
+      left: true,
+      right: false
     };
+
+    $scope.querySearch = function (query, aMap)
+    {
+      var results = query ? aMap.filter(createFilterFor(query)) : [];
+      return results;
+    };
+
+    function createFilterFor(query)
+    {
+      var lowercaseQuery = angular.lowercase(query);
+      return function filterFn(item)
+      {
+        return (item.displayLower.indexOf(lowercaseQuery) >= 0);
+      };
+    }
+
+    timestoredata.getEmployees().then(function (data)
+    {
+      $scope.employeeList = data;
+      $scope.employeeMapV = $scope.employeeList.map(function (employeeMap)
+      {
+        return {
+          value: employeeMap,
+          displayLower: angular.lowercase(employeeMap.EmployeeDisplay),
+          display: employeeMap.EmployeeDisplay
+        };
+      });
+    }, function () { });
+
+    $scope.viewApproveAllChanged = function ()
+    {
+      approveAllChanged();
+    }
+
+    function approveAllChanged()
+    {
+      $scope.departmentList[0].disabled = $scope.timecardAccess.approveAll;
+      $scope.departmentList[1].disabled = $scope.timecardAccess.approveAll;
+    }
+
+    timestoredata.getDepartments().then(function (data)
+    {
+      $scope.departmentList = data;
+      console.log('department list', data);
+      $scope.departmentList.unshift(
+        {
+          Department: 'View Only - Add Departments or Reports To',
+          DepartmentNumber: 'VIEW',
+          DepartmentDisplay: 'View Only - Add Departments or Reports To'
+        },
+        {
+          Department: 'Approve Leave Only - Add Departments or Reports To',
+          DepartmentNumber: 'LEAVE',
+          DepartmentDisplay: 'Approve Leave Only - Add Departments or Reports To'
+        });
+      console.log('updated department list', $scope.departmentList);
+    }, function () { });
+
+    timestoredata.getReportsTo().then(function (data)
+    {
+      $scope.reportsToList = data;
+    }, function () { });
+
+    $scope.selectedEmployeeChanged = function (employee)
+    {
+      if (employee === undefined)
+      {
+        $scope.employee = null;
+        $scope.timecardAccess = null;
+      } else
+      {
+        $scope.employee = employee;
+        timestoredata.getAccess(employee.value.EmployeeID).then(function (data)
+        {
+          $scope.timecardAccess = data;
+          updateDepartmentList();
+        });
+        // Load Access for this user.
+      }
+    };
+
+    function updateDepartmentList()
+    {
+      var tca = $scope.timecardAccess;
+      tca.viewAll = (tca.DepartmentsToApprove.indexOf('VIEW') > -1);
+      tca.approveAll = (tca.DepartmentsToApprove.indexOf('ALL') > -1);
+      for (var i = 0; i < $scope.departmentList.length; i++)
+      {
+        var dept = $scope.departmentList[i];
+        dept.selected = false;
+        if (tca.DepartmentsToApprove.indexOf(dept.DepartmentNumber) > -1)
+        {
+          dept.selected = true;
+        }
+      }
+      approveAllChanged();
+    }
+
+    $scope.GetEmployeeDisplay = function ()
+    {
+      var rtl = $scope.reportsToList;
+      if ($scope.timecardAccess === null || $scope.timecardAccess.ReportsTo === 0 || $scope.reportsToList.length === 0)
+      {
+        return '';
+      }
+      var index = _.findIndex(rtl, { 'EmployeeID': $scope.timecardAccess.ReportsTo });
+      if (index === -1)
+      {
+        return '';
+      } else
+      {
+        return rtl[index].EmployeeDisplay;
+      }
+    };
+
+    $scope.saveTimecardAccess = function ()
+    {
+      var rawTCA = {
+        Access_Type: $scope.timecardAccess.Raw_Access_Type,
+        EmployeeId: $scope.timecardAccess.EmployeeID,
+        ReportsTo: $scope.timecardAccess.ReportsTo,
+        RequiresApproval: $scope.timecardAccess.RequiresApproval,
+        BackendReportsAccess: $scope.timecardAccess.Backend_Reports_Access,
+        DepartmentsToApprove: getSelectedDepartmentList(),
+        DataType: $scope.timecardAccess.Data_Type,
+        CanChangeAccess: $scope.timecardAccess.CanChangeAccess
+      };
+      console.log('raw Timecard Access', rawTCA);
+      timestoredata.saveAccess(rawTCA).then(function (data) {
+          if (data === 'Success') {
+              showToast('Access Saved...');
+          } else {
+              showToast('Error attempting to save access, please contact MIS.');
+          }
+      });
+    };
+
+    function getSelectedDepartmentList()
+    {
+      var selDepts = [];
+      if ($scope.timecardAccess.Raw_Access_Type < 2)
+      { // They don't have any dept level access if they only 1 or 0.
+        return selDepts;
+
+      } else if ($scope.timecardAccess.viewAll)
+      {
+        selDepts.push('VIEW');
+        return selDepts;
+
+      } else if ($scope.timecardAccess.approveAll)
+      {
+        selDepts.push('ALL');
+        //return selDepts;
+
+      } //else {
+      for (var i = 0; i < $scope.departmentList.length; i++)
+      {
+        var dl = $scope.departmentList[i];
+        if (dl.selected)
+        {
+          selDepts.push(dl.DepartmentNumber);
+        }
+      }
+      console.log('selected departments', selDepts);
+      return selDepts;
+      //}
+
+    }
+
+    function showToast(Message)
+    {
+      $mdToast.show(
+        $mdToast.simple()
+          .content(Message)
+          .position($scope.getToastPosition())
+          .hideDelay(3000)
+      );
+    }
+
+    $scope.getToastPosition = function ()
+    {
+      return Object.keys($scope.toastPosition)
+        .filter(function (pos) { return $scope.toastPosition[pos]; })
+        .join(' ');
+    };
+
+  };
 
 }());
 /* global moment, _ */
@@ -51207,7 +51303,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   )
   {
     // testing variables
-    // end testing variables
+    // end testing variables    
+    timestoredata.getMyAccess()
+      .then(function (data)
+      {
+        $scope.myAccess = data;
+      });
     $scope.responseMessage = "";
     $scope.workDate = moment($routeParams.workDate, "YYYYMMDD").format(
       "M/D/YYYY"
@@ -51344,7 +51445,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     function validateDisasterHours()
     {
-      console.log("tctd", $scope.TCTD);
       $scope.disasterChoiceError = "";
       $scope.disasterTimeError = "";
       // we need to compare the times in DisasterWorkTimes and WorkTimes
@@ -51372,7 +51472,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             var wEnd = wst[j + 1];
             var dStartGood = dStart >= wStart && dStart <= wEnd;
             var dEndGood = dEnd >= wStart && dEnd <= wEnd;
-            found = (dStartGood && dEndGood);
+            found = dStartGood && dEndGood;
             if (dStartGood || dEndGood)
             {
               break;
@@ -51385,10 +51485,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             return;
           }
         }
-        if ($scope.TCTD.DisasterWorkHours.value > 0 && $scope.TCTD.Comment.length === 0)
+        if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
         {
-          $scope.disasterTimeError = "You must enter a comment indicating your duties relating to the disaster.";
-          $scope.errorList.push("You must enter a comment indicating your duties relating to the disaster.");
+          if ($scope.TCTD.DisasterWorkType === "")
+          {
+            $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
+            $scope.errorList.push($scope.disasterTimeError);
+            return;
+          }
+          if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
+          {
+            $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
+            $scope.errorList.push($scope.disasterTimeError);
+          }
         }
       }
     }
@@ -51412,10 +51521,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       // Let's make sure they aren't using more hours than they have banked.
       // These should be errors.
-      
       var hireDateCheck = addtimeFunctions.calculateWithinFirstNinetyDays(
         $scope.timecard.hireDate,
-        $scope.TCTD.workDate
+        $scope.TCTD.WorkDate
       );
       //console.log("hire date check", hireDateCheck);
       if (!hireDateCheck && ($scope.sickUsed > 0 || $scope.vacationUsed > 0))
@@ -51743,6 +51851,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.toggleOnCall = !$scope.toggleOnCall;
     };
 
+    $scope.checkDisasterWorkType = function ()
+    {
+      // this function is run after a disaster work type is selected.
+      // the comment is only required if they chose "Not Listed" as the option.
+      checkForErrors();
+    };
+
     $scope.calculateTotalHours = function ()
     {
       $scope.forceFullTimeList = outsideShortTimes();
@@ -52044,8 +52159,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     };
 
     $scope.getApprovalText = function (al, l) {
-      //t.Approval_Level < 1 ? 'Unapproved' : 'Needs Final Approval';
-      console.log('approval level', al, 'isleaveapproved', l)      
+      //t.Approval_Level < 1 ? 'Unapproved' : 'Needs Final Approval';      
       if (!l) {
         return 'Leave Requires Approval';
       } else {
@@ -52777,46 +52891,55 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
 })();
 /* global _ */
-(function () {
-    "use strict";
+(function ()
+{
+  "use strict";
 
-    angular.module('timestoreApp')
-        .controller('FinanceToolsController', ['$scope', 'timestoredata', 'viewOptions', 'datelist', financeTools]);
+  angular.module('timestoreApp')
+    .controller('FinanceToolsController', ['$scope', 'timestoredata', 'viewOptions', 'datelist', financeTools]);
 
-    function financeTools($scope, timestoredata, viewOptions, datelist) {
+  function financeTools($scope, timestoredata, viewOptions, datelist)
+  {
 
-        $scope.payperiodlist = datelist.getShortPayPeriodList();
-        $scope.showProgress = false;
-        $scope.postResult = '';
-        $scope.selectedPayPeriod = '';
-        viewOptions.viewOptions.showSearch = false;
-        viewOptions.viewOptions.share();
+    $scope.payperiodlist = datelist.getShortPayPeriodList();
+    $scope.showProgress = false;
+    $scope.postResult = '';
+    $scope.selectedPayPeriod = '';
+    viewOptions.viewOptions.showSearch = false;
+    viewOptions.viewOptions.share();
+    $scope.serverType = 'normal';
+    $scope.PostToFinance = function ()
+    {
+      console.log('server Type', $scope.serverType);
+      if ($scope.selectedPayPeriod === '')
+      {
+        alert('You must select a pay period');
+      } else
+      {
+        $scope.showProgress = true;
+        var m = moment($scope.selectedPayPeriod, 'M/D/YYYY');
+        timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m), $scope.serverType)
+          .then(onComplete);
+      }
+    };
 
-        $scope.PostToFinance = function () {
-            if ($scope.selectedPayPeriod === '') {
-                alert('You must select a pay period');
-            } else {
-                $scope.showProgress = true;
-                var m = moment($scope.selectedPayPeriod, 'M/D/YYYY');
-                timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m))
-                    .then(onComplete);
-            }
-        };
-        
-        function onComplete(data) {
-            $scope.showProgress = false;            
-            if (data.toUpperCase() === 'SUCCESS') {
-                $scope.postResult = 'The Post to Finplus completed Successfully.';
-            } else {
-                $scope.postResult = data;
-            }
-        }
-
-        //timestoredata.getPayPeriods().then(function (data) {
-        //    $scope.payperiodlist = data;
-        //}, function () {
-        //});
+    function onComplete(data)
+    {
+      $scope.showProgress = false;
+      if (data.toUpperCase() === 'SUCCESS')
+      {
+        $scope.postResult = 'The Post to Finplus completed Successfully.';
+      } else
+      {
+        $scope.postResult = data;
+      }
     }
+
+    //timestoredata.getPayPeriods().then(function (data) {
+    //    $scope.payperiodlist = data;
+    //}, function () {
+    //});
+  }
 
 }());
 (function () {
@@ -53342,8 +53465,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     function GroupsByPayPeriod()
     {
-      return [{ "ppe": "9/19/2017", "employees": [1066, 1067, 1157, 1306, 1707, 1759, 2262, 2619, 2756] }, { "ppe": "10/3/2017", "employees": [1067, 1759, 2619] }];
+      return [{ "ppe": "10/17/2017", "employees": [1270, 1304, 1313, 1433, 1508, 1719, 1816, 2037, 2097, 2282, 2474, 2489, 2493, 2704, 2710, 2742, 2753, 2768, 2819, 2849, 2855] }, { "ppe": "10/31/2017", "employees": [1184, 1304, 1433, 1483, 1508, 1719, 1848, 1889, 2033, 2282, 2348, 2474, 2489, 2493, 2644, 2704, 2753, 2759, 2794, 2819, 2826] }, { "ppe": "11/14/2017", "employees": [1433, 1508, 1719, 1830, 1889, 2037, 2644, 2704, 2753, 2758, 2794, 2819, 2834, 2849] }, { "ppe": "11/28/2017", "employees": [1184, 1341, 1719, 1889, 2258, 2471, 2634, 2644, 2704, 2794, 2819] }, { "ppe": "12/12/2017", "employees": [1270, 1304, 1719, 1889, 2097, 2348, 2634, 2644, 2704, 2753, 2794, 2809, 2826, 2832] }, { "ppe": "12/26/2017", "employees": [2644] }];
     }
+
+    // CAT B 17333 PW Callcenter after first 30 data
+    // [{"ppe": "10/17/2017", "employees": [1270,1304,1313,1433,1508,1719,1816,2037,2097,2282,2474,2489,2493,2704,2710,2742,2753,2768,2819,2849,2855]}, {"ppe": "10/31/2017", "employees": [1184,1304,1433,1483,1508,1719,1848,1889,2033,2282,2348,2474,2489,2493,2644,2704,2753,2759,2794,2819,2826]}, {"ppe": "11/14/2017", "employees": [1433,1508,1719,1830,1889,2037,2644,2704,2753,2758,2794,2819,2834,2849]}, {"ppe": "11/28/2017", "employees": [1184,1341,1719,1889,2258,2471,2634,2644,2704,2794,2819]}, {"ppe": "12/12/2017", "employees": [1270,1304,1719,1889,2097,2348,2634,2644,2704,2753,2794,2809,2826,2832]}, {"ppe": "12/26/2017", "employees": [2644]}]
+
     // Signs FAL data
     // [{"ppe": "9/19/2017", "employees": [1066,1067,1157,1306,1707,1759,2262,2619,2756]}, {"ppe": "10/3/2017", "employees": [1067,1759,2619]}];
 
@@ -53410,6 +53537,85 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   }
 
 })();
+/* global _, moment */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .controller("TimeclockViewController", [
+      "$scope",      
+      "viewOptions",
+      "timestoredata",
+      "timestoreNav",
+      "timeclockdata",
+      TimeclockView
+    ]);
+
+  function TimeclockView(
+    $scope,    
+    viewOptions,
+    timestoredata,
+    timestoreNav,
+    timeclockdata
+    
+  )
+  {
+    $scope.timeclockdata = timeclockdata;
+    $scope.filteredData = [];
+    $scope.supervisors = [];
+    $scope.supervisor = "SHOW ALL";
+    $scope.workdate = "";
+    $scope.timeclockdata.length > 0 ? moment($scope.timeclockdata[0].work_date).format('MM/DD/YYYY') : "";
+
+    $scope.showTimeclockData = function ()
+    {
+      if ($scope.supervisor === "SHOW ALL")
+      {
+        $scope.filteredData = $scope.timeclockdata;
+      }
+      else
+      {
+        $scope.filteredData = $scope.timeclockdata.filter(
+          function (j)
+          {
+            return j.reports_to_name === $scope.supervisor;
+          });
+      }
+    };
+
+    function filterSupervisors()
+    {
+      $scope.supervisors = [];
+      for (var i = 0; i < $scope.timeclockdata.length; i++)
+      {
+        if ($scope.supervisors.indexOf($scope.timeclockdata[i].reports_to_name) === -1 && $scope.timeclockdata[i].reports_to_name.trim().length > 0)
+        {
+          $scope.supervisors.push($scope.timeclockdata[i].reports_to_name);
+          if ($scope.timeclockdata[i].my_employee_id === $scope.timeclockdata[i].reports_to)
+          {
+            $scope.supervisor = $scope.timeclockdata[i].reports_to_name;
+          }
+        }
+      }
+      $scope.supervisors.sort();
+      $scope.supervisors.splice(0, 0, "SHOW ALL");
+      $scope.showTimeclockData();
+    }
+
+    filterSupervisors();
+
+
+
+
+    $scope.addTimeGo = function (employeeId)
+    {
+      timestoreNav.goAddTime(employeeId, $scope.workdate);
+    };
+
+  }
+})();
+
 /* global moment, _ */
 (function ()
 {

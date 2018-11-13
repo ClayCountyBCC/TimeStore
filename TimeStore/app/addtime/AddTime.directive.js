@@ -39,7 +39,12 @@
   )
   {
     // testing variables
-    // end testing variables
+    // end testing variables    
+    timestoredata.getMyAccess()
+      .then(function (data)
+      {
+        $scope.myAccess = data;
+      });
     $scope.responseMessage = "";
     $scope.workDate = moment($routeParams.workDate, "YYYYMMDD").format(
       "M/D/YYYY"
@@ -176,7 +181,6 @@
 
     function validateDisasterHours()
     {
-      console.log("tctd", $scope.TCTD);
       $scope.disasterChoiceError = "";
       $scope.disasterTimeError = "";
       // we need to compare the times in DisasterWorkTimes and WorkTimes
@@ -204,7 +208,7 @@
             var wEnd = wst[j + 1];
             var dStartGood = dStart >= wStart && dStart <= wEnd;
             var dEndGood = dEnd >= wStart && dEnd <= wEnd;
-            found = (dStartGood && dEndGood);
+            found = dStartGood && dEndGood;
             if (dStartGood || dEndGood)
             {
               break;
@@ -217,10 +221,19 @@
             return;
           }
         }
-        if ($scope.TCTD.DisasterWorkHours.value > 0 && $scope.TCTD.Comment.length === 0)
+        if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
         {
-          $scope.disasterTimeError = "You must enter a comment indicating your duties relating to the disaster.";
-          $scope.errorList.push("You must enter a comment indicating your duties relating to the disaster.");
+          if ($scope.TCTD.DisasterWorkType === "")
+          {
+            $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
+            $scope.errorList.push($scope.disasterTimeError);
+            return;
+          }
+          if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
+          {
+            $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
+            $scope.errorList.push($scope.disasterTimeError);
+          }
         }
       }
     }
@@ -244,10 +257,9 @@
 
       // Let's make sure they aren't using more hours than they have banked.
       // These should be errors.
-      
       var hireDateCheck = addtimeFunctions.calculateWithinFirstNinetyDays(
         $scope.timecard.hireDate,
-        $scope.TCTD.workDate
+        $scope.TCTD.WorkDate
       );
       //console.log("hire date check", hireDateCheck);
       if (!hireDateCheck && ($scope.sickUsed > 0 || $scope.vacationUsed > 0))
@@ -573,6 +585,13 @@
     $scope.Toggle_OnCallHours = function ()
     {
       $scope.toggleOnCall = !$scope.toggleOnCall;
+    };
+
+    $scope.checkDisasterWorkType = function ()
+    {
+      // this function is run after a disaster work type is selected.
+      // the comment is only required if they chose "Not Listed" as the option.
+      checkForErrors();
     };
 
     $scope.calculateTotalHours = function ()

@@ -18,6 +18,7 @@ Public Module ModuleMain
     Timecard = 3
     Log = 4
     FinplusTraining = 5
+    FinplusNew = 6
   End Enum
 
   Public Sub Log(e As Exception, Query As String)

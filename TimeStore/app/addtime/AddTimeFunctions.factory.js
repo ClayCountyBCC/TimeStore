@@ -112,7 +112,9 @@
           // if there are atleast 3 elements, we should check to see if the last two are only 2 apart.
           // if there are more than 4 elements, we want to just quit and leave it blank
           // that means that their time is more than just "clock in, go to lunch, come back from lunch, and clock out"
-          var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
+          var pubWorksDepartments = ["3701", "3711", "3712"];
+          var lunchDuration = pubWorksDepartments.indexOf(tctd.DepartmentNumber) !== -1 ? 2 : 4;
+          //var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
           if (tctd.selectedTimes[2] - tctd.selectedTimes[1] === lunchDuration)
           {
             tctd.SelectedLunchTime = tctd.selectedTimes[1];
@@ -127,6 +129,8 @@
         tctd.Comment = rawtctd.Comment;
         tctd.DisasterName = rawtctd.DisasterName;
         tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        tctd.DisasterWorkType = rawtctd.DisasterWorkType;
+        tctd.OutOfClass = rawtctd.OutOfClass;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
           rawtctd.WorkTimes = rawtctd.WorkTimes
@@ -261,15 +265,18 @@
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
       {
+        
         var wd = moment(workDate, "M/D/YYYY");
         var hd = moment(hireDate);
         return wd.diff(hd, "days") > 90;
+        
         // this function returns true if the person's hire date is more than
         // 90 days away from the work date.
       }
 
       function resetTCTD(tc, workDate)
       {
+        console.log("reset tctd", workDate, tc);
         // resetTCTD provides a 0'd out TCTD that conforms to the user's min/max / visibility for their classification
         var isExempt = tc.exemptStatus === "Exempt";
         populateConstants(isExempt, tc.classify);
@@ -289,6 +296,7 @@
           DisasterName: "",
           DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
+          DisasterWorkType: "",
           BreakCreditHours: getDefaultHours("Break Credit", true),
           OnCallWorkTimes: "",
           OnCallWorkHours: getDefaultHoursNoMax("On Call Hours Worked"),
@@ -296,6 +304,7 @@
           OnCallTotalHours: getDefaultHoursNoMax("Total On Call Hours"),
           OnCallSelectedTimesDisplay: "",
           OnCallSelectedTimes: [],
+          OutOfClass: false,
           SelectedLunchTime: null,
           LastSelectedLunchTime: null,
           HolidayHours: getDefaultHolidayHours(tc, workDate),
@@ -344,6 +353,7 @@
 
       function getBaseTCTD(tctd, tc)
       {
+        console.log("getbasetctd", tctd, tc);
         return {
           EmployeeID: tc.employeeID,
           DepartmentNumber: tc.departmentNumber,
@@ -352,6 +362,7 @@
           WorkHours: getValue(tctd.WorkHours.value),
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
+          DisasterWorkType: tctd.DisasterWorkType,
           DisasterName: "",
           DisasterPeriodType: 0,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
@@ -384,6 +395,7 @@
           OnCallWorkHours: getValue(tctd.OnCallWorkHours.value),
           OnCallWorkTimes: tctd.OnCallSelectedTimesDisplay,
           OnCallTotalHours: getValue(tctd.OnCallTotalHours.value),
+          OutOfClass: tctd.OutOfClass,
           SelectedLunchTime: null,
           LastSelectedLunchTime: null,
           TerminationDate: null
@@ -566,6 +578,7 @@
           }
         }
       }
+
       function calculateWeek(pps, d)
       {
         // assumes pps and d are both moment objects already
@@ -706,7 +719,9 @@
         }
         if (tctd.SelectedLunchTime)
         {
-          var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
+          var pubWorksDepartments = ["3701", "3711", "3712"];
+          var lunchDuration = pubWorksDepartments.indexOf(tctd.DepartmentNumber) !== -1 ? 2 : 4;
+          //var lunchDuration = tctd.DepartmentNumber === "3701" ? 2 : 4;
 
           if (parseInt(tctd.SelectedLunchTime) === -1)
           {
@@ -890,8 +905,6 @@
         }
         tctd.DisasterWorkTimes = times.join(" ");
         tctd.DisasterWorkHours.value = workHours;
-        console.log('d wt', tctd.DisasterWorkTimes);
-        console.log('d wh', tctd.DisasterWorkHours);
         tctd.disasterSelectedTimesDisplay = timeDisplay;
         
       }

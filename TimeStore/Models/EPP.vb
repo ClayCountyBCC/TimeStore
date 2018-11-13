@@ -1205,11 +1205,11 @@
 
     Private Function Get_Telestaff_Exceptions(e As EPP) As List(Of TimecardTimeException)
       Dim TEList As New List(Of TimecardTimeException)
-      If e.TelestaffProfileType = TelestaffProfileType.Office And e.EmployeeData.isFulltime And e.EmployeeData.HireDate >= PayPeriodStart Then
-        If Real_Scheduled_Hours_Week1 < 40 Then
+      If e.TelestaffProfileType = TelestaffProfileType.Office And e.EmployeeData.isFulltime And e.EmployeeData.HireDate <= PayPeriodStart Then
+        If Real_Scheduled_Hours_Week1 < 40 And Now > e.PayPeriodStart.AddDays(6).AddHours(8) Then
           TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "Not enough hours scheduled in Week 1."))
         End If
-        If Real_Scheduled_Hours_Week2 < 40 Then
+        If Real_Scheduled_Hours_Week2 < 40 And Now > e.PayPeriodStart.AddDays(13).AddHours(8) Then
           TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "Not enough hours scheduled in Week 2."))
         End If
       End If
@@ -1223,7 +1223,8 @@
       If _term_hours.TotalHours > 0 Then
         TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee has Term Hours entered."))
       End If
-      If e.Timelist.Count = 0 Then
+      If e.Total_Hours = 0 Then
+        'If e.Timelist.Count = 0 Then
         TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "No hours entered in this payperiod."))
       End If
 

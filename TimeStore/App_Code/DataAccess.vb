@@ -68,6 +68,9 @@ Public Module ModuleDataAccess
           Case ConnectionStringType.Log
             Return ConfigurationManager.ConnectionStrings("Log").ConnectionString
 
+          Case ConnectionStringType.FinplusNew
+            Return ConfigurationManager.ConnectionStrings("FinplusNew").ConnectionString
+
           Case Else
             Return ""
         End Select
@@ -90,6 +93,9 @@ Public Module ModuleDataAccess
 
           Case ConnectionStringType.Log
             Return ConfigurationManager.ConnectionStrings("Log").ConnectionString
+
+          Case ConnectionStringType.FinplusNew
+            Return ConfigurationManager.ConnectionStrings("FinplusNew").ConnectionString
 
           Case Else
             Return ""
@@ -501,6 +507,9 @@ WHERE access_type >= " & accessType
       '    Next
       '    .AppendLine(") ")
       'End If
+      If StartDate > CType("10/16/2018", Date) Then
+        .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch <> '2744' ") ' Jesse Hellard Exclusion while he works Animal Control and Public Safety until 8/4
+      End If
       If StartDate < CType("8/11/2015", Date) Or StartDate > CType("8/25/2015", Date) Then .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch <> '2201' ") ' Jesse Hellard Exclusion while he works Animal Control and Public Safety until 8/4
       .AppendLine("AND Wstat_Cde_Tbl.Wstat_Abrv_Ch NOT IN ('OTR', 'OTRR', 'ORD', 'ORRD', 'NO', 'DPRN') ")
       '.AppendLine("AND Resource_Tbl.rsc_no_in <> 1795 ")
@@ -556,6 +565,8 @@ WHERE access_type >= " & accessType
       Return Nothing
     End Try
   End Function
+
+
 
   Public Function Get_All_Saved_Timecard_Data(PayPeriodEnding As Date) As List(Of Saved_Timecard_Data)
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
@@ -853,7 +864,7 @@ WHERE access_type >= " & accessType
 
   Public Function GetTimeCards(PayPeriodStart As Date, Optional allowDataSave As Boolean = False) As List(Of GenericTimecard)
     Dim PublicSafety() As String = {"1703", "2103"} ' Removed 2102 ' these two variables are the constant department ids
-    Dim PublicWorks() As String = {"3701", "3709", "3711", "3712"} ' for these two departments.
+    'Dim PublicWorks() As String = {} '{"3701", "3709", "3711", "3712"} ' for these two departments.
 
     Dim PayPeriodEnding As Date = PayPeriodStart.AddDays(13)
     Dim gtc As New List(Of GenericTimecard)
@@ -868,8 +879,9 @@ WHERE access_type >= " & accessType
     ' or those that were terminated in the pay period.
     Dim employeeList As List(Of FinanceData) = (From el In GetCachedEmployeeDataFromFinplus()
                                                 Order By el.Department, el.EmployeeLastName
-                                                Where el.TerminationDate > PayPeriodStart And Not PublicWorks.Contains(el.Department)
+                                                Where el.TerminationDate > PayPeriodStart
                                                 Select el).ToList
+    ' And Not PublicWorks.Contains(el.Department)
     ' public works test And Not PublicWorks.Contains(el.Department)
     '(el.TerminationDate = Date.MaxValue Or
     '(el.TerminationDate > PayPeriodStart And
@@ -921,42 +933,138 @@ WHERE access_type >= " & accessType
 
   Public Function GetCrosstabData(payPeriodStart As Date) As List(Of Crosstab)
     Dim ppEnd As Date = payPeriodStart.AddDays(13)
-    Dim PublicWorks() As String = {"3701", "3709", "3711", "3712"} ' for these two departments.
+    'Dim PublicWorks() As String = {"3701", "3709", "3711", "3712"} ' for these two departments.
     Dim employeeList As List(Of FinanceData) = (From el In GetCachedEmployeeDataFromFinplus()
                                                 Order By el.Department, el.EmployeeLastName
                                                 Where (el.TerminationDate = Date.MaxValue Or
                                                 (el.TerminationDate > payPeriodStart And
-                                                el.TerminationDate <= ppEnd)) And Not PublicWorks.Contains(el.Department)
+                                                el.TerminationDate <= ppEnd))
                                                 Select el).ToList
+    'And Not PublicWorks.Contains(el.Department)
     ' public works test
     ' And Not PublicWorks.Contains(el.Department
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
-    Dim sbQ As New StringBuilder
-    With sbQ
-      .AppendLine("USE TimeStore; SELECT ISNULL(T1.orgn, 'Total') AS orgn, ISNULL(T1.employee_id, 0) AS employee_id,  ")
-      .AppendLine("SUM(reg) AS sumReg, SUM([231]) AS [231], SUM([090]) AS [090], SUM([095]) AS [095], SUM([110]) AS [110],SUM([046]) AS [046], ")
-      .AppendLine("SUM([100]) AS [100], SUM([120]) AS [120],SUM([121]) AS [121],SUM([230]) AS [230], SUM([232]) AS [232], ")
-      .AppendLine("SUM([111]) AS [111], SUM([123]) AS [123], SUM([130]) AS [130], SUM([134]) AS [134], ")
-      .AppendLine("SUM([131]) AS [131], SUM([101]) AS [101],  ")
-      .AppendLine("SUM([124]) AS [124], SUM([006]) AS [006], SUM([007]) AS [007], SUM([122]) AS [122], SUM([777]) AS [777], ")
-      .AppendLine("SUM([299]) AS [299], SUM([300]) AS [300],  SUM([301]) AS [301], SUM([302]) AS [302], SUM([303]) AS [303], SUM(TotalHours) AS TotalHours ")
-      .AppendLine("FROM (SELECT orgn, employee_id, pay_period_ending, [002] as reg, [046], [090], [095], [100], [101],  ")
-      .AppendLine("[110],[111], [121], [123], [230], [231], [232], [130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303], TotalHours ")
-      .AppendLine("FROM (SELECT S.employee_id, S.paycode, S.hours, S.orgn, S.pay_period_ending, S2.TotalHours FROM Saved_Time S ")
-      .AppendLine("INNER JOIN (SELECT employee_id, SUM(hours) AS TotalHours FROM Saved_Time ")
-      .Append("	WHERE pay_period_ending='").Append(ppEnd.ToShortDateString)
-      .Append("' GROUP BY employee_id) AS S2 ON S2.employee_id = S.employee_id ")
-      .Append("WHERE S.pay_period_ending='").Append(ppEnd.ToShortDateString)
-      .AppendLine("') AS ST ")
-      .AppendLine("PIVOT (	SUM(hours) ")
-      .AppendLine("	FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [121], [123], [230], [231], [232],  ")
-      .AppendLine("					[130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303]) ")
-      .AppendLine("	) AS PivotTable) AS T1 ")
-      .AppendLine("GROUP BY ROLLUP (T1.orgn, T1.employee_id);")
-      '.AppendLine("ORDER BY CASE WHEN t1.orgn IS NULL THEN 1 ELSE 0 END, t1.orgn ASC, ")
-      '.AppendLine("CASE WHEN t1.employee_id IS NULL THEN 1 ELSE 0 END, t1.employee_id ASC; ")
-    End With
-    Dim ds As DataSet = dbc.Get_Dataset(sbQ.ToString)
+    Dim query As String = $"
+USE TimeStore; 
+SELECT 
+  ISNULL(T1.orgn, 'Total') AS orgn, 
+  ISNULL(T1.employee_id, 0) AS employee_id,  
+  SUM(reg) AS sumReg, 
+  SUM([231]) AS [231], 
+  SUM([090]) AS [090], 
+  SUM([095]) AS [095], 
+  SUM([110]) AS [110],
+  SUM([046]) AS [046],
+  SUM([100]) AS [100],
+  SUM([120]) AS [120],
+  SUM([121]) AS [121],
+  SUM([230]) AS [230],
+  SUM([232]) AS [232],
+  SUM([111]) AS [111],
+  SUM([123]) AS [123],
+  SUM([130]) AS [130],
+  SUM([134]) AS [134],
+  SUM([131]) AS [131],
+  SUM([101]) AS [101],
+  SUM([124]) AS [124],
+  SUM([006]) AS [006],
+  SUM([007]) AS [007],
+  SUM([122]) AS [122],
+  SUM([777]) AS [777],
+  SUM([299]) AS [299],
+  SUM([300]) AS [300],
+  SUM([301]) AS [301],
+  SUM([302]) AS [302],
+  SUM([303]) AS [303],
+  SUM(TotalHours) AS TotalHours 
+FROM (
+  SELECT 
+    orgn,
+    employee_id,
+    pay_period_ending,
+    [002] as reg,
+    [046],
+    [090],
+    [095],
+    [100],
+    [101],
+    [110],
+    [111],
+    [121],
+    [123],
+    [230],
+    [231],
+    [232],
+    [130],
+    [131],
+    [134],
+    [120],
+    [122],
+    [124],
+    [006],
+    [007],
+    [777],
+    [299],
+    [300],
+    [301],
+    [302],
+    [303],
+    TotalHours 
+  FROM (
+    SELECT 
+      S.employee_id,
+      S.paycode,
+      S.hours,
+      S.orgn,
+      S.pay_period_ending,
+      S2.TotalHours 
+    FROM Saved_Time S 
+    LEFT OUTER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.person P ON S.employee_id = P.empl_no
+    INNER JOIN (
+      SELECT 
+        employee_id, 
+        SUM(hours) AS TotalHours 
+      FROM Saved_Time 
+      WHERE pay_period_ending='{ppEnd.ToShortDateString}'
+      GROUP BY employee_id
+    ) AS S2 ON S2.employee_id = S.employee_id 
+    WHERE 
+      1 = 1
+      AND (P.term_date > DATEADD(DAY, -13, CAST('{ppEnd.ToShortDateString}' AS DATE)) 
+      OR P.term_date IS NULL)
+      AND S.pay_period_ending='{ppEnd.ToShortDateString}'
+  ) AS ST 
+PIVOT (	SUM(hours) 
+  FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [121], [123], [230], [231], [232],  
+      		[130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303]) 
+  ) AS PivotTable) AS T1 
+GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
+    'Dim sbQ As New StringBuilder
+    'With sbQ
+    '  .AppendLine("USE TimeStore; SELECT ISNULL(T1.orgn, 'Total') AS orgn, ISNULL(T1.employee_id, 0) AS employee_id,  ")
+    '  .AppendLine("SUM(reg) AS sumReg, SUM([231]) AS [231], SUM([090]) AS [090], SUM([095]) AS [095], SUM([110]) AS [110],SUM([046]) AS [046], ")
+    '  .AppendLine("SUM([100]) AS [100], SUM([120]) AS [120],SUM([121]) AS [121],SUM([230]) AS [230], SUM([232]) AS [232], ")
+    '  .AppendLine("SUM([111]) AS [111], SUM([123]) AS [123], SUM([130]) AS [130], SUM([134]) AS [134], ")
+    '  .AppendLine("SUM([131]) AS [131], SUM([101]) AS [101],  ")
+    '  .AppendLine("SUM([124]) AS [124], SUM([006]) AS [006], SUM([007]) AS [007], SUM([122]) AS [122], SUM([777]) AS [777], ")
+    '  .AppendLine("SUM([299]) AS [299], SUM([300]) AS [300],  SUM([301]) AS [301], SUM([302]) AS [302], SUM([303]) AS [303], SUM(TotalHours) AS TotalHours ")
+    '  .AppendLine("FROM (SELECT orgn, employee_id, pay_period_ending, [002] as reg, [046], [090], [095], [100], [101],  ")
+    '  .AppendLine("[110],[111], [121], [123], [230], [231], [232], [130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303], TotalHours ")
+    '  .AppendLine("FROM (SELECT S.employee_id, S.paycode, S.hours, S.orgn, S.pay_period_ending, S2.TotalHours FROM Saved_Time S ")
+    '  .AppendLine("INNER JOIN (SELECT employee_id, SUM(hours) AS TotalHours FROM Saved_Time ")
+    '  .Append("	WHERE pay_period_ending='").Append(ppEnd.ToShortDateString)
+    '  .Append("' GROUP BY employee_id) AS S2 ON S2.employee_id = S.employee_id ")
+    '  .Append("WHERE S.pay_period_ending='").Append(ppEnd.ToShortDateString)
+    '  .AppendLine("') AS ST ")
+    '  .AppendLine("PIVOT (	SUM(hours) ")
+    '  .AppendLine("	FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [121], [123], [230], [231], [232],  ")
+    '  .AppendLine("					[130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303]) ")
+    '  .AppendLine("	) AS PivotTable) AS T1 ")
+    '  .AppendLine("GROUP BY ROLLUP (T1.orgn, T1.employee_id);")
+    '  '.AppendLine("ORDER BY CASE WHEN t1.orgn IS NULL THEN 1 ELSE 0 END, t1.orgn ASC, ")
+    '  '.AppendLine("CASE WHEN t1.employee_id IS NULL THEN 1 ELSE 0 END, t1.employee_id ASC; ")
+    'End With
+    Dim ds As DataSet = dbc.Get_Dataset(query)
     Try
       'Dim ct As List(Of Crosstab) = (From d In ds.Tables(0).AsEnumerable Select New Crosstab With {
       '                    .EmployeeID = IsNull(d("employee_id"), ""), .orgn = IsNull(d("orgn"), ""),
@@ -992,16 +1100,16 @@ WHERE access_type >= " & accessType
     End Try
   End Function
 
-  Public Function InsertSavedTimeToFinplus(tsds As DataSet, UseProduction As Boolean) As Boolean
+  Public Function InsertSavedTimeToFinplus(tsds As DataSet, cst As ConnectionStringType) As Boolean
     Dim sbQ As New StringBuilder
     'Dim dbf As New Tools.DB(GetCS(ConnectionStringType.FinPlus), toolsAppId, toolsDBError)
-    Dim cs As ConnectionStringType
-    If UseProduction Then
-      cs = ConnectionStringType.FinPlus
-    Else
-      cs = ConnectionStringType.FinplusTraining
-    End If
-    Dim dbf As New Tools.DB(GetCS(cs), toolsAppId, toolsDBError)
+    'Dim cs As ConnectionStringType
+    'If UseProduction Then
+    '  cs = ConnectionStringType.FinPlus
+    'Else
+    '  cs = ConnectionStringType.FinplusTraining
+    'End If
+    Dim dbf As New Tools.DB(GetCS(cst), toolsAppId, toolsDBError)
     ' We're going to grab all of the 002 data from Finplus's timecard table 
     ' and all of Timestore's SavedTime table
     ' loop through the finplus data to find matches. 
@@ -1009,16 +1117,21 @@ WHERE access_type >= " & accessType
     ' then we loop through the saved_time data and insert everything else.
     ' If the paycode and payrate exists in the Finplus Timecard data, we update.  Otherwise we insert.
     Dim employeeData As List(Of FinanceData) = GetCachedEmployeeDataFromFinplus()
-    Dim fds As DataSet = GetRawFinplusTimecardData(UseProduction)
+    Dim fds As DataSet = GetRawFinplusTimecardData(cst)
     If fds.Tables(0).Rows.Count > 0 Then
       Dim payrun As String = (From f In fds.Tables(0).AsEnumerable Where Not IsDBNull(f("pay_run")) Select f("pay_run")).FirstOrDefault
       With sbQ
         '.AppendLine("USE TimeStore;")
-        If UseProduction Then
-          .AppendLine("USE finplus50;")
-        Else
-          .AppendLine("USE trnfinplus50;")
-        End If
+        Select Case cst
+          Case ConnectionStringType.FinPlus
+            .AppendLine("USE finplus50;")
+          Case ConnectionStringType.FinplusNew
+            .AppendLine("USE finplus51;")
+          Case ConnectionStringType.FinplusTraining
+            .AppendLine("USE trnfinplus50;")
+          Case Else
+            .AppendLine("USE finplus50;")
+        End Select
         For Each ts In tsds.Tables(0).Rows
           Dim eid As Integer = ts("employee_id")
           Dim employee As FinanceData = (From e In employeeData
@@ -1128,24 +1241,36 @@ WHERE access_type >= " & accessType
     Return Math.Round(newRate, 5)
   End Function
 
-  Public Function UpdateFinplusWithSavedTime(tsds As DataSet, UseProduction As Boolean) As Boolean
-    Dim fds As DataSet = GetRawFinplusTimecardData(UseProduction)
-    Dim cs As ConnectionStringType
-    If UseProduction Then
-      cs = ConnectionStringType.FinPlus
-    Else
-      cs = ConnectionStringType.FinplusTraining
-    End If
-    Dim dbf As New Tools.DB(GetCS(cs), toolsAppId, toolsDBError)
+  Public Function UpdateFinplusWithSavedTime(tsds As DataSet, cst As ConnectionStringType) As Boolean
+
+    Dim fds As DataSet = GetRawFinplusTimecardData(cst)
+    'Dim cs As ConnectionStringType
+    'If UseProduction Then
+    '  cs = ConnectionStringType.FinPlus
+    'Else
+    '  cs = ConnectionStringType.FinplusTraining
+    'End If
+    Dim dbf As New Tools.DB(GetCS(cst), toolsAppId, toolsDBError)
     Dim sbQ As New StringBuilder
     Dim nomatch As Integer = 0, alreadymatch As Integer = 0
     With sbQ
       '.AppendLine("USE TimeStore;")
-      If UseProduction Then
-        .AppendLine("USE finplus50;")
-      Else
-        .AppendLine("USE trnfinplus50;")
-      End If
+      Select Case cst
+        Case ConnectionStringType.FinPlus
+          .AppendLine("USE finplus50;")
+
+        Case ConnectionStringType.FinplusNew
+          .AppendLine("USE finplus51;")
+        Case ConnectionStringType.FinplusTraining
+          .AppendLine("USE trnfinplus50;")
+        Case Else
+          .AppendLine("USE finplus50;")
+      End Select
+      'If UseProduction Then
+      '  .AppendLine("USE finplus50;")
+      'Else
+      '  .AppendLine("USE trnfinplus50;")
+      'End If
       ' Here we're looping through each employee in pentamation.
       ' this helps us reconcile because  if we don't have any hours for them
       ' in timestore, we can still do something with that information.
@@ -1223,21 +1348,26 @@ WHERE access_type >= " & accessType
     End Try
   End Function
 
-  Public Function GetRawFinplusTimecardData(UseProduction As Boolean) As DataSet
-    Dim cs As ConnectionStringType
-    If UseProduction Then
-      cs = ConnectionStringType.FinPlus
-    Else
-      cs = ConnectionStringType.FinplusTraining
-    End If
-    Dim dbf As New Tools.DB(GetCS(cs), toolsAppId, toolsDBError)
+  Public Function GetRawFinplusTimecardData(cst As ConnectionStringType) As DataSet
+    'Dim cs As ConnectionStringType
+    'If UseProduction Then
+    '  cs = ConnectionStringType.FinPlus
+    'Else
+    '  cs = ConnectionStringType.FinplusTraining
+    'End If
+    Dim dbf As New Tools.DB(GetCS(cst), toolsAppId, toolsDBError)
     Dim financeQuery As New StringBuilder
     With financeQuery
-      If UseProduction Then
-        .AppendLine("USE finplus50;")
-      Else
-        .AppendLine("USE trnfinplus50;")
-      End If
+      Select Case cst
+        Case ConnectionStringType.FinPlus
+          .AppendLine("USE finplus50;")
+        Case ConnectionStringType.FinplusNew
+          .AppendLine("USE finplus51;")
+        Case ConnectionStringType.FinplusTraining
+          .AppendLine("USE trnfinplus50;")
+        Case Else
+          .AppendLine("USE finplus50;")
+      End Select
       .AppendLine("SELECT TC.empl_no,pay_code,hours,payrate,amount,orgn,account,proj,pacct,classify,pay_cycle,tax_ind, ")
       .AppendLine("	pay_run,subtrack_id,reported,user_chg,date_chg,flsa_cycle,flsa_flg,flsa_carry_ovr,ret_pers_code ")
       .AppendLine("FROM timecard TC ")
@@ -1245,7 +1375,8 @@ WHERE access_type >= " & accessType
       .AppendLine("WHERE TC.pay_code IN ('002', '090', '007', '100', '101', '110', '111', '120', '121', '122',  ")
       .AppendLine("					'123', '124', '130', '131', '134', '230', '231', '232') ")
       ' public works test
-      .AppendLine("AND LTRIM(RTRIM(E.home_orgn)) NOT IN ('3701', '3709', '3711', '3712') ")
+      ' removed 11/13/2018
+      '.AppendLine("AND LTRIM(RTRIM(E.home_orgn)) NOT IN ('3701', '3709', '3711', '3712') ")
       .AppendLine("ORDER BY orgn ASC, empl_no ASC ")
 
     End With
@@ -1313,12 +1444,12 @@ WHERE access_type >= " & accessType
     End If
   End Function
 
-  Public Function SavedTimeToFinplusProcess(payPeriodEnding As Date, UseProduction As Boolean) As Boolean
+  Public Function SavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType) As Boolean
     Dim tc As List(Of GenericTimecard) = GetTimeCards(payPeriodEnding.AddDays(-13), True)
     Dim tsds As DataSet = GetRawTimestoreSavedTimeData(payPeriodEnding)
     'If Not UpdateFinplusWithSavedTime(tsds, UseProduction) Then Return False
-    UpdateFinplusWithSavedTime(tsds, UseProduction)
-    Return InsertSavedTimeToFinplus(tsds, UseProduction)
+    UpdateFinplusWithSavedTime(tsds, cst)
+    Return InsertSavedTimeToFinplus(tsds, cst)
 
   End Function
 
@@ -1603,7 +1734,8 @@ WHERE access_type >= " & accessType
             gtdl.Add(New GenericTimeData(t, f))
           Next
           ' public works test
-        Case "3701", "3709", "3711", "3712" ' public works
+          ' Removed 11/13/2018
+          'Case "3701", "3709", "3711", "3712" ' public works
 
 
         Case Else ' timecard / timestore

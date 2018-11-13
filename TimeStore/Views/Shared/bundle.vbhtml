@@ -259,9 +259,9 @@
              layout-wrap
              flex="55">
           <md-input-container ng-if="timecard.isPubWorks">
-            <label>Lunch Start {{ TCTD.DepartmentNumber === "3701" ? "(30 Mins)" : "(1 Hour)"}}</label>
+            <label>Lunch Start {{ TCTD.DepartmentNumber === "3701" || TCTD.DepartmentNumber === "3711" || TCTD.DepartmentNumber === "3712"  ? "(30 Mins)" : "(1 Hour)"}}</label>
             <md-select ng-disabled="lunchTimeList.length === 0 || timecard.selectedTimes.length === 0 || timecard.selectedTimes.length > 4"
-                       md-on-close="calculateTotalHours()"                                              
+                       md-on-close="calculateTotalHours()"
                        ng-model="TCTD.SelectedLunchTime">
               <md-option value="-1">No Lunch Taken</md-option>
               <md-option ng-repeat="t in lunchTimeList track by t.index"
@@ -297,7 +297,7 @@
             </md-input-container>
             <p ng-if="disasterChoiceError.length > 0"
                flex="100"
-               layout="row"               
+               layout="row"
                class="warn">
               {{ disasterChoiceError }}
             </p>
@@ -363,7 +363,42 @@
             {{ disasterTimeError }}
           </p>
           <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
-          <p>You must enter a comment indicating your duties relating to the disaster.</p>
+          <md-input-container flex="40">
+            <label>Disaster Work Type</label>
+            <md-select md-on-close="checkDisasterWorkType()"
+                       flex="100"
+                       ng-model="TCTD.DisasterWorkType"
+                       placeholder="Disaster Work Type"
+                       class="bigpaddingbottom">
+              <md-option value="Debris Pickup">
+                Debris Pickup
+              </md-option>
+              <md-option value="Debris Monitoring">
+                Debris Monitoring
+              </md-option>
+              <md-option value="Call Center">
+                Call Center
+              </md-option>
+              <md-option value="Working in EOC">
+                Working in EOC
+              </md-option>
+              <md-option value="Building Repair">
+                Building Repair
+              </md-option>
+              <md-option value="Road Repair">
+                Road Repair
+              </md-option>
+              <md-option value="Other Repair">
+                Other Repair
+              </md-option>
+              <md-option value="Prep for Storm">
+                Prep for Storm
+              </md-option>
+              <md-option value="Not Listed">
+                Not Listed
+              </md-option>
+            </md-select>
+          </md-input-container>
         </div>
       </div>
     </div>
@@ -371,7 +406,7 @@
     <div flex="100"
          ng-if="timecard.isPubWorks">
       <div style="margin-top: .75em; margin-bottom: .75em;"
-           class="short-toolbar my-primary"
+           class="short-toolbar my-accent"
            flex="100"
            layout="row"
            layout-align="start center">
@@ -383,234 +418,232 @@
       <span layout="row"
             layout-align="center center"
             flex="25">
-        <md-checkbox ng-true-value="1"
-                     ng-false-value="0"
+        <md-checkbox ng-disabled="myAccess.Raw_Access_Type  === 1 || myAccess.EmployeeID === parseInt(timecard.employeeId)"
+                     ng-change="calculateTotalHours()"
                      ng-model="TCTD.OutOfClass">
           Out of Class Pay
         </md-checkbox>
       </span>
     </div>
+    <div ng-show="TCTD.showOnCall"
+         ng-click="Toggle_OnCallHours()"
+         style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
+         flex="100"
+         class="short-toolbar my-accent"
+         layout="row"
+         layout-align="start center">
+      <span flex="5"></span>
+      <h5>
+        On Call Hours - Show / Hide
+      </h5>
+    </div>
 
+    <div ng-show="toggleOnCall"
+         style="margin-top: .5em;"
+         layout="row"
+         layout-align="center center"
+         layout-wrap
+         flex="100">
 
-      <div ng-show="TCTD.showOnCall"
-           ng-click="Toggle_OnCallHours()"
-           style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
+      <md-input-container ng-show="isCurrentPPD"
+                          flex="40">
+        <label>On Call Hours Worked</label>
+        <md-select md-on-close="calculateTotalHours()"
+                   flex="40"
+                   multiple
+                   ng-model="TCTD.OnCallSelectedTimes"
+                   placeholder="On Call Hours Worked"
+                   class="bigpaddingbottom">
+          <md-option ng-repeat="t in fullTimeList track by t.index"
+                     ng-value="t.index">
+            <span class="md-text">
+              {{t.display}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+      <div layout="column"
+           layout-align="center center"
+           layout-gt-md="row"
+           layout-align-gt-md="space-around center"
+           layout-wrap
+           flex="55">
+
+        <hours-display tctd="TCTD" hours="TCTD.OnCallWorkHours"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.OnCallMinimumHours"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.OnCallTotalHours"></hours-display>
+
+      </div>
+
+    </div>
+
+    <div flex="100">
+
+      <div style="margin-top: .25em; margin-bottom: .25em;"
            flex="100"
            class="short-toolbar my-accent"
            layout="row"
            layout-align="start center">
         <span flex="5"></span>
-        <h5>
-          On Call Hours - Show / Hide
+        <h5 flex
+            style="text-align: left;">
+          Non-Working Hours
         </h5>
+        <span style="text-align: center; margin-right: 1em;">
+          Banked Vacation: {{ timecard.bankedVacation }}
+          <span ng-if="vacationUsed > 0">
+            ( {{ vacationUsed }} hours )
+          </span>
+        </span>
+        <span style="text-align: center; margin-right: 1em;">
+          Banked Sick: {{ timecard.bankedSick }}
+          <span ng-if="sickUsed > 0">
+            ( {{ sickUsed }} hours )
+          </span>
+        </span>
+        <span style="text-align: center; margin-right: 1em;"
+              ng-if="timecard.exemptStatus !== 'Exempt'">
+          Banked Comp:{{ timecard.bankedComp }}
+          <span ng-if="bankedCompWeek1 > 0">
+            + {{ bankedCompWeek1 }} hours from Week 1
+          </span>
+          <span ng-if="compUsed > 0">
+            ( {{ compUsed }} hours )
+          </span>
+        </span>
       </div>
 
-      <div ng-show="toggleOnCall"
-           style="margin-top: .5em;"
+      <div style="margin: .5em .5em .5em .5em;"
            layout="row"
-           layout-align="center center"
+           layout-align="start center"
            layout-wrap
            flex="100">
 
-        <md-input-container ng-show="isCurrentPPD"
-                            flex="40">
-          <label>On Call Hours Worked</label>
-          <md-select md-on-close="calculateTotalHours()"
-                     flex="40"
-                     multiple
-                     ng-model="TCTD.OnCallSelectedTimes"
-                     placeholder="On Call Hours Worked"
-                     class="bigpaddingbottom">
-            <md-option ng-repeat="t in fullTimeList track by t.index"
-                       ng-value="t.index">
-              <span class="md-text">
-                {{t.display}}
-              </span>
-            </md-option>
-          </md-select>
-        </md-input-container>
-        <div layout="column"
-             layout-align="center center"
-             layout-gt-md="row"
-             layout-align-gt-md="space-around center"
-             layout-wrap
-             flex="55">
-
-          <hours-display tctd="TCTD" hours="TCTD.OnCallWorkHours"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.OnCallMinimumHours"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.OnCallTotalHours"></hours-display>
-
-        </div>
-
+        <hours-display tctd="TCTD" hours="TCTD.VacationHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.SickHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.SickFamilyLeave" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.CompTimeUsed" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.LWOPHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.ScheduledLWOPHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.LWOPSuspensionHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.HolidayHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.SickLeavePoolHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display tctd="TCTD" hours="TCTD.TermHours" calc="calculateTotalHours()"></hours-display>
       </div>
 
-      <div flex="100">
 
-        <div style="margin-top: .25em; margin-bottom: .25em;"
+      <div>
+        <div ng-click="Toggle_AdminHours()"
+             style="margin-top: .5em; margin-bottom: .5em; cursor: pointer;"
              flex="100"
              class="short-toolbar my-accent"
              layout="row"
              layout-align="start center">
           <span flex="5"></span>
-          <h5 flex
-              style="text-align: left;">
-            Non-Working Hours
+          <h5>
+            Administrative Leave - Show / Hide
           </h5>
-          <span style="text-align: center; margin-right: 1em;">
-            Banked Vacation: {{ timecard.bankedVacation }}
-            <span ng-if="vacationUsed > 0">
-              ( {{ vacationUsed }} hours )
-            </span>
-          </span>
-          <span style="text-align: center; margin-right: 1em;">
-            Banked Sick: {{ timecard.bankedSick }}
-            <span ng-if="sickUsed > 0">
-              ( {{ sickUsed }} hours )
-            </span>
-          </span>
-          <span style="text-align: center; margin-right: 1em;"
-                ng-if="timecard.exemptStatus !== 'Exempt'">
-            Banked Comp:{{ timecard.bankedComp }}
-            <span ng-if="bankedCompWeek1 > 0">
-              + {{ bankedCompWeek1 }} hours from Week 1
-            </span>
-            <span ng-if="compUsed > 0">
-              ( {{ compUsed }} hours )
-            </span>
-          </span>
         </div>
 
-        <div style="margin: .5em .5em .5em .5em;"
+        <div style="margin-top: .5em; margin-bottom: .5em;"
+             ng-show="TCTD.showAdminHours === true"
              layout="row"
              layout-align="start center"
              layout-wrap
              flex="100">
 
-          <hours-display tctd="TCTD" hours="TCTD.VacationHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.SickHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.SickFamilyLeave" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.CompTimeUsed" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.LWOPHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.ScheduledLWOPHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.LWOPSuspensionHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.HolidayHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.SickLeavePoolHours" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.TermHours" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminBereavement" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
+          <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
+
         </div>
-
-
-        <div>
-          <div ng-click="Toggle_AdminHours()"
-               style="margin-top: .5em; margin-bottom: .5em; cursor: pointer;"
-               flex="100"
-               class="short-toolbar my-accent"
-               layout="row"
-               layout-align="start center">
-            <span flex="5"></span>
-            <h5>
-              Administrative Leave - Show / Hide
-            </h5>
-          </div>
-
-          <div style="margin-top: .5em; margin-bottom: .5em;"
-               ng-show="TCTD.showAdminHours === true"
-               layout="row"
-               layout-align="start center"
-               layout-wrap
-               flex="100">
-
-            <hours-display tctd="TCTD" hours="TCTD.AdminBereavement" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
-            <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
-
-          </div>
-        </div>
-
       </div>
 
-      <div ng-if="!timecard.isPubWorks || myAccess.Raw_Access_Type > 1"
-           layout="row"
-           layout-align="space-around center"
-           flex="100"
-           layout-wrap>
+    </div>
 
-        <hours-display tctd="TCTD" hours="TCTD.DoubleTimeHours" calc="calculateTotalHours()"></hours-display>
+    <div ng-if="!timecard.isPubWorks || myAccess.Raw_Access_Type > 1"
+         layout="row"
+         layout-align="space-around center"
+         flex="100"
+         layout-wrap>
 
-        <span ng-show="TCTD.showVehicle === true"
-              layout="row"
-              layout-align="center center"
-              flex="25">
-          <md-checkbox ng-true-value="1"
-                       ng-false-value="0"
-                       ng-model="TCTD.Vehicle">
-            Take Home Vehicle
-          </md-checkbox>
-        </span>
+      <hours-display tctd="TCTD" hours="TCTD.DoubleTimeHours" calc="calculateTotalHours()"></hours-display>
 
-      </div>
-      <timecard-warnings flex="100"
-                         alignheader="start"
-                         headerclass="my-accent"
-                         dl="warningList"
-                         title="Warnings"></timecard-warnings>
+      <span ng-show="TCTD.showVehicle === true"
+            layout="row"
+            layout-align="center center"
+            flex="25">
+        <md-checkbox ng-true-value="1"
+                     ng-false-value="0"
+                     ng-model="TCTD.Vehicle">
+          Take Home Vehicle
+        </md-checkbox>
+      </span>
 
-      <timecard-warnings flex="100"
-                         alignheader="start"
-                         headerclass="warn"
-                         dl="errorList"
-                         title="Errors"></timecard-warnings>
-      <div layout="row"
-           layout-align="center center"
-           layout-wrap
-           flex="100">
-        <md-input-container class="md-whiteframe-z1 margin-left-bottom"
-                            flex="50">
-          <label>
-            <md-icon aria-label="comment icon"
-                     md-svg-src="images/ic_insert_comment_24px.svg">
-            </md-icon>
-            Add a Comment for this day
-          </label>
-          <input ng-model-options="{ debounce: 1500 }"
-                 ng-model="TCTD.Comment"
-                 name="comment"
-                 ng-change="calculateTotalHours()"
-                 md-maxlength="100" />
-        </md-input-container>
-        <span flex></span>
-        <md-button ng-click="resetTimes()"
-                   class="md-raised">
-          Reset
-          <md-icon aria-label="reset data icon"
-                   md-svg-src="images/ic_settings_backup_restore_24px.svg">
+    </div>
+    <timecard-warnings flex="100"
+                       alignheader="start"
+                       headerclass="my-accent"
+                       dl="warningList"
+                       title="Warnings"></timecard-warnings>
+
+    <timecard-warnings flex="100"
+                       alignheader="start"
+                       headerclass="warn"
+                       dl="errorList"
+                       title="Errors"></timecard-warnings>
+    <div layout="row"
+         layout-align="center center"
+         layout-wrap
+         flex="100">
+      <md-input-container class="md-whiteframe-z1 margin-left-bottom"
+                          flex="50">
+        <label>
+          <md-icon aria-label="comment icon"
+                   md-svg-src="images/ic_insert_comment_24px.svg">
+          </md-icon>
+          Add a Comment for this day
+        </label>
+        <input ng-model-options="{ debounce: 1500 }"
+               ng-model="TCTD.Comment"
+               name="comment"
+               ng-change="calculateTotalHours()"
+               md-maxlength="100" />
+      </md-input-container>
+      <span flex></span>
+      <md-button ng-click="resetTimes()"
+                 class="md-raised">
+        Reset
+        <md-icon aria-label="reset data icon"
+                 md-svg-src="images/ic_settings_backup_restore_24px.svg">
+        </md-icon>
+      </md-button>
+      <div>
+        <md-button ng-disabled="errorList.length > 0"
+                   ng-click="saveTCTD()"
+                   class="md-raised md-warn">
+          Save
+          <md-icon aria-label="save icon"
+                   md-svg-src="images/ic_save_24px.svg">
           </md-icon>
         </md-button>
-        <div>
-          <md-button ng-disabled="errorList.length > 0"
-                     ng-click="saveTCTD()"
-                     class="md-raised md-warn">
-            Save
-            <md-icon aria-label="save icon"
-                     md-svg-src="images/ic_save_24px.svg">
-            </md-icon>
-          </md-button>
-          <md-tooltip ng-if="errorList.length > 0">
-            Unable to Save Changes while errors are present.
-          </md-tooltip>
-        </div>
+        <md-tooltip ng-if="errorList.length > 0">
+          Unable to Save Changes while errors are present.
+        </md-tooltip>
       </div>
-      <div layout="row"
-           layout-align="end center"
-           layout-wrap
-           flex="100">
-        {{ responseMessage }}
-      </div>
+    </div>
+    <div layout="row"
+         layout-align="end center"
+         layout-wrap
+         flex="100">
+      {{ responseMessage }}
+    </div>
 
-</form>
+  </form>
 </script>
 <script type="text/ng-template" id="AddCompTime.directive.tmpl.html">
   <div style="margin-top: .5em;"
@@ -733,6 +766,127 @@
                ng-disabled="hours.disabled"/>
     </md-input-container>
 </script>
+<script type="text/ng-template" id="TimeclockView.controller.tmpl.html">
+
+  <date-selector title="Work Date:"
+                 label="Select Work Date"
+                 datetype="day"
+                 flex="100">
+  </date-selector>
+  <div layout="row"
+       layout-align="start center"
+       layout-wrap
+       flex="100">
+    <div layout="row"
+         layout-align="center center"
+         class="short-toolbar my-accent"
+         flex-gt-md="50"
+         flex="100">
+      <h5 style="text-align: center;">
+        Supervisor:
+      </h5>
+    </div>
+    <div flex="50"
+         layout="row"
+         layout-align="center center">
+      <div layout="row"
+           layout-align="center center"
+           flex="100">
+
+        <md-input-container flex="50">
+          <label>Select A Supervisor</label>
+          <md-select md-on-close="showTimeclockData()"
+                     flex="100"
+                     ng-model="supervisor">
+            <md-option ng-repeat="s in supervisors"
+                       ng-value="s">
+              {{s}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+      </div>
+    </div>
+  </div>
+  <div flex-offset="5"
+       flex="90"
+       layout="row"
+       layout-align="start center"
+       layout-wrap
+       ng-hide="supervisor === ''">
+    <md-list layout="row"
+             layout-align="start center"
+             layout-wrap
+             flex="100">
+      <md-list-item flex="100"
+                    class="md-no-proxy">
+        <span flex="100"
+              layout="row"
+              layout-align="center center">
+          <span flex="10">
+            Dept
+          </span>
+          <span flex="20">
+            Name
+          </span>
+          <span flex="35">
+            Work Times
+          </span>
+          <span flex="15">
+            Any Non Working Hours
+          </span>
+          <span class="centerme"
+                flex="10">
+            Start Time Issue
+          </span>
+          <span class="centerme"
+                flex="10">
+            End Time Issue
+          </span>
+        </span>
+        <md-divider></md-divider>
+      </md-list-item>
+      <md-list-item flex="100"
+                    class="md-no-proxy"
+                    ng-repeat="f in filteredData">
+        <span flex="100"
+              layout="row"
+              layout-align="center center">
+          <span flex="10">
+            {{f.department_id}}
+          </span>
+          <span flex="20">
+            <a style="text-decoration: underline; cursor: pointer;"
+               layout="row"
+               layout-align="start center"
+               ng-click="addTimeGo(f.employee_id)"
+               flex>
+              {{f.employee_name}}
+            </a>
+
+          </span>
+          <span flex="35">
+            {{f.work_times}}
+          </span>
+          <span flex="15">
+            {{f.non_working_hours}}
+          </span>
+          <span flex="10">
+            {{ f.punch_in_issue}}
+          </span>
+          <span flex="10">
+            {{ f.punch_out_issue}}
+          </span>
+        </span>
+        <md-divider></md-divider>
+      </md-list-item>
+    </md-list>
+
+
+  </div>
+
+</script>
+
 <script type="text/ng-template" id="Approval.tmpl.html">
   <div flex="100"
        layout="row"
@@ -1450,58 +1604,80 @@
     </div>
 </script>
 <script type="text/ng-template" id="FinanceTools.tmpl.html">
+  <div layout="row"
+       layout-align="center center"
+       flex="100"
+       layout-wrap>
+    <md-progress-linear ng-if="showProgress === true"
+                        flex="100"
+                        md-mode="indeterminate">
+    </md-progress-linear>
+
     <div layout="row"
          layout-align="center center"
-         flex="100"
-         layout-wrap>
-        <md-progress-linear ng-if="showProgress === true"
-                            flex="100"
-                            md-mode="indeterminate">
-        </md-progress-linear>
+         layout-padding
+         layout-wrap
+         flex="90">
+      <md-radio-group flex="100"
+                      layout="row"
+                      layout-align="center center"
+                      class="smaller"
+                      ng-model="serverType">
+        <md-radio-button value="normal">
+          Normal Finplus Server
+        </md-radio-button>
+        <md-radio-button value="new">
+          New Finplus Server
+        </md-radio-button>
+        <md-radio-button value="training">
+          Training Database
+        </md-radio-button>
+      </md-radio-group>
+    </div>
+      <div layout="row"
+           layout-align="center center"
+           layout-padding
+           layout-wrap
+           flex="90">
+        <md-select aria-label="Select Pay Period"
+                   flex="40"
+                   ng-model="selectedPayPeriod">
+          <md-select-label>
+            Select the Pay Period to Post {{ selectedPayPeriod }}
+          </md-select-label>
+          <md-option ng-repeat="pp in payperiodlist"
+                     ng-value="pp">
+            {{ pp }}
+          </md-option>
+        </md-select>
+        <md-button ng-click="PostToFinance()"
+                   class="md-warn md-raised">
+          Post Timestore Data to Finplus
+        </md-button>
         <div layout="row"
              layout-align="center center"
-             layout-padding
-             layout-wrap
-             flex="90">
-            <md-select aria-label="Select Pay Period"
-                       flex="40"
-                       ng-model="selectedPayPeriod">
-                <md-select-label>
-                    Select the Pay Period to Post {{ selectedPayPeriod }}
-                </md-select-label>
-                <md-option ng-repeat="pp in payperiodlist"
-                           ng-value="pp">
-                    {{ pp }}
-                </md-option>
-            </md-select>
-            <md-button ng-click="PostToFinance()"
-                       class="md-warn md-raised">
-                Post Timestore Data to Finplus
-            </md-button>
-            <div layout="row"
-                 layout-align="center center"
-                 flex="50">
-                Clicking this button will post all of the data from Timestore for the selected pay period to the Finplus database.
-            </div>
-            <div ng-if="postResult.length > 0"
-                 flex="100"
-                 layout="row"
-                 layout-align="center center"
-                 layout-wrap
-                 layout-padding
-                 layout-margin>
-                <span layout="row"
-                      layout-align="end center"
-                      flex="25">
-                    Post Result:
-                </span>
-                <span layout="row"
-                      layout-align="start center"
-                      flex="50">
-                    {{ postResult }}
-                </span>
-            </div>
+             flex="50">
+          Clicking this button will post all of the data from Timestore for the selected pay period to the Finplus database.
         </div>
+        <div ng-if="postResult.length > 0"
+             flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap
+             layout-padding
+             layout-margin>
+          <span layout="row"
+                layout-align="end center"
+                flex="25">
+            Post Result:
+          </span>
+          <span layout="row"
+                layout-align="start center"
+                flex="50">
+            {{ postResult }}
+          </span>
+        </div>
+      </div>
     </div>
 </script>
 <script type="text/ng-template" id="Incentives.tmpl.html">

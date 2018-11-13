@@ -23,14 +23,13 @@ Namespace Controllers
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
+      'Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
       Dim myCookie As New HttpCookie("employeeid", EID.ToString)
       myCookie.Expires = Today.AddYears(1)
       myCookie.HttpOnly = False
       HttpContext.Response.SetCookie(myCookie)
       Return Timecard_Access.GetTimeCardAccess(EID)
     End Function
-
-
 
     Function Index() As ActionResult
       Dim x As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
@@ -46,8 +45,6 @@ Namespace Controllers
     Function CurrentEmployee() As JsonNetResult
       Return Employee(AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name), 0)
     End Function
-
-
 
     <HttpPost>
     <OutputCache(VaryByParam:="*", Duration:=0, NoStore:=True)>
@@ -333,6 +330,18 @@ Namespace Controllers
       Return True
     End Function
 
+    <HttpPost>
+    Public Function TimeclockData(WorkDate As Date) As JsonNetResult
+      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+      Dim jnr As New JsonNetResult
+      If tca.Raw_Access_Type < Timecard_Access.Access_Types.Department_1 Then
+        jnr.Data = ""
+      Else
+        jnr.Data = Timeclock_Data.View(WorkDate, tca.EmployeeID)
+      End If
+      Return jnr
+    End Function
+
     Private Function GetApprovalData(type As String, ppdIndex As Integer, Optional unRestricted As Boolean = False) As JsonNetResult
       ' Unrestricted is used when we want to allow someone to view their staff's
       ' data regardless of who approved it.
@@ -346,12 +355,7 @@ Namespace Controllers
         payperiodstart = GetPayPeriodStart(Today.AddDays(ppdIndex * 14))
       End If
       Dim payperiodend As Date = payperiodstart.AddDays(13)
-      ' DEBUG LINE TO BE REMOVED
-#If DEBUG Then
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
-#Else
-      Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
-#End If
 
       'Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
 
@@ -607,7 +611,7 @@ Namespace Controllers
         Dim myEID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
         'Dim myTca As New Timecard_Access(myEID, Request)
         Dim myTca = Timecard_Access.GetTimeCardAccess(myEID)
-        If Not SavedTCTD.Validate() Then Return New HttpStatusCodeResult(400)
+        If Not SavedTCTD.Validate(myTca, Request.LogonUserIdentity.Name) Then Return New HttpStatusCodeResult(400)
         If myTca.Check_Access_To_EmployeeId(SavedTCTD.EmployeeID) Then
           If myTca.EmployeeID <> SavedTCTD.EmployeeID AndAlso
                     (myTca.DepartmentsToApprove.Contains("VIEW") Or
