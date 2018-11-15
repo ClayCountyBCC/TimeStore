@@ -736,19 +736,19 @@ Namespace Controllers
           Select Case myLC.MyDept
             Case "1805", "3701A"
               myLC.leaveData = (From a In hta
-                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                Where (tca.DepartmentsToApprove.Contains(a.dept_id) Or
                                   tca.ReportsToList.Contains(a.employee_id) Or
                                   (a.dept_id = "1805" Or a.dept_id = "3701A"))
                                 Select a).ToList
             Case "1804", "1803"
               myLC.leaveData = (From a In hta
-                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                Where (tca.DepartmentsToApprove.Contains(a.dept_id) Or
                                   tca.ReportsToList.Contains(a.employee_id) Or
                                   (a.dept_id = "1804" Or a.dept_id = "1803"))
                                 Select a).ToList
             Case Else
               myLC.leaveData = (From a In hta
-                                Where (tca.DepartmentsToApprove.Contains(myLC.MyDept) Or
+                                Where (tca.DepartmentsToApprove.Contains(a.dept_id) Or
                                   tca.ReportsToList.Contains(a.employee_id) Or
                                   a.dept_id = myLC.MyDept) Select a).ToList
           End Select
@@ -766,8 +766,8 @@ Namespace Controllers
           '            Or a.reports_to = tca.EmployeeID) And a.employee_id <> tca.EmployeeID _
           '            And a.access_type < tca.Raw_Access_Type Select a).ToList
           myLC.leaveData = (From a In hta
-                            Where (tca.DepartmentsToApprove.Contains(a.dept_id) Or
-                              tca.ReportsToList.Contains(a.employee_id)) And
+                            Where tca.DepartmentsToApprove.Contains(a.dept_id) Or
+                              tca.ReportsToList.Contains(a.employee_id) And
                               a.employee_id <> tca.EmployeeID And
                               a.access_type < tca.Raw_Access_Type Select a).ToList
         ElseIf tca.ReportsToList.Count > 0 Then
@@ -876,58 +876,52 @@ Namespace Controllers
       Dim fl As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
       Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
+      Dim baseBdayList As List(Of Namedday) = Namedday.GetAllCachedBirthdays()
       Dim jnr As New JsonNetResult
       ' This section of code is for finding active employees that are in Finplus
       ' but aren't in Active Directory.
       Try
-        'Dim s As String = ""
-        'Try
-        '  Dim tmpfl = From f In GetCachedEmployeeDataFromFinplus()
-        '              Where Not f.IsTerminated
-        '              Select f
-        '  For Each f In tmpfl
-        '    If Not aded.ContainsKey(f.EmployeeId) Then
-        '      s &= f.EmployeeName & "," & f.EmployeeId.ToString & "," & f.DepartmentName & "," & f.JobTitle & vbCrLf
-        '    End If
-        '  Next
-        '  If s.Length > 0 Then
-        '    Dim e As New ErrorLog("Missing Employees from AD", s, "", "", "")
-        '  End If
-        'Catch ex As Exception
-        '  Dim e As New ErrorLog(ex, "")
-        'End Try
 
         If fl.Count = 1 Then
           Dim dept As String = fl.First.Department
-          fl = GetCachedEmployeeDataFromFinplus()
-          Dim flad = (From f In fl
-                      Where Not f.IsTerminated And
-                        f.BirthDate <> Date.MinValue And
-                        aded.ContainsKey(f.EmployeeId)
-                      Select f.BirthDate, f.Department, f.EmployeeId)
+          'fl = GetCachedEmployeeDataFromFinplus()
+
+          'Dim flad = (From f In fl
+          '            Where Not f.IsTerminated And
+          '              f.BirthDate <> Date.MinValue And
+          '              aded.ContainsKey(f.EmployeeId)
+          '            Select f.BirthDate, f.Department, f.EmployeeId)
           Dim bdayList As List(Of Namedday)
           If tca.DepartmentsToApprove.Contains("ALL") Then
             'bdayList = (From f In flad Select f.Department, f.Name, f.BirthDate)
 
-            bdayList = (From f In flad
-                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
+            bdayList = (From b In baseBdayList Select b).ToList()
 
           ElseIf tca.DepartmentsToApprove.Count > 0 Then
-            bdayList = (From f In flad
-                        Where tca.DepartmentsToApprove.Contains(f.Department) And
-                        f.Department = dept
-                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
+            bdayList = (From b In baseBdayList
+                        Where tca.DepartmentsToApprove.Contains(b.Dept) Or
+                          b.Dept = dept
+                        Select b).ToList()
+
+            'bdayList = (From f In flad
+            '            Where tca.DepartmentsToApprove.Contains(f.Department) And
+            '            f.Department = dept
+            '            Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
 
           Else
-            bdayList = (From f In flad Where f.Department = dept
-                        Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
+            'bdayList = (From f In flad Where f.Department = dept
+            '            Select New Namedday(aded(f.EmployeeId).Name, f.BirthDate, f.Department)).ToList
+            bdayList = (From b In baseBdayList
+                        Where b.Dept = dept
+                        Select b).ToList()
           End If
 
-          Dim ndList As New List(Of Namedday)
-          For Each b In bdayList
-            ndList.AddRange(b.ToList)
-          Next
-          jnr.Data = ndList
+          'Dim ndList As New List(Of Namedday)
+          'For Each b In bdayList
+          '  ndList.AddRange(b.ToList)
+          'Next
+          'jnr.Data = ndList
+          jnr.Data = bdayList
         Else
           ' if we don't get the expected information from finplus, let's just return this user's leave requests.
           jnr.Data = ""

@@ -35,5 +35,46 @@
       Next
       Return bl
     End Function
+
+    Public Shared Function GetAllCachedBirthdays() As List(Of Namedday)
+      Dim cip As New Runtime.Caching.CacheItemPolicy
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(12)
+      Return myCache.GetItem("birthdays", cip)
+    End Function
+
+    Public Shared Function GetAllBirthdays() As List(Of Namedday)
+
+      ' This section of code is for finding active employees that are in Finplus
+      ' but aren't in Active Directory.
+      Try
+
+        Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
+        Dim fl = GetCachedEmployeeDataFromFinplus()
+        Dim flad = (From f In fl
+                    Where Not f.IsTerminated And
+                      f.BirthDate <> Date.MinValue And
+                      aded.ContainsKey(f.EmployeeId)
+                    Select f.BirthDate, f.Department, f.EmployeeId)
+        Dim bdayList As New List(Of Namedday)
+        For Each f In flad
+          Dim m As Integer = f.BirthDate.Month
+          Dim d As Integer = f.BirthDate.Day
+          If m = 2 And d = 29 Then d = 28
+          Dim name As String = aded(f.EmployeeId).Name
+          bdayList.Add(New Namedday(name, New Date(Now.Year - 1, m, d), f.Department))
+          bdayList.Add(New Namedday(name, New Date(Now.Year, m, d), f.Department))
+          bdayList.Add(New Namedday(name, New Date(Now.Year + 1, m, d), f.Department))
+        Next
+
+        Return bdayList
+
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
+        Return New List(Of Namedday)
+      End Try
+    End Function
+
+
+
   End Class
 End Namespace

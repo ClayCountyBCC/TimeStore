@@ -45,6 +45,8 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "birthdays"
+          Return Namedday.GetAllBirthdays()
         Case "allaccessdict"
           Return Timecard_Access.GetAllAccess_Dict()
         Case "allaccesslist"
