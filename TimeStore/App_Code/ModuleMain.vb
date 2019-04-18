@@ -97,6 +97,10 @@ Public Module ModuleMain
         ' Christmas Eve         Dec 24
         HolidayList.Add(DateSerial(vYear, 12, 24))
     End Select
+    Select Case vYear
+      Case 2018
+        HolidayList.Add(DateSerial(2018, 12, 31))
+    End Select
 
     ' Christmas Day         Dec 25
     HolidayList.Add(DateSerial(vYear, 12, 25))

@@ -72,6 +72,7 @@
       $scope.filteredDataByDateAndDeptList = [];
     }
 
+
     function processLeaveRequestData(data)
     {
       console.log('leave data', data);

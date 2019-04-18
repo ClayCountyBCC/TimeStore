@@ -784,7 +784,7 @@
           End If
         End If
       End If
-      If Total_Hours_Week2 <= HoursNeededForOvertimeByWeek AndAlso Unscheduled_Overtime.TotalHours_Week1 > 0 Then
+      If Total_Hours_Week2 <= HoursNeededForOvertimeByWeek AndAlso Unscheduled_Overtime.TotalHours_Week2 > 0 Then
         Unscheduled_Overtime.Move_Week2(Unscheduled_Overtime.TotalHours_Week2, _unscheduled_regular_overtime, Timelist)
       End If
       If (Total_Non_Working_Hours_Week2 > (Scheduled_Regular_Overtime.TotalHours_Week2 + Comp_Time_Banked.TotalHours_Week2 + Unscheduled_Regular_Overtime.TotalHours_Week2) -
@@ -1304,6 +1304,16 @@
 
 
         Case TelestaffProfileType.Office
+
+          If Unscheduled_Overtime.TotalHours_Week1 + Scheduled_Overtime.TotalHours_Week1 > 0 And
+           Total_Hours_Week1 < HoursNeededForOvertimeByWeek Then
+            TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Too many overtime hours for hours worked in Week 1."))
+          End If
+
+          If Unscheduled_Overtime.TotalHours_Week2 + Scheduled_Overtime.TotalHours_Week2 > 0 And
+           Total_Hours_Week2 < HoursNeededForOvertimeByWeek Then
+            TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Too many overtime hours for hours worked in Week 2."))
+          End If
 
           If Not e.IsExempt And (e.Regular.TotalHours + Vacation.TotalHours + Sick.TotalHours > 80) Then
             TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Too many Regular hours detected."))

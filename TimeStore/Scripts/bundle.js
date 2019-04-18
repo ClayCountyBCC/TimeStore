@@ -48841,7 +48841,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       var classVehicle = function ()
       {
-        return ["1221", "0055", "0606", "0605"]; // 1055 for testing
+        return ["1290", "1221", "0055", "0606", "0605"]; // 1055 for testing
       };
 
       var classOnCall = function ()
@@ -48867,8 +48867,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           { class: "1429", callMin: 2 },
           { class: "1430", callMin: 2 },
           { class: "1431", callMin: 2 },
-          { class: "1435", callMin: 2 },
-          { class: "1460", callMin: 2 }
+          { class: "1460", callMin: 2 },
+          { class: "1435", callMin: 2 }, // Signmaking supervisor
+          { class: "1432", callMin: 3 }, // lead signmaker
+          { class: "1433", callMin: 3 }  // signmaker
         ];
       };
 
@@ -49940,7 +49942,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         // in order for it to be a holiday.
         // for department 2801, Animal Control, we want to allow them to enter a holiday in
         // anytime during the week of the holiday.
-        if (tc.departmentNumber === "2801" || tc.employeeID === "2850")
+        if (tc.departmentNumber === "2801" || tc.employeeID === "2850" || tc.classify === "0840")
         {
           // We do this by looking at each date in tc.HolidaysInPPD and calculate the week for each one
           // using calculateWeek(payperiodstart, holiday).
@@ -52630,6 +52632,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             case "HireDate":
               return moment(row[fieldName]).format("M/D/YYYY HH:mm A");
             //break;
+            case "Comment":
+              return "";
             default:
               return row[fieldName] || "";
           }
@@ -53070,6 +53074,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.selectedId = -1;
       $scope.filteredDataByDateAndDeptList = [];
     }
+
 
     function processLeaveRequestData(data)
     {

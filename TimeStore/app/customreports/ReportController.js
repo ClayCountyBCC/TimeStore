@@ -252,6 +252,8 @@
             case "HireDate":
               return moment(row[fieldName]).format("M/D/YYYY HH:mm A");
             //break;
+            case "Comment":
+              return "";
             default:
               return row[fieldName] || "";
           }

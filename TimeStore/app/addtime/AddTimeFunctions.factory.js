@@ -551,7 +551,7 @@
         // in order for it to be a holiday.
         // for department 2801, Animal Control, we want to allow them to enter a holiday in
         // anytime during the week of the holiday.
-        if (tc.departmentNumber === "2801" || tc.employeeID === "2850")
+        if (tc.departmentNumber === "2801" || tc.employeeID === "2850" || tc.classify === "0840")
         {
           // We do this by looking at each date in tc.HolidaysInPPD and calculate the week for each one
           // using calculateWeek(payperiodstart, holiday).

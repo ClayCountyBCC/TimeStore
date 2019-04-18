@@ -766,8 +766,8 @@ Namespace Controllers
           '            Or a.reports_to = tca.EmployeeID) And a.employee_id <> tca.EmployeeID _
           '            And a.access_type < tca.Raw_Access_Type Select a).ToList
           myLC.leaveData = (From a In hta
-                            Where tca.DepartmentsToApprove.Contains(a.dept_id) Or
-                              tca.ReportsToList.Contains(a.employee_id) And
+                            Where (tca.DepartmentsToApprove.Contains(a.dept_id) Or
+                              tca.ReportsToList.Contains(a.employee_id)) And
                               a.employee_id <> tca.EmployeeID And
                               a.access_type < tca.Raw_Access_Type Select a).ToList
         ElseIf tca.ReportsToList.Count > 0 Then

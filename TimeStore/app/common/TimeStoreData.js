@@ -277,7 +277,7 @@
 
       var classVehicle = function ()
       {
-        return ["1221", "0055", "0606", "0605"]; // 1055 for testing
+        return ["1290", "1221", "0055", "0606", "0605"]; // 1055 for testing
       };
 
       var classOnCall = function ()
@@ -303,8 +303,10 @@
           { class: "1429", callMin: 2 },
           { class: "1430", callMin: 2 },
           { class: "1431", callMin: 2 },
-          { class: "1435", callMin: 2 },
-          { class: "1460", callMin: 2 }
+          { class: "1460", callMin: 2 },
+          { class: "1435", callMin: 2 }, // Signmaking supervisor
+          { class: "1432", callMin: 3 }, // lead signmaker
+          { class: "1433", callMin: 3 }  // signmaker
         ];
       };
 
