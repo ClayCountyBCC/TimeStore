@@ -23,7 +23,6 @@ Namespace Controllers
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
-      'Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
       Dim myCookie As New HttpCookie("employeeid", EID.ToString)
       myCookie.Expires = Today.AddYears(1)
       myCookie.HttpOnly = False

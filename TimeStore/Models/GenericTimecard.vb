@@ -449,22 +449,41 @@
 
     Public ReadOnly Property Data_Type As String
       Get
-        If Current_Timecard_Data.Count = 0 Then
-          Select Case departmentNumber
-            Case "1703", "2103"
-              Return "telestaff"
-            Case "2102"
-              If payPeriodStart < CType("3/23/2016", Date) Then
-                Return "telestaff"
-              Else
-                Return "timecard"
-              End If
-            Case Else
-              Return "timecard"
-          End Select
+        If Get_Data_Type(employeeID, departmentNumber, payPeriodStart) = ModuleMain.Data_Type.Telestaff Then
+          Return "telestaff"
         Else
-          Return (From c In Current_Timecard_Data Select c.DataType).First
+          Return "timecard"
         End If
+        'If Current_Timecard_Data.Count = 0 Then
+        '  Select Case departmentNumber
+        '    Case "1703"
+        '      Return "telestaff"
+
+        '    Case "2103"
+        '      Select Case GroupName
+        '        Case "PREVENTION"
+        '          If payPeriodStart < CType("5/8/2019", Date) Then
+        '            Return "telestaff"
+        '          Else
+        '            Return "timecard"
+        '          End If
+        '        Case Else
+        '          Return "telestaff"
+        '      End Select
+
+        '    Case "2102"
+        '      If payPeriodStart < CType("3/23/2016", Date) Then
+        '        Return "telestaff"
+        '      Else
+        '        Return "timecard"
+        '      End If
+        '    Case Else
+        '      Return "timecard"
+        '  End Select
+
+        'Else
+        '  Return (From c In Current_Timecard_Data Select c.DataType).First
+        'End If
       End Get
     End Property
 
@@ -725,7 +744,15 @@
         std.EmployeeId = employeeID
         std.DataType = "timecard"
         If PS.Contains(departmentNumber) Then
-          std.DataType = "telestaff"
+          If GroupName = "PREVENTION" Then
+            If payPeriodStart < CType("5/8/2019", Date) Then
+              std.DataType = "telestaff"
+            Else
+              std.DataType = "timecard"
+            End If
+          Else
+            std.DataType = "telestaff"
+          End If
         End If
 
         std.PayCode = c.payCode
@@ -825,40 +852,54 @@
       ' The upside to this is we'll have some form of data to give the end user,
       ' and we can just check that and give a message as to why we only returned finplus data.
       Dim f As List(Of FinanceData) = GetEmployeeDataFromFinPlus(EmployeeID)
+
       If f.Count = 1 Then
         foundEmployee = True
         Dim fd As FinanceData = f.First()
-        'If StartDate < CType("8/11/2015", Date) Or StartDate > CType("8/25/2015", Date) 
-        If EmployeeID = 2201 And (payPeriodStart < CType("8/12/2015", Date) Or payPeriodStart > CType("8/25/2015", Date)) Then
+        If Get_Data_Type(EmployeeID, fd.Department, payPeriodStart) = ModuleMain.Data_Type.Timecard Then
+
           Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
           Dim e As New TC_EPP(tctd, fd, payPeriodStart)
           Load_TCTD(e)
+
         Else
-          Select Case fd.Department
-            Case "1703" ' Telestaff
-              Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
-              Dim e As New EPP(ttdl, fd, payPeriodStart)
-              Load_EPP(e)
-            Case "2102", "2103"
-              ' For these departments we want to make them look in Telestaff first, and then
-              ' fall back to Timestore if nothing is found.
 
-              Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
-              If ttdl.Count > 0 Then
-                Dim e As New EPP(ttdl, fd, payPeriodStart)
-                Load_EPP(e)
-              Else
-                Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
-                Dim e As New TC_EPP(tctd, fd, payPeriodStart)
-                Load_TCTD(e)
-              End If
+          Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
+          Dim e As New EPP(ttdl, fd, payPeriodStart)
+          Load_EPP(e)
 
-            Case Else ' Going to try the timecard database for everything else.
-              Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
-              Dim e As New TC_EPP(tctd, fd, payPeriodStart)
-              Load_TCTD(e)
-          End Select
         End If
+        ''If StartDate < CType("8/11/2015", Date) Or StartDate > CType("8/25/2015", Date) 
+        'If EmployeeID = 2201 And (payPeriodStart < CType("8/12/2015", Date) Or payPeriodStart > CType("8/25/2015", Date)) Then
+        '  Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
+        '  Dim e As New TC_EPP(tctd, fd, payPeriodStart)
+        '  Load_TCTD(e)
+        'Else
+        '  Select Case fd.Department
+        '    Case "1703" ' Telestaff
+        '      Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
+        '      Dim e As New EPP(ttdl, fd, payPeriodStart)
+        '      Load_EPP(e)
+        '    Case "2102", "2103"
+        '      ' For these departments we want to make them look in Telestaff first, and then
+        '      ' fall back to Timestore if nothing is found.
+
+        '      Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
+        '      If ttdl.Count > 0 Then
+        '        Dim e As New EPP(ttdl, fd, payPeriodStart)
+        '        Load_EPP(e)
+        '      Else
+        '        Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
+        '        Dim e As New TC_EPP(tctd, fd, payPeriodStart)
+        '        Load_TCTD(e)
+        '      End If
+
+        '    Case Else ' Going to try the timecard database for everything else.
+        '      Dim tctd As List(Of TimecardTimeData) = GetEmployeeDataFromTimecardOrTimeStore(payPeriodStart, EmployeeID)
+        '      Dim e As New TC_EPP(tctd, fd, payPeriodStart)
+        '      Load_TCTD(e)
+        '  End Select
+        'End If
 
       Else
         ' We didn't find this employee, we should do something.
@@ -1327,6 +1368,7 @@
     Private Sub Load_TCTD(Employee As TC_EPP)
       Load_FinanceData(Employee.EmployeeData)
       GroupName = Employee_Data.GetGroupName(employeeID)
+
       payPeriodStart = Employee.PayPeriodStart
       isExempt = Employee.IsExempt
       WarningList = Employee.WarningList

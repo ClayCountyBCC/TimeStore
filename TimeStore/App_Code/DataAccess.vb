@@ -48,7 +48,7 @@ Public Module ModuleDataAccess
     ' MSIL03, CLAYBCCDV10 = Development / Testing
     ' CLAYBCCIIS01 = Production
     Select Case Environment.MachineName.ToUpper
-      Case "CLAYBCCDV10", "MISSL01" ' QA
+      Case "CLAYBCCDV10" ', "MISSL01" ' QA
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -75,7 +75,7 @@ Public Module ModuleDataAccess
             Return ""
         End Select
 
-      Case "CLAYBCCIIS01" ' Production
+      Case "CLAYBCCIIS01", "MISSL01" ' Production
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString

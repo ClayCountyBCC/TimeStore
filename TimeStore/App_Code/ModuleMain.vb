@@ -179,7 +179,58 @@ Public Module ModuleMain
     Return ppList
   End Function
 
+  Public Enum Data_Type As Integer
+    Timecard = 0
+    Telestaff = 1
+  End Enum
 
+  Public Function Get_Data_Type(employee_id As Integer, department_id As String, pay_period_start As Date) As Data_Type
+    ' this function was added to facilitate switching an employee from Telestaff to timestore, 
+    ' and knowing when they switched.
+    Select Case department_id
+      Case "1703"
+        Return Data_Type.Telestaff
+
+      Case "2103"
+        Return Data_Type.Telestaff
+
+
+      Case "2102"
+        If pay_period_start < CType("3/23/2016", Date) Then
+          Return Data_Type.Telestaff
+        Else
+          Return Data_Type.Timecard
+        End If
+
+      Case "1709"
+        Select Case employee_id
+          Case 1109 ' Anthony Roseberry and Chip Earls moved from Telestaff to Timestore on this date.
+            If pay_period_start < CType("4/30/2019", Date) Then
+              Return Data_Type.Telestaff
+            Else
+              Return Data_Type.Timecard
+            End If
+
+          Case 2546
+            If pay_period_start < CType("5/15/2019", Date) Then
+              Return Data_Type.Telestaff
+            Else
+              Return Data_Type.Timecard
+            End If
+
+          Case Else
+            Return Data_Type.Timecard
+        End Select
+      Case Else
+        ' Jesse Hellard moved from Animal Control to Public Safety Dispatch for about 4 weeks.  Only one pay period
+        ' was in telestaff, all of his other data was in Timestore / timecard.
+        If employee_id = 2201 AndAlso pay_period_start = CType("8/10/2015", Date) Then Return Data_Type.Telestaff
+
+        Return Data_Type.Timecard
+
+    End Select
+
+  End Function
 
   Public Function Calculate_PayRate_With_Incentives(PR As Double,
                                                     Specialties As String,
@@ -218,6 +269,15 @@ Public Module ModuleMain
 
         Case "SUBC", "OTSUBC", "OTMSUBC", "OLTRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG" ' Step up BC
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+
+        Case "DOTSUBC" ' Step Up Doubletime BC ' For those rare occasions when someone steps up as a BC when they're on office duty, so they are eligible for double time.
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
+
+        Case "DOTSUO" ' Step up Doubletime Officer ' Same as above
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
+
+        Case "DOTSUE" ' Step up Doubletime Engineer ' Same as above.
+          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.1, HoursByYear)
 
           ' Shift trades from here down
         Case "ST10" ' older work codes, not used anymore

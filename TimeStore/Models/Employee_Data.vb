@@ -22,7 +22,6 @@
 
       Dim tgDepts As New List(Of String) From {
         "1703",
-        "2102",
         "2103"
       }
 

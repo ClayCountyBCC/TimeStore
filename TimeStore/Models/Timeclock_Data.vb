@@ -51,7 +51,7 @@
         FROM Timeclock_Data
         WHERE 
           source='F'
-          AND CAST(raw_punch_date AS TIME) <= CAST(rounded_punch_date AS TIME)  
+          AND DATEDIFF(SECOND, CAST(raw_punch_date AS TIME), CAST(rounded_punch_date AS TIME)) >= -59
           AND DATEPART(HOUR, rounded_punch_date) = 7
           AND DATEPART(MINUTE, rounded_punch_date) = 0
           AND CAST(raw_punch_date AS DATE) = @Punchdate
@@ -63,36 +63,43 @@
         FROM Timeclock_Data
         WHERE 
           source='F'
-          AND CAST(raw_punch_date AS TIME) >= CAST(rounded_punch_date AS TIME)  
+          AND DATEDIFF(SECOND, CAST(raw_punch_date AS TIME), CAST(rounded_punch_date AS TIME)) <= 0
           AND DATEPART(HOUR, rounded_punch_date) = 15
           AND DATEPART(MINUTE, rounded_punch_date) = 30
           AND CAST(raw_punch_date AS DATE) = @Punchdate
 
       ), BadPunches AS (
+
         SELECT
           CAST(E.empl_no AS INT) employee_id,
-          CASE WHEN GAM.employee_id IS NULL THEN 
-            ISNULL(CONVERT(VARCHAR(15), CAST(MIN(raw_punch_date) AS TIME), 100), 'No Punch')
-          ELSE
-            ''
+          CASE WHEN GAM.employee_id IS NOT NULL 
+            THEN ''
+            ELSE 
+              CASE WHEN DATEPART(HH, CAST(MIN(raw_punch_date) AS TIME)) < 12 
+              THEN CONVERT(VARCHAR(15), CAST(MIN(raw_punch_date) AS TIME), 100)
+              ELSE 'No Punch'
+              END
           END earliest_raw_punch,
-          CASE WHEN GPM.employee_id IS NULL THEN
-            ISNULL(CONVERT(VARCHAR(15), CAST(MAX(raw_punch_date) AS TIME), 100), 'No Punch')
+          CASE WHEN GPM.employee_id IS NOT NULL 
+          THEN ''
           ELSE
-            ''
+              CASE WHEN DATEPART(HH, CAST(MAX(raw_punch_date) AS TIME)) > 12 
+              THEN CONVERT(VARCHAR(15), CAST(MAX(raw_punch_date) AS TIME), 100)
+              ELSE 'No Punch'
+              END
           END latest_raw_punch
         FROM [SQLCLUSFINANCE\FINANCE].finplus50.dbo.employee E
         INNER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.person P ON E.empl_no = P.empl_no
         LEFT OUTER JOIN Timeclock_Data T ON E.empl_no=T.employee_id
           AND CAST(T.raw_punch_date AS DATE) = @PunchDate
           AND T.source = 'F'
-        LEFT OUTER JOIN EmployeesWithGoodAMPunches GAM ON E.empl_no = GAM.employee_id
-        LEFT OUTER JOIN EmployeesWithGoodPMPunches GPM ON E.empl_no = GPM.employee_id
+        LEFT OUTER JOIN EmployeesWithGoodAMPunches GAM ON CAST(E.empl_no AS INT) = GAM.employee_id
+        LEFT OUTER JOIN EmployeesWithGoodPMPunches GPM ON CAST(E.empl_no AS INT) = GPM.employee_id
         WHERE 
           E.home_orgn IN ('3701', '3711', '3712')
           AND (P.term_date IS NULL OR P.term_date > @PunchDate)
           AND (GAM.employee_id IS NULL OR GPM.employee_id IS NULL)
-        GROUP BY E.empl_no, GAM.employee_id, GPM.employee_id
+        GROUP BY CAST(E.empl_no AS INT), GAM.employee_id, GPM.employee_id
 
       ), NonWorkingHours AS (
 
@@ -117,8 +124,8 @@
           LTRIM(RTRIM(E.home_orgn)) department_id,
           LTRIM(RTRIM(E.f_name)) + ' ' + LTRIM(RTRIM(E.l_name)) employee_name,
           ISNULL(W.work_times, 'No punches') work_times,
-          ISNULL(B.earliest_raw_punch, 'No Punch') punch_in_issue,
-          ISNULL(B.latest_raw_punch, 'No Punch') punch_out_issue,
+          ISNULL(B.earliest_raw_punch, '') punch_in_issue,
+          ISNULL(B.latest_raw_punch, '') punch_out_issue,
           ISNULL(A.reports_to, 0) reports_to,
           LTRIM(RTRIM(ISNULL(BOSS.f_name, ''))) + ' ' + LTRIM(RTRIM(ISNULL(BOSS.l_name, ''))) reports_to_name,
 
