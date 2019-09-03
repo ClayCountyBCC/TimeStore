@@ -16,11 +16,12 @@ Namespace Models
     Property WorkTimes As String = ""
     Property WorkHours As Double = 0
     Property DisasterName As String = ""
-    Property DisasterPeriodType As Integer = 0
+    'Property DisasterPeriodType As Integer = 0
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
     Property DisasterWorkType As String = ""
-    Property DisasterRule As Integer = 0
+    Property DisasterNormalScheduledHours As Double = -1
+    'Property DisasterRule As Integer = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
     Property VacationHours As Double = 0
@@ -94,11 +95,10 @@ Namespace Models
       WorkHours = STD.work_hours
       WorkTimes = STD.work_times
       DisasterName = STD.disaster_name
-      DisasterPeriodType = STD.disaster_period_type
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
       DisasterWorkType = STD.disaster_work_type
-      DisasterRule = STD.disaster_rule
+      DisasterNormalScheduledHours = STD.disaster_normal_scheduled_hours
       OutOfClass = STD.out_of_class
     End Sub
 
@@ -264,6 +264,7 @@ Namespace Models
       dp.Add("@disaster_work_times", std.disaster_work_times)
       dp.Add("@disaster_work_hours", std.disaster_work_hours)
       dp.Add("@disaster_work_type", std.disaster_work_type)
+      dp.Add("@disaster_normal_scheduled_hours", std.disaster_normal_scheduled_hours)
       dp.Add("@break_credit", std.break_credit)
       dp.Add("@work_hours", std.work_hours)
       dp.Add("@holiday", std.holiday)

@@ -45,6 +45,12 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "disaster_rules"
+          Dim ppe As Date = Date.Parse(s(1))
+          Return DisasterEventRules.Get_Disaster_Rules(ppe)
+        Case "disaster_period"
+          Dim ppe As Date = Date.Parse(s(1))
+          Return DisasterPeriod.Get_Disaster_Period(ppe)
         Case "birthdays"
           Return Namedday.GetAllBirthdays()
         Case "allaccessdict"

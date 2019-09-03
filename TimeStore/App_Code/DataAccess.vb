@@ -57,8 +57,8 @@ Public Module ModuleDataAccess
             'Return ConfigurationManager.ConnectionStrings("TimecardProduction").ConnectionString
             'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
           Case ConnectionStringType.Timestore
-            'Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
-            Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
+            Return ConfigurationManager.ConnectionStrings("TimestoreQA").ConnectionString
+            'Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
 
           Case ConnectionStringType.FinPlus
             'Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
@@ -67,9 +67,6 @@ Public Module ModuleDataAccess
             Return ConfigurationManager.ConnectionStrings("FinplusQA").ConnectionString
           Case ConnectionStringType.Log
             Return ConfigurationManager.ConnectionStrings("Log").ConnectionString
-
-          Case ConnectionStringType.FinplusNew
-            Return ConfigurationManager.ConnectionStrings("FinplusNew").ConnectionString
 
           Case Else
             Return ""
@@ -94,8 +91,8 @@ Public Module ModuleDataAccess
           Case ConnectionStringType.Log
             Return ConfigurationManager.ConnectionStrings("Log").ConnectionString
 
-          Case ConnectionStringType.FinplusNew
-            Return ConfigurationManager.ConnectionStrings("FinplusNew").ConnectionString
+            'Case ConnectionStringType.FinplusNew
+            '  Return ConfigurationManager.ConnectionStrings("FinplusNew").ConnectionString
 
           Case Else
             Return ""
@@ -170,7 +167,7 @@ Public Module ModuleDataAccess
     'Dim sbQuery As New StringBuilder, 
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.FinPlus), toolsAppId, toolsDBError)
     Dim query As String = "
-      USE finplus50;
+      USE finplus51;
       SELECT 
         E.hire_date, 
         E.empl_no, 
@@ -238,7 +235,7 @@ Public Module ModuleDataAccess
     ' This pulls the employee data from Pentamation for the list of departments 
     Dim sbQuery As New StringBuilder, dbc As New Tools.DB(GetCS(ConnectionStringType.FinPlus), toolsAppId, toolsDBError)
     With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
-      .AppendLine("USE finplus50;")
+      .AppendLine("USE finplus51;")
       .Append("SELECT LTRIM(RTRIM(UPPER(code))) AS code, LTRIM(RTRIM(UPPER(desc_x))) AS desc_x FROM dept ORDER BY desc_x ASC")
     End With
     Dim ds As DataSet = dbc.Get_Dataset(sbQuery.ToString)
@@ -1019,7 +1016,7 @@ FROM (
       S.pay_period_ending,
       S2.TotalHours 
     FROM Saved_Time S 
-    LEFT OUTER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.person P ON S.employee_id = P.empl_no
+    LEFT OUTER JOIN [SQLCLUSFINANCE\FINANCE].finplus51.dbo.person P ON S.employee_id = P.empl_no
     INNER JOIN (
       SELECT 
         employee_id, 
@@ -1124,13 +1121,11 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
         '.AppendLine("USE TimeStore;")
         Select Case cst
           Case ConnectionStringType.FinPlus
-            .AppendLine("USE finplus50;")
-          Case ConnectionStringType.FinplusNew
             .AppendLine("USE finplus51;")
           Case ConnectionStringType.FinplusTraining
-            .AppendLine("USE trnfinplus50;")
+            .AppendLine("USE trnfinplus51;")
           Case Else
-            .AppendLine("USE finplus50;")
+            .AppendLine("USE finplus51;")
         End Select
         For Each ts In tsds.Tables(0).Rows
           Dim eid As Integer = ts("employee_id")
@@ -1257,14 +1252,12 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
       '.AppendLine("USE TimeStore;")
       Select Case cst
         Case ConnectionStringType.FinPlus
-          .AppendLine("USE finplus50;")
-
-        Case ConnectionStringType.FinplusNew
           .AppendLine("USE finplus51;")
+
         Case ConnectionStringType.FinplusTraining
-          .AppendLine("USE trnfinplus50;")
+          .AppendLine("USE trnfinplus51;")
         Case Else
-          .AppendLine("USE finplus50;")
+          .AppendLine("USE finplus51;")
       End Select
       'If UseProduction Then
       '  .AppendLine("USE finplus50;")
@@ -1360,13 +1353,11 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     With financeQuery
       Select Case cst
         Case ConnectionStringType.FinPlus
-          .AppendLine("USE finplus50;")
-        Case ConnectionStringType.FinplusNew
           .AppendLine("USE finplus51;")
         Case ConnectionStringType.FinplusTraining
-          .AppendLine("USE trnfinplus50;")
+          .AppendLine("USE trnfinplus51;")
         Case Else
-          .AppendLine("USE finplus50;")
+          .AppendLine("USE finplus51;")
       End Select
       .AppendLine("SELECT TC.empl_no,pay_code,hours,payrate,amount,orgn,account,proj,pacct,classify,pay_cycle,tax_ind, ")
       .AppendLine("	pay_run,subtrack_id,reported,user_chg,date_chg,flsa_cycle,flsa_flg,flsa_carry_ovr,ret_pers_code ")
@@ -1435,6 +1426,54 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     End Try
   End Function
 
+  Public Function GetRawTimestoreSavedTimeDataForDisaster(payPeriodEnding As Date) As DataSet
+    Dim dbts As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
+    Dim f As List(Of FinanceData) = GetAllEmployeeDataFromFinPlus()
+    Dim TimestoreQuery As New StringBuilder
+    With TimestoreQuery
+      .AppendLine("USE TimeStore;")
+      ' -----------------
+      ' original version
+      ' -----------------
+
+      '.AppendLine("SELECT employee_id,paycode,payrate,hours,amount,orgn,classify ")
+      ' -----------------
+      ' disaster calculations version
+      ' -----------------
+      .AppendLine("SELECT employee_id,")
+      .AppendLine("CASE WHEN paycode = '777' THEN '002' ELSE paycode END AS paycode,")
+      .AppendLine("CASE WHEN paycode = '777' THEN CAST(payrate * 1.5 AS DECIMAL(10, 5)) ELSE payrate END AS payrate, ")
+      .AppendLine("hours,amount,orgn,classify ")
+      .AppendLine("FROM Saved_Time")
+      .AppendLine("WHERE pay_period_ending = @PayPeriodEnding ")
+
+      ' paycode 800 is a paycode we use only in Timestore to determine if
+      ' a firefighter / dispatch employee marked any holiday hours as 
+      ' ineligible.  This paycode is invalid to finplus so we're not
+      ' going to send it to them.
+      ' "777"
+      .AppendLine("AND paycode <> 800 ")
+      .AppendLine("AND ((orgn NOT IN ('1703', '2103')")
+      .AppendLine("AND paycode NOT IN ('230', '231', '232', '299', '300', '301', '302', '303', '046', '120'))")
+      .AppendLine("OR orgn IN ('1703', '2103'))")
+      .AppendLine("ORDER BY orgn ASC, employee_id ASC")
+    End With
+    Dim P(0) As SqlParameter
+    P(0) = New SqlParameter("@PayPeriodEnding", Data.SqlDbType.Date) With {.Value = payPeriodEnding}
+    Dim ds As DataSet
+    Try
+      ds = dbts.Get_Dataset(TimestoreQuery.ToString, P)
+      For Each d In ds.Tables(0).Rows
+        d("payrate") = GetPayrate(d("paycode"), d("payrate"))
+        d("classify") = GetClassification(d("employee_id"), f, d("classify"))
+      Next
+      Return ds
+    Catch ex As Exception
+      Log(ex)
+      Return Nothing
+    End Try
+  End Function
+
   Public Function GetClassification(EmployeeID As Integer, ByRef fdl As List(Of FinanceData), oldClassification As String) As String
     Dim e = (From f In fdl Where f.EmployeeId = EmployeeID Select f)
     If e.Count = 0 Then
@@ -1450,7 +1489,14 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     'If Not UpdateFinplusWithSavedTime(tsds, UseProduction) Then Return False
     UpdateFinplusWithSavedTime(tsds, cst)
     Return InsertSavedTimeToFinplus(tsds, cst)
+  End Function
 
+  Public Function SpecialDisasterSavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType) As Boolean
+    Dim tc As List(Of GenericTimecard) = GetTimeCards(payPeriodEnding.AddDays(-13), True)
+    Dim tsds As DataSet = GetRawTimestoreSavedTimeDataForDisaster(payPeriodEnding)
+    'If Not UpdateFinplusWithSavedTime(tsds, UseProduction) Then Return False
+    UpdateFinplusWithSavedTime(tsds, cst)
+    Return InsertSavedTimeToFinplus(tsds, cst)
   End Function
 
   Public Function Save_Hours(EmployeeID As Integer,

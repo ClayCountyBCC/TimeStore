@@ -88,8 +88,8 @@
               ELSE 'No Punch'
               END
           END latest_raw_punch
-        FROM [SQLCLUSFINANCE\FINANCE].finplus50.dbo.employee E
-        INNER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.person P ON E.empl_no = P.empl_no
+        FROM CLAYBCCFINDB.finplus51.dbo.employee E
+        INNER JOIN CLAYBCCFINDB.finplus51.dbo.person P ON E.empl_no = P.empl_no
         LEFT OUTER JOIN Timeclock_Data T ON E.empl_no=T.employee_id
           AND CAST(T.raw_punch_date AS DATE) = @PunchDate
           AND T.source = 'F'
@@ -142,13 +142,13 @@
             2, 
             N''), '') non_working_hours
 
-        FROM [SQLCLUSFINANCE\FINANCE].finplus50.dbo.employee E
-        INNER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.person P ON E.empl_no = P.empl_no
+        FROM CLAYBCCFINDB.finplus51.dbo.employee E
+        INNER JOIN CLAYBCCFINDB.finplus51.dbo.person P ON E.empl_no = P.empl_no
         LEFT OUTER JOIN Work_Hours W ON E.empl_no = W.employee_id AND W.work_date = @PunchDate
         LEFT OUTER JOIN BadPunches B ON E.empl_no = B.employee_id
         --LEFT OUTER JOIN BadLatePunch BLP ON E.empl_no = BLP.employee_id
         LEFT OUTER JOIN Access A ON E.empl_no = A.employee_id
-        LEFT OUTER JOIN [SQLCLUSFINANCE\FINANCE].finplus50.dbo.employee BOSS ON A.reports_to = BOSS.empl_no    
+        LEFT OUTER JOIN CLAYBCCFINDB.finplus51.dbo.employee BOSS ON A.reports_to = BOSS.empl_no    
         WHERE 
           E.home_orgn IN ('3701', '3711', '3712')
           AND (P.term_date IS NULL OR P.term_date > @PunchDate)

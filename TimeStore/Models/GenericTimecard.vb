@@ -358,6 +358,13 @@
       End Get
     End Property
 
+    Public ReadOnly Property Disaster_Periods() As List(Of DisasterPeriod)
+      Get
+        Dim dp = DisasterPeriod.Get_Cached_Disaster_Rules(payPeriodStart.AddDays(13))
+        Return dp
+      End Get
+    End Property
+
     Public ReadOnly Property DepartmentDisplay() As String
       Get
         Return department & " (" & departmentNumber & ")"
@@ -1335,34 +1342,34 @@
 
     End Sub
 
-    Private Sub UpdateDisasterData()
-      Try
-        Dim tmp = (From t In RawTCTD
-                   Where t.DisasterName.Length > 0
-                   Select t).ToList
+    'Private Sub UpdateDisasterData()
+    '  Try
+    '    Dim tmp = (From t In RawTCTD
+    '               Where t.DisasterName.Length > 0
+    '               Select t).ToList
 
-        If tmp.Count > 0 Then
-          Dim f = tmp.First
-          DisasterName_Display = f.DisasterName
-          DisasterPeriodType_Display = f.DisasterPeriodtype
-        Else
-          Dim disasters As List(Of Disaster) = myCache.GetItem("disasterdates")
-          Dim foundList As List(Of Disaster) = (From d In disasters
-                                                Where payPeriodStart >= d.Disaster_Start And
-                                                payPeriodStart <= d.Disaster_End
-                                                Order By d.Disaster_Start
-                                                Select d).ToList
-          If foundList.Count > 0 Then
-            Dim f = foundList.First
-            DisasterName_Display = f.Name
-            DisasterPeriodType_Display = f.Disaster_Period_Type
-          End If
+    '    If tmp.Count > 0 Then
+    '      Dim f = tmp.First
+    '      DisasterName_Display = f.DisasterName
+    '      'DisasterPeriodType_Display = f.DisasterPeriodtype
+    '    Else
+    '      Dim disasters As List(Of Disaster) = myCache.GetItem("disasterdates")
+    '      Dim foundList As List(Of Disaster) = (From d In disasters
+    '                                            Where payPeriodStart >= d.Disaster_Start And
+    '                                            payPeriodStart <= d.Disaster_End
+    '                                            Order By d.Disaster_Start
+    '                                            Select d).ToList
+    '      If foundList.Count > 0 Then
+    '        Dim f = foundList.First
+    '        DisasterName_Display = f.Name
+    '        'DisasterPeriodType_Display = f.Disaster_Period_Type
+    '      End If
 
-        End If
-      Catch ex As Exception
-        Dim e As New ErrorLog(ex, "")
-      End Try
-    End Sub
+    '    End If
+    '  Catch ex As Exception
+    '    Dim e As New ErrorLog(ex, "")
+    '  End Try
+    'End Sub
 
 
     Private Sub Load_TCTD(Employee As TC_EPP)
@@ -1376,7 +1383,7 @@
       RawTCTD.AddRange(Employee.TL)
 
       'load in the disaster info
-      UpdateDisasterData()
+      'UpdateDisasterData()
 
       Dim holidays As List(Of Date) = getHolidayList(payPeriodStart.Year)
       If payPeriodStart.Year <> payPeriodStart.AddDays(13).Year Then

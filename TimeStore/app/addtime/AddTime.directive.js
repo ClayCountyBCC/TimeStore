@@ -60,6 +60,9 @@
     $scope.fullTimeList = [];
     $scope.shortTimeList = [];
     $scope.lunchTimeList = [];
+
+    $scope.normallyScheduledHours = addtimeFunctions.getNormallyScheduledHours();
+
     $scope.timeList = [];
     $scope.TCTD = addtimeFunctions.loadSavedTCTD(
       $scope.timecard,
@@ -68,14 +71,28 @@
     $scope.isCurrentPPD = isCurrentPayPeriod();
     $scope.disasterChoiceError = "";
     $scope.disasterTimeError = "";
+    $scope.normallyScheduledHoursError = "";
     //$scope.disasterHours = $scope.TCTD.DisasterWorkHours.value > 0 ? 'true' : null;
     
     populateTimeLists();
     updateBanksUsed();
+    
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
-    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;
-    $scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
-    $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
+    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;    
+    $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
+    // changed on 8/31/2019
+    //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
+    //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0; // ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
+    //$scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
+    $scope.showDisaster = $scope.TCTD.DisasterName.length > 0;
+    //$scope.TCTD.DisasterNormalScheduledHours values are as follows:
+    // -1 if the value has not yet been saved
+    // 0 if they are not normally scheduled on this day
+    // > 0 if they are normally scheduled
+    $scope.NormallyScheduled = $scope.TCTD.DisasterNormalScheduledHours === -1 ? null : $scope.TCTD.DisasterNormalScheduledHours > 0;
+    $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled === true;
+
+      //$scope.TCTD.DisasterNormalScheduledHours.toString() !== "-1";
     checkForErrors();
 
     function populateTimeLists()
@@ -172,10 +189,26 @@
 
     $scope.DisasterHoursChoice = function ()
     {
-      $scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
-      if ($scope.DisasterHoursRelated === false)
+      $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
+      checkForErrors();
+      if ($scope.DisasterHoursRelated === false && $scope.errorList.length === 0)
       {
-        $scope.calculateTotalHours();
+        $scope.saveTCTD();
+      }
+    };
+    
+    $scope.NormallyScheduledChoice = function ()
+    {
+      $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
+      checkForErrors()
+    };
+
+    $scope.NormallyScheduledHoursSelected = function ()
+    {
+      checkForErrors();
+      if ($scope.errorList.length === 0)
+      {
+        $scope.saveTCTD();
       }
     };
 
@@ -183,57 +216,85 @@
     {
       $scope.disasterChoiceError = "";
       $scope.disasterTimeError = "";
+      $scope.normallyScheduledHoursError = "";
       // we need to compare the times in DisasterWorkTimes and WorkTimes
       // to ensure that they always overlap
-      if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
+      //if ($scope.timecard.DisasterName_Display.length > 0 && $scope.TCTD.WorkHours.value > 0)
+      if ($scope.TCTD.WorkHours.value === 0) return;
+
+      if (!$scope.showDisaster) return;
+
+      if ($scope.DisasterHoursRelated === null)
       {
-        if ($scope.DisasterHoursRelated === null && $scope.ShowDisasterWarning)
+        $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated. Your time has not yet been saved.";
+        $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+        return;
+      }
+
+      if (!$scope.DisasterHoursRelated) return;
+
+      if ($scope.NormallyScheduled === null)
+      {
+        $scope.normallyScheduledHoursError = "You must select if you are normally scheduled to work on this date.";
+        $scope.errorList.push("You must select if you are normally scheduled to work on this date.");
+        return;
+      }
+
+      if ($scope.NormallyScheduled && $scope.TCTD.DisasterNormalScheduledHours.toString() === "-1")
+      {
+        $scope.normallyScheduledHoursError = "You must select how many hours you normally work on this date.";
+        $scope.errorList.push("You must select how many hours you normally work on this date.");
+        return;
+      }
+
+      if ($scope.TCTD.DisasterWorkHours.value === 0)
+      {
+        $scope.normallyScheduledHoursError = "You must add your hours worked for the disaster to the Disaster Hours Worked selection.";
+        $scope.errorList.push("You must add the hours worked for the disaster to the Disaster Hours Worked selection.");
+        return;
+      }
+
+
+      var dst = $scope.TCTD.disasterSelectedTimes;
+      var wst = $scope.TCTD.selectedTimes;
+      var dLength = dst.length - dst.length % 2;
+      var wLength = wst.length - wst.length % 2;
+      for (var i = 0; i < dLength; i += 2)
+      {
+        var dStart = dst[i];
+        var dEnd = dst[i + 1];
+        var found = false;
+        for (var j = 0; j < wLength; j += 2)
         {
-          $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated.";
-          $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+          var wStart = wst[j];
+          var wEnd = wst[j + 1];
+          var dStartGood = dStart >= wStart && dStart <= wEnd;
+          var dEndGood = dEnd >= wStart && dEnd <= wEnd;
+          found = dStartGood && dEndGood;
+          if (dStartGood || dEndGood)
+          {
+            break;
+          }
+        }
+        if (!found)
+        {
+          $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
+          $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
           return;
         }
-        var dst = $scope.TCTD.disasterSelectedTimes;
-        var wst = $scope.TCTD.selectedTimes;
-        var dLength = dst.length - dst.length % 2;
-        var wLength = wst.length - wst.length % 2;
-        for (var i = 0; i < dLength; i += 2)
+      }
+      if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
+      {
+        if ($scope.TCTD.DisasterWorkType === "")
         {
-          var dStart = dst[i];
-          var dEnd = dst[i + 1];
-          var found = false;
-          for (var j = 0; j < wLength; j += 2)
-          {
-            var wStart = wst[j];
-            var wEnd = wst[j + 1];
-            var dStartGood = dStart >= wStart && dStart <= wEnd;
-            var dEndGood = dEnd >= wStart && dEnd <= wEnd;
-            found = dStartGood && dEndGood;
-            if (dStartGood || dEndGood)
-            {
-              break;
-            }
-          }
-          if (!found)
-          {
-            $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
-            $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
-            return;
-          }
+          $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
+          $scope.errorList.push($scope.disasterTimeError);
+          return;
         }
-        if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
+        if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
         {
-          if ($scope.TCTD.DisasterWorkType === "")
-          {
-            $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
-            $scope.errorList.push($scope.disasterTimeError);
-            return;
-          }
-          if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
-          {
-            $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
-            $scope.errorList.push($scope.disasterTimeError);
-          }
+          $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
+          $scope.errorList.push($scope.disasterTimeError);
         }
       }
     }
@@ -577,9 +638,7 @@
 
     $scope.Toggle_DisasterHours = function ()
     {
-      console.log('showDisaster', $scope.showDisaster);
-      $scope.showDisaster = !$scope.showDisaster;
-      
+      $scope.ExpandDisasterHours = !$scope.ExpandDisasterHours;
     };
 
     $scope.Toggle_OnCallHours = function ()
@@ -592,6 +651,10 @@
       // this function is run after a disaster work type is selected.
       // the comment is only required if they chose "Not Listed" as the option.
       checkForErrors();
+      if ($scope.errorList.length === 0)
+      {
+        $scope.saveTCTD();
+      }
     };
 
     $scope.calculateTotalHours = function ()

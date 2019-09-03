@@ -83,10 +83,10 @@ Namespace Controllers
       Select Case serverType
         Case "training"
           cst = ConnectionStringType.FinplusTraining
-        Case "normal"
+        Case "normal", "specialdisaster"
           cst = ConnectionStringType.FinPlus
-        Case "new"
-          cst = ConnectionStringType.FinplusNew
+          'Case "new"
+          '  cst = ConnectionStringType.FinplusNew
         Case Else
           cst = ConnectionStringType.FinplusTraining
       End Select
@@ -96,9 +96,9 @@ Namespace Controllers
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       If tca.Backend_Reports_Access = False Then
         jnr.Data = "Error: You do not have access to this function."
-        Add_Timestore_Note(tca.EmployeeID, ppe, "This user attempted to use the UploadFinanceData function.", Request.LogonUserIdentity.Name)
+        Add_Timestore_Note(tca.EmployeeID, ppe, "This user attempted to use the UploadFinanceData " & serverType & " function.", Request.LogonUserIdentity.Name)
       Else
-        Add_Timestore_Note(tca.EmployeeID, ppe, "Started the Post to Finance Process", Request.LogonUserIdentity.Name)
+        Add_Timestore_Note(tca.EmployeeID, ppe, "Started the Post to Finance Process for " & serverType & " ", Request.LogonUserIdentity.Name)
 
         'Dim UseProduction As Boolean = False
         'Select Case Environment.MachineName.ToUpper
@@ -107,11 +107,18 @@ Namespace Controllers
         '  Case "CLAYBCCIIS01"
         '    UseProduction = True
         'End Select
-        Dim t As Boolean = SavedTimeToFinplusProcess(ppe, cst)
+        Dim t As Boolean
+
+        If serverType = "specialdisaster" Then
+          SpecialDisasterSavedTimeToFinplusProcess(ppe, cst)
+        Else
+          SavedTimeToFinplusProcess(ppe, cst)
+        End If
+
         'Dim t As Boolean = False
         If t Then
           jnr.Data = "Success"
-          Add_Timestore_Note(tca.EmployeeID, ppe, "Post to Finance Process has completed.", Request.LogonUserIdentity.Name)
+          Add_Timestore_Note(tca.EmployeeID, ppe, "Post to Finance Process for " & serverType & " has completed.", Request.LogonUserIdentity.Name)
         Else
           jnr.Data = "An Error occurred, please contact MIS for more information."
           Add_Timestore_Note(tca.EmployeeID, ppe, "Post to Finance Process did not complete due to errors.", Request.LogonUserIdentity.Name)

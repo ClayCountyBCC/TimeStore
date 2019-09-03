@@ -11,6 +11,7 @@
         loadSavedTCTD: loadSavedTCTD,
         resetTCTD: resetTCTD,
         getTimeList: getTimeList,
+        getNormallyScheduledHours: getNormallyScheduledHours,
         getShortTimeList: getShortTimeList,
         calculateTotalHours: calculateTotalHours,
         getHourTypesList: getHourTypesList,
@@ -130,6 +131,7 @@
         tctd.DisasterName = rawtctd.DisasterName;
         tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
         tctd.DisasterWorkType = rawtctd.DisasterWorkType;
+        tctd.DisasterNormalScheduledHours = rawtctd.DisasterNormalScheduledHours;
         tctd.OutOfClass = rawtctd.OutOfClass;
         if (rawtctd.WorkTimes.search(/(\d+):(\d+):(00) (A|P)/g) !== -1)
         {
@@ -286,6 +288,23 @@
           workDate
         );
 
+        var DisasterNameToUse = "";        
+        var wd = moment(workDate, "M/D/YYYY");
+        if (tc.Disaster_Periods.length > 0)
+        {
+          for (var i = 0; i < tc.Disaster_Periods.length; i++)
+          {
+            var disaster_period = tc.Disaster_Periods[i];
+            if (DisasterNameToUse.length === 0)
+            {
+              if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
+              {
+                DisasterNameToUse = disaster_period.Name;
+              }
+            }
+          }
+        }
+
         var tctd = {
           EmployeeID: tc.employeeID,
           DepartmentNumber: tc.departmentNumber,
@@ -293,8 +312,9 @@
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
           DisasterWorkTimes: "",
-          DisasterName: "",
-          DisasterPeriodType: 0,
+          DisasterName: DisasterNameToUse,
+          DisasterNormalScheduledHours: -1,
+          //DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           DisasterWorkType: "",
           BreakCreditHours: getDefaultHours("Break Credit", true),
@@ -364,7 +384,7 @@
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
           DisasterWorkType: tctd.DisasterWorkType,
           DisasterName: "",
-          DisasterPeriodType: 0,
+          DisasterNormalScheduledHours: tctd.DisasterNormalScheduledHours,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
           VacationHours: getValue(tctd.VacationHours.value),
@@ -537,6 +557,17 @@
         }
         timeList.push("11:59:59 PM");
         return timeList;
+      }
+
+      function getNormallyScheduledHours()
+      {
+        var hours = [];
+        for (var i = 1.25; i < 12.25; i += .25)
+        {
+          hours.push(i);
+        }
+        console.log('normally scheduled hours', hours);
+        return hours;
       }
 
       function getValue(p)

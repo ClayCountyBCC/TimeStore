@@ -416,6 +416,8 @@
     <Compile Include="Models\Approval_Data.vb" />
     <Compile Include="Models\crosstab.vb" />
     <Compile Include="Models\DisasterDate.vb" />
+    <Compile Include="Models\DisasterEventRules.vb" />
+    <Compile Include="Models\DisasterPeriod.vb" />
     <Compile Include="Models\Employee_Data.vb" />
     <Compile Include="Models\Enums.vb" />
     <Compile Include="Models\EPP.vb" />

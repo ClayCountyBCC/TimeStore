@@ -16,8 +16,9 @@ Namespace Models
     Property disaster_work_hours As Double = 0
     Property disaster_name As String = ""
     Property disaster_work_type As String = ""
-    Property disaster_period_type As Integer = 0 ' used by the client to determine how we should ask for disaster hours.  1 = always ask, 2 = don't ask but allow disaster hours to be entered. 0 = no disaster hours should be entered.
-    Property disaster_rule As Integer = 0
+    'Property disaster_period_type As Integer = 0 ' used by the client to determine how we should ask for disaster hours.  1 = always ask, 2 = don't ask but allow disaster hours to be entered. 0 = no disaster hours should be entered.
+    'Property disaster_rule As Integer = 0
+    Property disaster_normal_scheduled_hours As Decimal = 0
     Property break_credit As Double = 0
     Property work_hours As Double = 0
     Property holiday As Double = 0
@@ -48,7 +49,8 @@ Namespace Models
       disaster_work_times = tctd.DisasterWorkTimes
       disaster_work_hours = tctd.DisasterWorkHours
       disaster_name = tctd.DisasterName
-      disaster_period_type = tctd.DisasterPeriodType
+      disaster_normal_scheduled_hours = tctd.DisasterNormalScheduledHours
+      'disaster_period_type = tctd.DisasterPeriodType
       disaster_work_type = tctd.DisasterWorkType
       break_credit = tctd.BreakCreditHours
       holiday = tctd.HolidayHours
@@ -66,7 +68,6 @@ Namespace Models
 
     Private Shared Function GetWorkHoursQuery() As String
       Dim query As String = "
-        USE TimeStore;
         SELECT 
           work_hours_id,
           employee_id,
@@ -76,9 +77,8 @@ Namespace Models
           work_times,
           disaster_work_times,
           disaster_work_hours,
-          ISNULL(D.Name, '') disaster_name,
-          ISNULL(DPR.rule_applied, 0) disaster_rule,
-          ISNULL(D.Period_Type, 0) disaster_period_type,
+          ISNULL(D.Name, '') disaster_name,          
+          ISNULL(W.disaster_normal_scheduled_hours, -1) disaster_normal_scheduled_hours,          
           ISNULL(disaster_work_type, '') disaster_work_type,
           break_credit,
           work_hours,
@@ -95,9 +95,9 @@ Namespace Models
           by_machinename,
           by_ip_address,
           doubletime_hours 
-        FROM Work_Hours 
-        LEFT OUTER JOIN Disaster_Data D ON Work_Hours.work_date BETWEEN D.Disaster_Start AND D.Disaster_End
-        LEFT OUTER JOIN Disaster_Pay_Rules DPR ON Work_Hours.work_date = DPR.disaster_date"
+        FROM TimeStore.dbo.Work_Hours W
+        LEFT OUTER JOIN TimeStore.dbo.Disaster_Period D ON W.work_date BETWEEN D.StartDate AND D.EndDate"
+
       Return query
     End Function
 
@@ -107,8 +107,8 @@ Namespace Models
       dp.Add("@EmployeeID", EmployeeID)
       Dim query As String = GetWorkHoursQuery() + "
         WHERE 
-          employee_id = @EmployeeID
-          AND work_date = @WorkDate
+          W.employee_id = @EmployeeID
+          AND W.work_date = @WorkDate
         ORDER BY work_date ASC, employee_id ASC"
       Try
         Dim l = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
@@ -132,8 +132,8 @@ Namespace Models
       dp.Add("@End", EndDate)
       Dim query As String = GetWorkHoursQuery() + "
         WHERE 
-          work_date BETWEEN @Start AND @End 
-        ORDER BY work_date ASC, employee_id ASC"
+          W.work_date BETWEEN @Start AND @End 
+        ORDER BY W.work_date ASC, W.employee_id ASC"
       Try
         Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
         Dim stlApp = Saved_TimeStore_Data_To_Approve.GetAllByDateRange(Start, EndDate)
@@ -156,9 +156,9 @@ Namespace Models
       dp.Add("@EmployeeID", EmployeeID)
       Dim query As String = GetWorkHoursQuery() + "
         WHERE 
-          employee_id = @EmployeeID
-          AND work_date BETWEEN @Start AND @End 
-        ORDER BY work_date ASC, employee_id ASC"
+          W.employee_id = @EmployeeID
+          AND W.work_date BETWEEN @Start AND @End 
+        ORDER BY W.work_date ASC, W.employee_id ASC"
       Try
         'Return Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
         Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
