@@ -33,7 +33,7 @@ Public Module ModuleMain
     Dim specialDisasterPayPeriodStart As Date = Date.Parse("8/21/2019")
     Dim specialDisasterPayPeriodEnd As Date = specialDisasterPayPeriodStart.AddDays(13)
     If (WorkDate >= specialDisasterPayPeriodStart And WorkDate < specialDisasterPayPeriodEnd) Then
-      Return Now > GetPayPeriodStart(WorkDate).AddDays(16).AddHours(17)
+      Return Now > GetPayPeriodStart(WorkDate).AddDays(16).AddHours(14)
     Else
       Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
     End If
