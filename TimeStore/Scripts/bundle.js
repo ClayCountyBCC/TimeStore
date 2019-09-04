@@ -50677,20 +50677,38 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             function initWorkDay() {
               $scope.showDayOfWeek = true;
               $scope.datetypeDisplay = 'Date';
-              //if (!checkCurrentPayPeriod()) {
-              //    return;
-              //}
+
               $scope.selectedWorkDate = setWorkDate($routeParams.workDate);
               $scope.dayOfWeek = setWorkDay($routeParams.workDate);
               $scope.dateList = datelist.getWorkDayList();
               $scope.prevDate = getDateValue(-1);
               $scope.nextDate = getDateValue(1);
-              if (moment().format('YYYYMMDD') === $scope.currentPayPeriodStart && moment().hour() < 10) {
+              // Hurricane Dorian logic.
+              var m;
+              var specialdisasterlogicStart = moment("8/20/2019", "M/D/YYYY");
+              var specialdisasterlogicEnd = moment("9/7/2019", "M/D/YYYY");
+              var wdDisasterLogic = moment($routeParams.workDate, 'YYYYMMDD');
+              if (wdDisasterLogic.isBetween(specialdisasterlogicStart, specialdisasterlogicEnd, 'day'))
+              {
                 $scope.allowPrevious = true;
-                var m = moment(timestoredata.getPayPeriodStart(), "YYYYMMDD").add(-14, 'days');
-                $scope.minDate = m.clone().toDate();
-              } else {
-                $scope.allowPrevious = (moment($scope.currentPayPeriodStart, 'YYYYMMDD').subtract(1, 'days').isBefore(moment($scope.prevDate, 'M/D/YYYY')));
+                $scope.minDate = moment("8/21/2019", "M/D/YYYY").toDate();
+                if (moment().format('YYYYMMDD') === '20190906' && moment().hour() > 13)
+                {
+                  $scope.allowPrevious = false;
+                  $scope.minDate = moment("9/4/2019", "M/D/YYYY").toDate();
+                } 
+              }
+              else
+              {
+                if (moment().format('YYYYMMDD') === $scope.currentPayPeriodStart && moment().hour() < 10)
+                {
+                  $scope.allowPrevious = true;
+                  m = moment(timestoredata.getPayPeriodStart(), "YYYYMMDD").add(-14, 'days');
+                  $scope.minDate = m.clone().toDate();
+                } else
+                {
+                  $scope.allowPrevious = (moment($scope.currentPayPeriodStart, 'YYYYMMDD').subtract(1, 'days').isBefore(moment($scope.prevDate, 'M/D/YYYY')));
+                }
               }
 
             }
@@ -51386,7 +51404,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     // -1 if the value has not yet been saved
     // 0 if they are not normally scheduled on this day
     // > 0 if they are normally scheduled
-    $scope.NormallyScheduled = $scope.TCTD.DisasterNormalScheduledHours === -1 ? null : $scope.TCTD.DisasterNormalScheduledHours > 0;
+    $scope.NormallyScheduled = null;
+
+    if ($scope.TCTD.DisasterNormalScheduledHours === 0)
+    {
+      $scope.NormallyScheduled = false;
+    }
+    if ($scope.TCTD.DisasterNormalScheduledHours > 0)
+    {
+      $scope.NormallyScheduled = true;
+    }
+
+    //$scope.NormallyScheduled= $scope.TCTD.DisasterNormalScheduledHours === -1 ? null : $scope.TCTD.DisasterNormalScheduledHours > 0;
     $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled === true;
 
       //$scope.TCTD.DisasterNormalScheduledHours.toString() !== "-1";
@@ -51497,6 +51526,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.NormallyScheduledChoice = function ()
     {
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
+      $scope.TCTD.DisasterNormalScheduledHours = $scope.NormallyScheduled ? null : 0;
       checkForErrors();
       if ($scope.errorList.length === 0)
       {

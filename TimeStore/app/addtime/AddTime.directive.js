@@ -89,7 +89,18 @@
     // -1 if the value has not yet been saved
     // 0 if they are not normally scheduled on this day
     // > 0 if they are normally scheduled
-    $scope.NormallyScheduled = $scope.TCTD.DisasterNormalScheduledHours === -1 ? null : $scope.TCTD.DisasterNormalScheduledHours > 0;
+    $scope.NormallyScheduled = null;
+
+    if ($scope.TCTD.DisasterNormalScheduledHours === 0)
+    {
+      $scope.NormallyScheduled = false;
+    }
+    if ($scope.TCTD.DisasterNormalScheduledHours > 0)
+    {
+      $scope.NormallyScheduled = true;
+    }
+
+    //$scope.NormallyScheduled= $scope.TCTD.DisasterNormalScheduledHours === -1 ? null : $scope.TCTD.DisasterNormalScheduledHours > 0;
     $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled === true;
 
       //$scope.TCTD.DisasterNormalScheduledHours.toString() !== "-1";
@@ -200,6 +211,7 @@
     $scope.NormallyScheduledChoice = function ()
     {
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
+      $scope.TCTD.DisasterNormalScheduledHours = $scope.NormallyScheduled ? null : 0;
       checkForErrors();
       if ($scope.errorList.length === 0)
       {
