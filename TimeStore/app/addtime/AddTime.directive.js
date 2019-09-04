@@ -201,6 +201,10 @@
     {
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
       checkForErrors();
+      if ($scope.errorList.length === 0)
+      {
+        $scope.saveTCTD();
+      }
     };
 
     $scope.NormallyScheduledHoursSelected = function ()

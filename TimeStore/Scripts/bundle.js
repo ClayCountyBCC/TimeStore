@@ -51498,6 +51498,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
       checkForErrors();
+      if ($scope.errorList.length === 0)
+      {
+        $scope.saveTCTD();
+      }
     };
 
     $scope.NormallyScheduledHoursSelected = function ()
