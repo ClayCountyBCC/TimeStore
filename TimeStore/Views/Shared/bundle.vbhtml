@@ -399,7 +399,10 @@
              layout-align-gt-md="space-around center"
              layout-wrap
              flex="55">
-
+          <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+                     class="md-primary md-raised">
+            Copy Work Hours
+          </md-button>
           <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
         </div>
         <div layout-padding

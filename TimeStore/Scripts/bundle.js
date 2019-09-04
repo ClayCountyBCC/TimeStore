@@ -51497,7 +51497,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.NormallyScheduledChoice = function ()
     {
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
-      checkForErrors()
+      checkForErrors();
     };
 
     $scope.NormallyScheduledHoursSelected = function ()
@@ -51507,6 +51507,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         $scope.saveTCTD();
       }
+    };
+
+    $scope.CopyWorkHoursToDisasterWorkHours = function ()
+    {
+      $scope.TCTD.disasterSelectedTimes = $scope.TCTD.selectedTimes;
+      $scope.calculateTotalHours();
     };
 
     function validateDisasterHours()
