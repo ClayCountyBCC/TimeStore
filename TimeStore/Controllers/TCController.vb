@@ -9,17 +9,23 @@ Namespace Controllers
 
     Private cache As myCache
 
-    Private Function IsItPastCutoffDate(WorkDate As Date) As Boolean
-      ' This function returns true if the current date is greater than the 
-      ' cutoff for the date in the pay period that was passed.  
-      ' Ugh, that doesn't mean anything.  Let me try again.
-      ' The cutoff for changes to the pay period is 10 AM the day after the end of
-      ' the pay period.  So if the pay period were to end on 9/6/2016,
-      ' users would have until 9/7/2016 10:00 AM EDT to make changes.
-      ' If the current date/time is after that for a given pay period ending date, 
-      ' we return true.
-      Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
-    End Function
+    'Private Function IsItPastCutoffDate(WorkDate As Date) As Boolean
+    '  ' This function returns true if the current date is greater than the 
+    '  ' cutoff for the date in the pay period that was passed.  
+    '  ' Ugh, that doesn't mean anything.  Let me try again.
+    '  ' The cutoff for changes to the pay period is 10 AM the day after the end of
+    '  ' the pay period.  So if the pay period were to end on 9/6/2016,
+    '  ' users would have until 9/7/2016 10:00 AM EDT to make changes.
+    '  ' If the current date/time is after that for a given pay period ending date, 
+    '  ' we return true.
+    '  Dim specialDisasterPayPeriodStart As Date = Date.Parse("8/21/2019")
+    '  Dim specialDisasterPayPeriodEnd As Date = specialDisasterPayPeriodStart.AddDays(13)
+    '  If (WorkDate >= specialDisasterPayPeriodStart And WorkDate < specialDisasterPayPeriodEnd) Then
+    '    Return Now > GetPayPeriodStart(WorkDate).AddDays(16).AddHours(17)
+    '  Else
+    '    Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
+    '  End If
+    'End Function
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)

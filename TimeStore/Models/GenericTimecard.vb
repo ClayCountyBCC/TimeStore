@@ -217,7 +217,8 @@
     ReadOnly Property showAddTime As Boolean
       Get
         If Data_Type = "timecard" Then
-          Return (Days_Since_PPE < 2)
+          Return Not IsItPastCutoffDate(payPeriodStart)
+          'Return (Days_Since_PPE < 2)
         Else
           Return False
         End If
@@ -354,7 +355,13 @@
 
     Public ReadOnly Property Days_Since_PPE() As Integer
       Get
-        Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
+        ' For Disaster Hurricane Dorian
+        ' Remove Later
+        If payPeriodStart = "8/21/2019" Then
+          Return Today.Subtract(payPeriodStart.AddDays(15)).TotalDays
+        Else
+          Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
+        End If
       End Get
     End Property
 

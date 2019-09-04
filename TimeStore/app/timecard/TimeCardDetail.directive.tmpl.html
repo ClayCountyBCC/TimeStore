@@ -72,65 +72,7 @@
                      ng-show="ctrl.timecard.exemptStatus !== 'Exempt' && ctrl.timecard.Data_Type === 'timecard'"
                      timecard="ctrl.timecard"></add-comp-time>
     </md-tab>
-
-    <!--<md-tab label="Approve"
-            id="approveyourhours">
-
-      <div ng-show="timecard.ErrorList.length === 0 && timecard.Approval_Level === 0 && timecard.Days_Since_PPE <= 1 && timecard.timeList.length > 0"
-           flex="100"
-           layout-padding>
-
-        <time-approval flex="95" tl="timecard.timeList" tc="timecard"></time-approval>
-
-      </div>
-      <div ng-show="timecard.ErrorList.length > 0"
-           layout="row"
-           layout-align="center center"
-           layout-padding
-           layout-wrap
-           flex="100">
-        Your time cannot be approved while there are Errors present.
-        <timecard-warnings flex="100"
-                           alignheader="center"
-                           headerclass="warn"
-                           dl="timecard.ErrorList"
-                           title="Errors"></timecard-warnings>
-      </div>
-      <div ng-show="timecard.Approval_Level > 0 && timecard.Days_Since_PPE < 1"
-           layout="row"
-           layout-align="center center"
-           layout-padding
-           flex="100">
-        Your time has already been approved.
-      </div>
-      <div ng-show="timecard.Days_Since_PPE > 1"
-           layout="row"
-           layout-align="center center"
-           layout-padding
-           flex="100">
-        It is too late to approve your time for this pay period.
-      </div>
-      <div ng-show="timecard.timeList.length === 0 && timecard.Days_Since_PPE < 1"
-           layout="row"
-           layout-align="center center"
-           layout-padding
-           flex="100">
-        No time has been entered to approve.
-      </div>
-      <div ng-show="timecard.WarningList.length > 0"
-           layout="row"
-           layout-align="center center"
-           layout-padding
-           layout-wrap
-           flex="100">
-        These warnings should be considered before you approve your time.
-        <timecard-warnings flex="100"
-                           alignheader="center"
-                           headerclass="my-accent"
-                           dl="timecard.WarningList"
-                           title="Warnings"></timecard-warnings>
-      </div>
-    </md-tab>-->
+      
 
     <md-tab label="Notes"
             id="notelist">

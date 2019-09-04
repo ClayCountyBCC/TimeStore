@@ -355,9 +355,9 @@
       ' their minimum needed for overtime and move the hours to different types as needed.
 
       ' First we're going to move the regular pay to overtime and the overtime to regular pay as needed.
-      If TelestaffProfileType = TelestaffProfileType.Office Then
-        Balance_Disaster_Hours()
-      End If
+      'If TelestaffProfileType = TelestaffProfileType.Office Then
+      '  'Balance_Disaster_Hours()
+      'End If
       If Not IsExempt Then
         If Not IsOvertime_Calculated_Weekly Then
           Balance_Overtime_By_Payperiod_Hours()
@@ -502,34 +502,35 @@
     End Sub
 
     Private Function Handle_Disaster_Hours_Office(ByRef T As TelestaffTimeData) As Boolean
-      If T.DisasterRule = 0 Or
-        Not T.IsWorkingTime Or
-        Not TelestaffProfileType = TelestaffProfileType.Office Then Return False
-
-      If IsExempt Then
-        If T.DisasterRule = 2 Then Return False
-        Select Case T.WorkCode
-          Case "002", "299"
-            Return False
-          Case Else
-            If (T.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
-              T.WorkDate.DayOfWeek = DayOfWeek.Sunday) Then
-              Disaster_StraightTime.Add(T)
-              Return True
-            End If
-        End Select
-        Return False
-      Else
-        Select Case T.DisasterRule
-          Case 1
-            Disaster_Doubletime.Add(T)
-            Return True
-          Case 2
-
-        End Select
-
-      End If
       Return False
+      'If T.DisasterRule = 0 Or
+      '  Not T.IsWorkingTime Or
+      '  Not TelestaffProfileType = TelestaffProfileType.Office Then Return False
+
+      'If IsExempt Then
+      '  If T.DisasterRule = 2 Then Return False
+      '  Select Case T.WorkCode
+      '    Case "002", "299"
+      '      Return False
+      '    Case Else
+      '      If (T.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+      '        T.WorkDate.DayOfWeek = DayOfWeek.Sunday) Then
+      '        Disaster_StraightTime.Add(T)
+      '        Return True
+      '      End If
+      '  End Select
+      '  Return False
+      'Else
+      '  Select Case T.DisasterRule
+      '    Case 1
+      '      Disaster_Doubletime.Add(T)
+      '      Return True
+      '    Case 2
+
+      '  End Select
+
+      'End If
+      'Return False
     End Function
 
 

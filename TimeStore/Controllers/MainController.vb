@@ -110,9 +110,9 @@ Namespace Controllers
         Dim t As Boolean
 
         If serverType = "specialdisaster" Then
-          SpecialDisasterSavedTimeToFinplusProcess(ppe, cst)
+          t = SpecialDisasterSavedTimeToFinplusProcess(ppe, cst)
         Else
-          SavedTimeToFinplusProcess(ppe, cst)
+          t = SavedTimeToFinplusProcess(ppe, cst)
         End If
 
         'Dim t As Boolean = False

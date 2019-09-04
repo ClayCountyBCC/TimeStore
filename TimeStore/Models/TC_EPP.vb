@@ -191,79 +191,83 @@
 
     Public ReadOnly Property DisasterRegular(week As Integer) As Double
       Get
+        Return 0
         ' old - 8/31/2019
         'Return (From t In Week_TL(week)
         '        Where t.DisasterRule = 2
         '        Select t.DisasterWorkHours).Sum -
         '        DisasterOverTime(week) -
         '        DisasterAdminLeave(week)
-        Return (From t In Week_TL(week)
-                Select t.DisasterWorkHours).Sum -
-                DisasterOverTime(week) -
-                DisasterAdminLeave(week)
+        'Return (From t In Week_TL(week)
+        '        Select t.DisasterWorkHours).Sum -
+        '        DisasterOverTime(week) -
+        '        DisasterAdminLeave(week)
       End Get
     End Property
 
     Public ReadOnly Property Calculated_DisasterRegular(Week As Integer) As Double
       Get
-        Select Case Week
-          Case 1, 2
-            'Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
-            Dim val As Double = DisasterRegular(Week)
-            If Term_Hours(0) = 0 Then
-              If IsExempt AndAlso EmployeeData.HireDate < PayPeriodStart Then
-                Dim HoursForOTByWeek As Double = EmployeeData.HoursNeededForOvertime / 2
-                If val > HoursForOTByWeek Then val = HoursForOTByWeek
-                If val > 0 And val < HoursForOTByWeek Then val = HoursForOTByWeek
-              Else
-                If val > 40 Then
-                  val = 40
-                End If
-              End If
-              'If val > DisasterRegular(Week) Then
-              '  val = DisasterRegular(Week)
-              'End If
-            End If
-            val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
-              LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) - DisasterAdminLeave(Week)
-            Return Math.Max(val, 0)
-          Case Else
-            Return Calculated_DisasterRegular(1) + Calculated_DisasterRegular(2)
-        End Select
+        Return 0
+        'Select Case Week
+        '  Case 1, 2
+        '    'Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
+        '    Dim val As Double = DisasterRegular(Week)
+        '    If Term_Hours(0) = 0 Then
+        '      If IsExempt AndAlso EmployeeData.HireDate < PayPeriodStart Then
+        '        Dim HoursForOTByWeek As Double = EmployeeData.HoursNeededForOvertime / 2
+        '        If val > HoursForOTByWeek Then val = HoursForOTByWeek
+        '        If val > 0 And val < HoursForOTByWeek Then val = HoursForOTByWeek
+        '      Else
+        '        If val > 40 Then
+        '          val = 40
+        '        End If
+        '      End If
+        '      'If val > DisasterRegular(Week) Then
+        '      '  val = DisasterRegular(Week)
+        '      'End If
+        '    End If
+        '    val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
+        '      LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) - DisasterAdminLeave(Week)
+        '    Return Math.Max(val, 0)
+        '  Case Else
+        '    Return Calculated_DisasterRegular(1) + Calculated_DisasterRegular(2)
+        'End Select
       End Get
     End Property
 
     Public ReadOnly Property DisasterDoubleTime(Week As Integer) As Double
       Get
-        If IsExempt Then
-          Return 0
-        Else
-          ' old 8/31/2019
-          'Return (From t In Week_TL(Week)
-          '        Where t.DisasterRule = 1
-          '        Select t.WorkHours + t.BreakCreditHours).Sum
-          Return (From t In Week_TL(Week)
-                  Select t.WorkHours + t.BreakCreditHours).Sum
-        End If
+        Return 0
+        'If IsExempt Then
+        '  Return 0
+        'Else
+        '  ' old 8/31/2019
+        '  'Return (From t In Week_TL(Week)
+        '  '        Where t.DisasterRule = 1
+        '  '        Select t.WorkHours + t.BreakCreditHours).Sum
+        '  Return (From t In Week_TL(Week)
+        '          Select t.WorkHours + t.BreakCreditHours).Sum
+        'End If
       End Get
     End Property
 
     Public ReadOnly Property DisasterOverTime(Week As Integer) As Double
       Get
-        If IsExempt Then
-          Return 0
-        Else
-          'old 8/31/2019
-          'Return (From t In Week_TL(Week)
-          '        Where t.DisasterRule = 2 And
-          '            t.WorkHours + t.BreakCreditHours > 8 And
-          '          t.DoubleTimeHours = 0
-          '        Select t.WorkHours + t.BreakCreditHours - 8).Sum
-          Return (From t In Week_TL(Week)
-                  Where t.WorkHours + t.BreakCreditHours > 8 And
-                    t.DoubleTimeHours = 0
-                  Select t.WorkHours + t.BreakCreditHours - 8).Sum
-        End If
+        Return 0
+        'If IsExempt Then
+        '  Return 0
+        'Else
+        '  'old 8/31/2019
+        '  'Return (From t In Week_TL(Week)
+        '  '        Where t.DisasterRule = 2 And
+        '  '            t.WorkHours + t.BreakCreditHours > 8 And
+        '  '          t.DoubleTimeHours = 0
+        '  '        Select t.WorkHours + t.BreakCreditHours - 8).Sum
+        '  Return (From t In Week_TL(Week)
+        '          Where t.WorkHours + t.BreakCreditHours > 8 And
+        '            t.DoubleTimeHours = 0
+        '          Select t.WorkHours + t.BreakCreditHours - 8).Sum
+        'End If
       End Get
     End Property
 
@@ -276,32 +280,33 @@
 
     Public ReadOnly Property DisasterStraightTime(Week As Integer) As Double
       Get
-        If IsExempt Then
-          ' old 8/31/2019
-          'Dim weekday = (From t In Week_TL(Week)
-          '               Where t.DisasterRule = 1 And
-          '                 t.WorkHours > 8 And
-          '                 t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
-          '                 t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
-          '               Select t.WorkHours - 8).Sum
-          'Dim weekend = (From t In Week_TL(Week)
-          '               Where t.DisasterRule = 1 And
-          '                 (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
-          '                 t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
-          '               Select t.WorkHours).Sum
-          Dim weekday = (From t In Week_TL(Week)
-                         Where t.WorkHours > 8 And
-                           t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
-                           t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
-                         Select t.WorkHours - 8).Sum
-          Dim weekend = (From t In Week_TL(Week)
-                         Where (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
-                           t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
-                         Select t.WorkHours).Sum
-          Return weekday + weekend
-        Else
-          Return 0
-        End If
+        Return 0
+        'If IsExempt Then
+        '  ' old 8/31/2019
+        '  'Dim weekday = (From t In Week_TL(Week)
+        '  '               Where t.DisasterRule = 1 And
+        '  '                 t.WorkHours > 8 And
+        '  '                 t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
+        '  '                 t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
+        '  '               Select t.WorkHours - 8).Sum
+        '  'Dim weekend = (From t In Week_TL(Week)
+        '  '               Where t.DisasterRule = 1 And
+        '  '                 (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+        '  '                 t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+        '  '               Select t.WorkHours).Sum
+        '  Dim weekday = (From t In Week_TL(Week)
+        '                 Where t.WorkHours > 8 And
+        '                   t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
+        '                   t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
+        '                 Select t.WorkHours - 8).Sum
+        '  Dim weekend = (From t In Week_TL(Week)
+        '                 Where (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+        '                   t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+        '                 Select t.WorkHours).Sum
+        '  Return weekday + weekend
+        'Else
+        '  Return 0
+        'End If
       End Get
     End Property
 
