@@ -399,7 +399,8 @@
         <hours-display tctd="TCTD" hours="TCTD.SickFamilyLeave" calc="calculateTotalHours()"></hours-display>
         <hours-display tctd="TCTD" hours="TCTD.CompTimeUsed" calc="calculateTotalHours()"></hours-display>
         <hours-display tctd="TCTD" hours="TCTD.LWOPHours" calc="calculateTotalHours()"></hours-display>
-        <hours-display tctd="TCTD" hours="TCTD.ScheduledLWOPHours" calc="calculateTotalHours()"></hours-display>
+        <hours-display ng-show="!timecard.isFullTime"
+                       tctd="TCTD" hours="TCTD.ScheduledLWOPHours" calc="calculateTotalHours()"></hours-display>
         <hours-display tctd="TCTD" hours="TCTD.LWOPSuspensionHours" calc="calculateTotalHours()"></hours-display>
         <hours-display tctd="TCTD" hours="TCTD.HolidayHours" calc="calculateTotalHours()"></hours-display>
         <hours-display tctd="TCTD" hours="TCTD.SickLeavePoolHours" calc="calculateTotalHours()"></hours-display>

@@ -15,6 +15,7 @@
     Private _disaster_overtime As New GroupedHours
     Private _disaster_doubletime As New GroupedHours
     Private _admin_leave_disaster As New GroupedHours
+    Public DisasterPayRules As List(Of DisasterEventRules) = New List(Of DisasterEventRules)()
     Public Property Banked_Holiday_Hours As Double = 0
     Public Property TelestaffHoursNeededForOvertime As Double = Double.MinValue
     Public Property TelestaffProfileType As TelestaffProfileType
@@ -23,6 +24,23 @@
     Public Property PayPeriodStart As Date
     Public Property ErrorList As New List(Of String)
     Public Property WarningList As New List(Of String)
+
+    Public Shared Function PopulateDisasterWorkDates(PayPeriodStart As Date, DisasterPayRules As List(Of DisasterEventRules)) As List(Of Date)
+      Dim workdates As List(Of Date) = New List(Of Date)()
+      If DisasterPayRules.Count = 0 Then Return workdates
+
+      For Each dpr In DisasterPayRules
+        If dpr.pay_rule = 1 Or dpr.pay_rule = 2 Then
+          Dim d As Date = dpr.StartDate.Date
+          Do While d < dpr.EndDate.Date
+            If Not workdates.Contains(d) And d >= PayPeriodStart Then workdates.Add(d.Date)
+            d = d.AddDays(1)
+          Loop
+        End If
+      Next
+      Return workdates
+    End Function
+
 
     Private Sub Init_GroupedHours_Paycodes()
       _regular.PayCode = "002"
@@ -76,6 +94,7 @@
       TelestaffHoursNeededForOvertime = Get_Hours_Needed_For_Overtime()
       TelestaffProfileType = Get_Profile_Type()
       Init_GroupedHours_Paycodes()
+      DisasterPayRules = DisasterEventRules.Get_Cached_Disaster_Rules(PPS.AddDays(13))
       ' Holiday Hours Special Handling, these hours will need to be removed from the green sheet printout.
       Handle_Holiday_Modifier(True)
 
@@ -355,9 +374,9 @@
       ' their minimum needed for overtime and move the hours to different types as needed.
 
       ' First we're going to move the regular pay to overtime and the overtime to regular pay as needed.
-      'If TelestaffProfileType = TelestaffProfileType.Office Then
-      '  'Balance_Disaster_Hours()
-      'End If
+      If TelestaffProfileType = TelestaffProfileType.Office Then
+        Balance_Disaster_Hours()
+      End If
       If Not IsExempt Then
         If Not IsOvertime_Calculated_Weekly Then
           Balance_Overtime_By_Payperiod_Hours()
@@ -371,39 +390,60 @@
 
     Private Sub Balance_Disaster_Hours()
       If TelestaffProfileType = TelestaffProfileType.Office Then
+
         If IsExempt Then
-          Balance_Exempt_Disaster_By_Week(Regular.Week1, Disaster_Regular.Week1)
-          Balance_Exempt_Disaster_By_Week(Regular.Week2, Disaster_Regular.Week2)
+          'Balance_Exempt_Disaster_By_Period_By_Day(Disaster_Regular)
+          Balance_Exempt_Disaster_By_Period_By_Week(Disaster_Regular.Week1)
+          Balance_Exempt_Disaster_By_Period_By_Week(Disaster_Regular.Week2)
+          'Balance_Exempt_Disaster_By_Week(Regular.Week1, Disaster_Regular.Week1)
+          'Balance_Exempt_Disaster_By_Week(Regular.Week2, Disaster_Regular.Week2)
         Else
-          Balance_NonExempt_Disaster_By_Week(Regular.Week1, Disaster_Regular.Week1)
-          Balance_NonExempt_Disaster_By_Week(Regular.Week2, Disaster_Regular.Week2)
+          Balance_NonExempt_Disaster_By_Period_By_Week(Disaster_Regular.Week1)
+          Balance_NonExempt_Disaster_By_Period_By_Week(Disaster_Regular.Week2)
         End If
+
       End If
     End Sub
 
-    Private Sub Balance_Exempt_Disaster_By_Week(Regular_Week As List(Of TelestaffTimeData),
-                                                Disaster_Regular_week As List(Of TelestaffTimeData))
-      ' Everything on these dates should be moved to disaster regular overtime.
-      Dim dates = (From t In Timelist
-                   Where t.DisasterRule = 1 And
-                     (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
-                     t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
-                   Select t.WorkDate).Distinct.ToList()
+    Private Sub Balance_Exempt_Disaster_By_Period_By_Week(DisasterRegular As List(Of TelestaffTimeData))
+
+      'Dim NormallyScheduled As Boolean = True
+      'For Each t In DisasterRegular
+      '  NormallyScheduled = Not (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+      '  If t.WorkDate = "9/2/2019" Then NormallyScheduled = False
+
+      '  For Each dpr In DisasterPayRules
+
+      '  Next
+      'Next
+
+
+      'Everything on these dates should be moved to disaster regular overtime.
+      'Dim dates = (From t In Timelist
+      '             Where t.DisasterRule = 1 And
+      '               (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+      '               t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+      '             Select t.WorkDate).Distinct.ToList()
+      Dim dates = PopulateDisasterWorkDates(PayPeriodStart, DisasterPayRules)
 
       If dates.Count = 0 Then Exit Sub
       For Each d In dates
-        Dim r As Double = (From t In Regular_Week
-                           Where t.WorkDate = d And
-                             t.DisasterRule = 1
-                           Select t.WorkHours).Sum
-        Dim dr As Double = (From t In Disaster_Regular_week
+        Dim dr As Double = (From t In DisasterRegular
                             Where t.WorkDate = d And
                               t.DisasterRule = 1
                             Select t.WorkHours).Sum
-        Regular.Move_Day(r, d, Regular_Week, Disaster_StraightTime, Timelist)
-        Disaster_Regular.Move_Day(dr, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+        ' no one is scheduled to work Saturdays or Sundays
+        If d.DayOfWeek = DayOfWeek.Saturday Or d.DayOfWeek = DayOfWeek.Sunday Then
+          Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_StraightTime, Timelist)
+        Else
+          If d = "9/2/2019" Or d = "9/3/2019" Then ' 9/2/2019 is hte holiday, 9/3 is the date of the full activation start.
+            Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_StraightTime, Timelist)
+          End If
+        End If
+
+
       Next
-      ' for these dates, we need to move everything worked past 8 hours to the disaster regular overtime
+      'For these dates, we need To move everything worked past 8 hours To the disaster regular overtime
       dates = (From t In Timelist
                Where t.DisasterRule = 1 And
                  t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
@@ -416,16 +456,12 @@
       Dim tmp As Double = 0
 
       For Each d In dates
-        Dim r As Double = (From t In Regular_Week
-                           Where t.WorkDate = d And
-                             t.DisasterRule = 1
-                           Select t.WorkHours).Sum
-        Dim dr As Double = (From t In Disaster_Regular_week
+        Dim dr As Double = (From t In DisasterRegular
                             Where t.WorkDate = d And
-                              t.DisasterRule = 1
+                                t.DisasterRule = 1
                             Select t.WorkHours).Sum
-        If dr + r > 8 Then
-          hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+        If dr > 8 Then
+          hoursToMove = dr - 8 ' everything over 8 needs to get moved to disaster regular overtime
           If dr > 0 Then
             If dr - hoursToMove >= 0 Then
               tmp = hoursToMove
@@ -434,47 +470,74 @@
               tmp = dr
               hoursToMove = hoursToMove - dr
             End If
-            Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
-          End If
-          If hoursToMove > 0 Then
-            If r > 0 Then
-              If r - hoursToMove >= 0 Then
-                tmp = hoursToMove
-                hoursToMove = 0
-              Else
-                tmp = r
-                hoursToMove = hoursToMove - r
-              End If
-              Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
-            End If
+            Disaster_Regular.Move_Day(tmp, d, DisasterRegular, Disaster_StraightTime, Timelist)
           End If
         End If
       Next
     End Sub
 
-    Private Sub Balance_NonExempt_Disaster_By_Week(Regular_Week As List(Of TelestaffTimeData),
-                                                Disaster_Regular_week As List(Of TelestaffTimeData))
-      ' Everything on these dates should be moved to disaster regular overtime.
-      Dim dates = (From t In Timelist
-                   Where t.DisasterRule = 2
-                   Select t.WorkDate).Distinct.ToList()
+    Private Sub Balance_NonExempt_Disaster_By_Period_By_Week(DisasterRegular As List(Of TelestaffTimeData))
+      'Everything on these dates should be moved to disaster regular overtime.
+      Dim dates = PopulateDisasterWorkDates(PayPeriodStart, DisasterPayRules)
 
       If dates.Count = 0 Then Exit Sub
+
+      For Each d In dates
+        Dim dr As Double = (From t In DisasterRegular
+                            Where t.WorkDate = d And
+                              t.DisasterRule = 1
+                            Select t.WorkHours).Sum
+        ' no one is scheduled to work Saturdays or Sundays
+        If d.DayOfWeek = DayOfWeek.Sunday Then
+
+          Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Doubletime, Timelist)
+
+        Else
+
+          If d.DayOfWeek = DayOfWeek.Saturday Then
+            Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Overtime, Timelist)
+
+          Else
+            If d = "9/2/2019" Then ' 9/2/2019 is hte holiday, 9/3 is the date of the full activation start.
+              Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Overtime, Timelist)
+            End If
+          End If
+        End If
+
+
+      Next
 
       Dim hoursToMove As Double = 0
       Dim tmp As Double = 0
 
+      Dim NormallyScheduledHours As Double = 8
+
+      If EmployeeData.EmployeeId = 1158 Then
+        NormallyScheduledHours = 10
+      End If
+
       For Each d In dates
-        Dim r As Double = (From t In Regular_Week
-                           Where t.WorkDate = d And
-                             t.DisasterRule = 2
-                           Select t.WorkHours).Sum
-        Dim dr As Double = (From t In Disaster_Regular_week
+
+        Dim dr As Double = (From t In DisasterRegular
                             Where t.WorkDate = d And
                               t.DisasterRule = 2
                             Select t.WorkHours).Sum
-        If dr + r > 8 Then
-          hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+        Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Doubletime, Timelist)
+
+        dr = (From t In DisasterRegular
+              Where t.WorkDate = d And
+                              t.DisasterRule = 1
+              Select t.WorkHours).Sum
+
+        If d = "8/30/2019" And EmployeeData.EmployeeId = 1158 Then
+          NormallyScheduledHours = 0
+        End If
+        If d = "9/3/2019" Or d = "9/2/2019" Or d = "9/4/2019" Then
+          NormallyScheduledHours = 0
+        End If
+
+        If dr > NormallyScheduledHours Then
+          hoursToMove = dr - NormallyScheduledHours ' everything over 8 needs to get moved to disaster regular overtime
           If dr > 0 Then
             If dr - hoursToMove >= 0 Then
               tmp = hoursToMove
@@ -483,23 +546,133 @@
               tmp = dr
               hoursToMove = hoursToMove - dr
             End If
-            Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_Overtime, Timelist)
-          End If
-          If hoursToMove > 0 Then
-            If r > 0 Then
-              If r - hoursToMove >= 0 Then
-                tmp = hoursToMove
-                hoursToMove = 0
-              Else
-                tmp = r
-                hoursToMove = hoursToMove - r
-              End If
-              Regular.Move_Day(tmp, d, Regular_Week, Disaster_Overtime, Timelist)
-            End If
+            Disaster_Regular.Move_Day(tmp, d, DisasterRegular, Disaster_Overtime, Timelist)
           End If
         End If
       Next
+
+
     End Sub
+
+    'Private Sub Balance_Exempt_Disaster_By_Week(Disaster_Regular_week As List(Of TelestaffTimeData))
+    '  'Everything on these dates should be moved to disaster regular overtime.
+    '  'Dim dates = (From t In Timelist
+    '  '             Where t.DisasterRule = 1 And
+    '  '               (t.WorkDate.DayOfWeek = DayOfWeek.Saturday Or
+    '  '               t.WorkDate.DayOfWeek = DayOfWeek.Sunday)
+    '  '             Select t.WorkDate).Distinct.ToList()
+    '  Dim dates = PopulateDisasterWorkDates(PayPeriodStart, DisasterPayRules)
+
+    '  If dates.Count = 0 Then Exit Sub
+    '  For Each d In dates
+    '    Dim r As Double = (From t In Regular_Week
+    '                       Where t.WorkDate = d And
+    '                         t.DisasterRule = 1
+    '                       Select t.WorkHours).Sum
+    '    Dim dr As Double = (From t In Disaster_Regular_week
+    '                        Where t.WorkDate = d And
+    '                          t.DisasterRule = 1
+    '                        Select t.WorkHours).Sum
+    '    Regular.Move_Day(r, d, Regular_Week, Disaster_StraightTime, Timelist)
+    '    Disaster_Regular.Move_Day(dr, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+    '  Next
+    '  'For these dates, we need To move everything worked past 8 hours To the disaster regular overtime
+    '  dates = (From t In Timelist
+    '           Where t.DisasterRule = 1 And
+    '             t.WorkDate.DayOfWeek <> DayOfWeek.Saturday And
+    '             t.WorkDate.DayOfWeek <> DayOfWeek.Sunday
+    '           Select t.WorkDate).Distinct.ToList
+
+    '  If dates.Count = 0 Then Exit Sub
+
+    '  Dim hoursToMove As Double = 0
+    '  Dim tmp As Double = 0
+
+    '  For Each d In dates
+    '    Dim r As Double = (From t In Regular_Week
+    '                       Where t.WorkDate = d And
+    '                           t.DisasterRule = 1
+    '                       Select t.WorkHours).Sum
+    '    Dim dr As Double = (From t In Disaster_Regular_week
+    '                        Where t.WorkDate = d And
+    '                            t.DisasterRule = 1
+    '                        Select t.WorkHours).Sum
+    '    If dr + r > 8 Then
+    '      hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+    '      If dr > 0 Then
+    '        If dr - hoursToMove >= 0 Then
+    '          tmp = hoursToMove
+    '          hoursToMove = 0
+    '        Else
+    '          tmp = dr
+    '          hoursToMove = hoursToMove - dr
+    '        End If
+    '        Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+    '      End If
+    '      If hoursToMove > 0 Then
+    '        If r > 0 Then
+    '          If r - hoursToMove >= 0 Then
+    '            tmp = hoursToMove
+    '            hoursToMove = 0
+    '          Else
+    '            tmp = r
+    '            hoursToMove = hoursToMove - r
+    '          End If
+    '          Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_StraightTime, Timelist)
+    '        End If
+    '      End If
+    '    End If
+    '  Next
+    'End Sub
+
+    'Private Sub Balance_NonExempt_Disaster_By_Week(Regular_Week As List(Of TelestaffTimeData),
+    '                                            Disaster_Regular_week As List(Of TelestaffTimeData))
+    '  'Everything on these dates should be moved to disaster regular overtime.
+    '  Dim dates = (From t In Timelist
+    '               Where t.DisasterRule = 2
+    '               Select t.WorkDate).Distinct.ToList()
+
+    '  If dates.Count = 0 Then Exit Sub
+
+    '  Dim hoursToMove As Double = 0
+    '  Dim tmp As Double = 0
+
+    '  For Each d In dates
+    '    Dim r As Double = (From t In Regular_Week
+    '                       Where t.WorkDate = d And
+    '                         t.DisasterRule = 2
+    '                       Select t.WorkHours).Sum
+    '    Dim dr As Double = (From t In Disaster_Regular_week
+    '                        Where t.WorkDate = d And
+    '                          t.DisasterRule = 2
+    '                        Select t.WorkHours).Sum
+    '    If dr + r > 8 Then
+    '      hoursToMove = dr + r - 8 ' everything over 8 needs to get moved to disaster regular overtime
+    '      If dr > 0 Then
+    '        If dr - hoursToMove >= 0 Then
+    '          tmp = hoursToMove
+    '          hoursToMove = 0
+    '        Else
+    '          tmp = dr
+    '          hoursToMove = hoursToMove - dr
+    '        End If
+    '        Disaster_Regular.Move_Day(tmp, d, Disaster_Regular_week, Disaster_Overtime, Timelist)
+    '      End If
+    '      If hoursToMove > 0 Then
+    '        If r > 0 Then
+    '          If r - hoursToMove >= 0 Then
+    '            tmp = hoursToMove
+    '            hoursToMove = 0
+    '          Else
+    '            tmp = r
+    '            hoursToMove = hoursToMove - r
+    '          End If
+    '          Regular.Move_Day(tmp, d, Regular_Week, Disaster_Overtime, Timelist)
+    '        End If
+    '      End If
+    '    End If
+    '  Next
+    'End Sub
 
     Private Function Handle_Disaster_Hours_Office(ByRef T As TelestaffTimeData) As Boolean
       Return False
@@ -743,9 +916,18 @@
           End If
         End If
       End If
-      If Total_Hours_Week1 <= HoursNeededForOvertimeByWeek AndAlso Unscheduled_Overtime.TotalHours_Week1 > 0 Then
-        Unscheduled_Overtime.Move_Week1(Unscheduled_Overtime.TotalHours_Week1, _unscheduled_regular_overtime, Timelist)
+      If Unscheduled_Overtime.TotalHours_Week1 > 0 Then
+        If Total_Hours_Week1 <= HoursNeededForOvertimeByWeek Then
+          Unscheduled_Overtime.Move_Week1(Unscheduled_Overtime.TotalHours_Week1, _unscheduled_regular_overtime, Timelist)
+        End If
+        Dim DisasterTotalOvertimeHoursWeek1 = Disaster_Doubletime.TotalHours_Week1 + Disaster_Overtime.TotalHours_Week1 + Disaster_StraightTime.TotalHours_Week1
+        If Total_Hours_Week1 - DisasterTotalOvertimeHoursWeek1 <= HoursNeededForOvertimeByWeek Then
+          Unscheduled_Overtime.Move_Week2(Unscheduled_Overtime.TotalHours_Week1, _unscheduled_regular_overtime, Timelist)
+        End If
       End If
+
+
+
       If (Total_Non_Working_Hours_Week1 > (Scheduled_Regular_Overtime.TotalHours_Week1 + Comp_Time_Banked.TotalHours_Week1 + Unscheduled_Regular_Overtime.TotalHours_Week1) -
                     Unscheduled_Double_Overtime.TotalHours_Week1) AndAlso Unscheduled_Overtime.TotalHours_Week1 > 0 Then
         Dim diff As Double = Total_Hours_Week1 + Comp_Time_Banked.TotalHours_Week1 - Total_Non_Working_Hours_Week1 - HoursNeededForOvertimeByWeek - Unscheduled_Double_Overtime.TotalHours_Week1
@@ -786,6 +968,11 @@
         End If
       End If
       If Total_Hours_Week2 <= HoursNeededForOvertimeByWeek AndAlso Unscheduled_Overtime.TotalHours_Week2 > 0 Then
+        Unscheduled_Overtime.Move_Week2(Unscheduled_Overtime.TotalHours_Week2, _unscheduled_regular_overtime, Timelist)
+      End If
+      Dim DisasterTotalOvertimeHoursWeek2 = Disaster_Doubletime.TotalHours_Week2 + Disaster_Overtime.TotalHours_Week2 + Disaster_StraightTime.TotalHours_Week2
+      If Total_Hours_Week2 - DisasterTotalOvertimeHoursWeek2 <= HoursNeededForOvertimeByWeek AndAlso
+        Unscheduled_Overtime.TotalHours_Week2 > 0 Then
         Unscheduled_Overtime.Move_Week2(Unscheduled_Overtime.TotalHours_Week2, _unscheduled_regular_overtime, Timelist)
       End If
       If (Total_Non_Working_Hours_Week2 > (Scheduled_Regular_Overtime.TotalHours_Week2 + Comp_Time_Banked.TotalHours_Week2 + Unscheduled_Regular_Overtime.TotalHours_Week2) -

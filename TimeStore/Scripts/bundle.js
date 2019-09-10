@@ -51519,7 +51519,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       checkForErrors();
       if ($scope.DisasterHoursRelated === false && $scope.errorList.length === 0)
       {
-        $scope.saveTCTD();
+        $scope.calculateTotalHours();
       }
     };
     
@@ -51528,24 +51528,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.ShowDisasterNormallyScheduledHours = $scope.NormallyScheduled;
       $scope.TCTD.DisasterNormalScheduledHours = $scope.NormallyScheduled ? null : 0;
       checkForErrors();
-      if ($scope.errorList.length === 0)
-      {
-        $scope.saveTCTD();
-      }
+      $scope.calculateTotalHours();
     };
 
     $scope.NormallyScheduledHoursSelected = function ()
     {
       checkForErrors();
-      if ($scope.errorList.length === 0)
-      {
-        $scope.saveTCTD();
-      }
+      $scope.calculateTotalHours();
     };
 
     $scope.CopyWorkHoursToDisasterWorkHours = function ()
     {
       $scope.TCTD.disasterSelectedTimes = $scope.TCTD.selectedTimes;
+      $scope.TCTD.disasterSelectedTimesDisplay = $scope.TCTD.selectedTimesDisplay;
       $scope.calculateTotalHours();
     };
 
@@ -51948,8 +51943,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     $scope.saveTCTD = function ()
     {
+      console.log("saving tctd", $scope.TCTD);
+
       var basetctd = addtimeFunctions.getBaseTCTD($scope.TCTD, $scope.timecard);
-      console.log('basetctd', basetctd);
+      console.log('basetctd after save', basetctd);
       timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError);
     };
 

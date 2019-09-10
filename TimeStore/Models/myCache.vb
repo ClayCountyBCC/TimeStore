@@ -79,6 +79,8 @@ Namespace Models
           Return AD_EmployeeData.GetEmployeeDataFromAD()
         Case "employee_lookup_data"
           Return AD_EmployeeData.GetEmployeeLookupData()
+        Case "employeedata_dict"
+          Return GetEmployeeDataFromFinplusAsDictionary()
         Case "employeedata"
           'Dim payperiodstart As Date = s(1)
           Return GetAllEmployeeDataFromFinPlus()
@@ -105,7 +107,7 @@ Namespace Models
           Return Get_All_Notes(ppd)
         Case "telestaffdata"
           Dim ppd As Date = s(1)
-          Return GetEmployeeDataFromTelestaff(ppd)
+          Return TelestaffTimeData.GetEmployeeDataFromTelestaff(ppd)
         Case "approvaldata"
           Dim ppd As Date = s(1)
           Return Get_All_Saved_Timecard_Data(ppd)

@@ -128,6 +128,24 @@ Public Module ModuleDataAccess
     Return fdl
   End Function
 
+  Public Function GetCachedEmployeeDataFromFinplusAsDictionary() As Dictionary(Of Integer, FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
+    Dim key As String = "employeedata_dict" ' & PayPeriodStart.ToShortDateString
+    Dim fdl As Dictionary(Of Integer, FinanceData) = myCache.GetItem(key, CIP)
+    Return fdl
+  End Function
+
+  Public Function GetEmployeeDataFromFinplusAsDictionary() As Dictionary(Of Integer, FinanceData)
+    Dim fdl As List(Of FinanceData) = GetCachedEmployeeDataFromFinplus()
+    Dim dict As New Dictionary(Of Integer, FinanceData)
+    For Each f In fdl
+      dict(f.EmployeeId) = f
+    Next
+    Return dict
+  End Function
+
   Public Function GetEmployeeDataFromFinPlus(DepartmentList As List(Of String)) As List(Of FinanceData)
     Dim CIP As New CacheItemPolicy With {
       .AbsoluteExpiration = Now.AddHours(12)
@@ -443,125 +461,7 @@ WHERE access_type >= " & accessType
     End Try
   End Function
 
-  Public Function GetEmployeeDataFromTelestaff(StartDate As Date, Optional ByVal EmployeeID As String = "", Optional ByVal EndDate? As Date = Nothing) As List(Of TelestaffTimeData)
-    Dim I As List(Of Incentive) = myCache.GetItem("incentive")
-    Dim sbQuery As New StringBuilder, dbc As New Tools.DB(GetCS(ConnectionStringType.Telestaff), toolsAppId, toolsDBError)
-    With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
-      .AppendLine("USE Telestaff;")
-      .Append("DECLARE @Start DATETIME = '").Append(StartDate.ToShortDateString).Append("';")
-      If EndDate.HasValue Then
-        .Append("DECLARE @End DATETIME = '").Append(EndDate.Value.ToShortDateString).Append("';")
-      Else
-        .AppendLine("DECLARE @End DATETIME = DATEADD(dd, 13, @Start);")
-      End If
 
-      .AppendLine("SELECT ISNULL(DRP.rule_applied, 0) disaster_rule, ")
-      .AppendLine("R.payinfo_no_in, R.rsc_no_in, R.rsc_desc_ch, R.Rsc_Hourwage_db, R.Rsc_From_Da, R.Rsc_Thru_Da, AAA.* FROM (SELECT Resource_Master_Tbl.RscMaster_No_In, Staffing_Tbl.Staffing_Calendar_Da, ")
-      .AppendLine("SUM(DATEDIFF(minute,Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt))/60.00 as StaffingHours, Wstat_Cde_Tbl.Wstat_FLSA_Si, Wstat_Cde_Tbl.Wstat_WageFactor_In,")
-      .AppendLine("Staffing_Tbl.Staffing_Benign_Si AS RequiresApproval, Resource_Master_Tbl.RscMaster_Name_Ch,Resource_Master_Tbl.RscMaster_EmployeeID_Ch, ")
-      .AppendLine("Staffing_Tbl.Staffing_Start_Dt,Staffing_Tbl.Staffing_End_Dt,Job_Title_Tbl.Job_Abrv_Ch,Wstat_Type_Tbl.Wstat_Type_Desc_Ch,")
-      .AppendLine("(CASE WHEN LTRIM(RTRIM(Wstat_Cde_Tbl.Wstat_Abrv_Ch)) = '' THEN 'Straight' ELSE UPPER(LTRIM(RTRIM(Wstat_Cde_Tbl.Wstat_Abrv_Ch))) END) AS WstatAbrv,")
-      .AppendLine("Wstat_Cde_Tbl.Wstat_Name_Ch AS WstatName,Wstat_Payroll_ch,Pay_Information_Tbl.PayInfo_FlsaHours_In,")
-      .AppendLine("Shift_tbl.shift_abrv_ch, shift_tbl.Shift_TimeDuration_Ch, shift_tbl.shift_type_no_in, ")
-      .AppendLine("CASE WHEN Staffing_Tbl.Staffing_Benign_Si = 'Y' THEN ISNULL(Staffing_tbl.Staffing_Note_Vc, '') + ")
-      .AppendLine("' *** Unapproved in Telestaff' ELSE ISNULL(Staffing_tbl.Staffing_Note_Vc, '') END AS Comment, ")
-      .AppendLine("ISNULL(dbo.GetRscSpecialties(Resource_Tbl.Rsc_No_In,1), '') as Specialties, ISNULL(STRAT.strat_name_ch, '') AS StratName ")
-      .AppendLine("FROM Staffing_Tbl ")
-      .AppendLine("LEFT OUTER JOIN strategy_tbl STRAT ON Staffing_tbl.strat_no_in=STRAT.strat_no_in ")
-      .AppendLine("JOIN Resource_Tbl ON Resource_Tbl.Rsc_No_In=Staffing_Tbl.Rsc_No_In ")
-      .AppendLine("JOIN Wstat_Cde_Tbl ON Wstat_Cde_Tbl.Wstat_No_In=Staffing_Tbl.Wstat_No_In ")
-      .AppendLine("JOIN Shift_Tbl ON Shift_Tbl.Shift_No_In=Staffing_Tbl.Shift_No_In ")
-      .AppendLine("JOIN Wstat_Type_Tbl ON Wstat_Type_Tbl.Wstat_Type_No_In=Wstat_Cde_Tbl.Wstat_Type_No_In ")
-      .AppendLine("JOIN Job_Title_Tbl ON Job_Title_Tbl.Job_No_In=Resource_Tbl.Job_No_In ")
-      .AppendLine("LEFT OUTER JOIN Pay_Information_Tbl ON Pay_Information_Tbl.PayInfo_No_In=Resource_Tbl.PayInfo_No_In ")
-      .AppendLine("JOIN Resource_Master_Tbl ON Resource_Master_Tbl.RscMaster_No_In=Resource_Tbl.RscMaster_No_In ")
-      .AppendLine("JOIN Position_Tbl ON Position_Tbl.Pos_No_In=Staffing_Tbl.Pos_No_In ")
-      .AppendLine("JOIN Unit_Tbl ON Unit_Tbl.Unit_No_In=Position_Tbl.Unit_No_In ")
-      .AppendLine("JOIN Station_Tbl ON Station_Tbl.Station_No_In=Unit_Tbl.Station_No_In ")
-      .AppendLine("WHERE Staffing_Tbl.Staffing_Calendar_Da BETWEEN @Start AND @End AND Station_Tbl.Region_No_In IN (4,2,5,6) ")
-      ' Excluding the following work codes:
-      ' OTR -  Overtime Reject, field personnel were offered OT by Telestaff and didn't take it.
-      ' ORD - same as above but for Dispatch
-      ' OTRR - reject for rapid hire.  Same as above
-      ' DMWI - Dispatch shift trade, working.  This lets you know that the dispatcher traded shifts with someone and now they are working the shift in repayment.
-      ' MWI - Same as above just for field personnel instead of dispatch
-      ' SLOT - Sick leave on OT, person accepted OT but was sick.  Just used by Telestaff to fill the vacancy.
-      ' BR - Break for staff employees, this is used to accurately calculate their schedules, rather than using the automatically calculated break.
-      ' OJ - OJI on OT, these hours are not paid.
-      ' ADMNSWAP - Admin leave on Swap time, so it's not paid time.
-      ' OR - Off roster
-      ' 8/1/2014, these were moved to the NonPaid array and are now manually excluded.
-      ' The reason for the change is because we will need to see all of the time to correctly render a user's timesheet.
-      '.AppendLine("AND Wstat_Cde_Tbl.Wstat_Abrv_Ch NOT IN ('ADMNSWAP', 'OTR', 'OTRR', 'DMWI', 'MWI', 'ORD', 'SLOT', 'BR', 'OJ', 'OR') ")
-      ' 8/4/2014, we're going to keep the exclusions that are just used by telestaff to fill a spot on the roster.
-      If EmployeeID.Length > 0 Then .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch = '").Append(EmployeeID).AppendLine("'")
-
-      'If Not EmployeeList Is Nothing Then
-      '    .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch IN (")
-      '    For a As Integer = 0 To EmployeeList.Count - 1
-      '        .Append("'").Append(EmployeeList(a)).Append("'")
-      '        If a < EmployeeList.Count - 1 Then .Append(",")
-      '    Next
-      '    .AppendLine(") ")
-      'End If
-      If StartDate > CType("10/16/2018", Date) Then
-        .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch <> '2744' ") ' Jesse Hellard Exclusion while he works Animal Control and Public Safety until 8/4
-      End If
-      If StartDate < CType("8/11/2015", Date) Or StartDate > CType("8/25/2015", Date) Then .Append("AND Resource_Master_Tbl.RscMaster_EmployeeID_Ch <> '2201' ") ' Jesse Hellard Exclusion while he works Animal Control and Public Safety until 8/4
-      .AppendLine("AND Wstat_Cde_Tbl.Wstat_Abrv_Ch NOT IN ('OTR', 'OTRR', 'ORD', 'ORRD', 'NO', 'DPRN') ")
-      '.AppendLine("AND Resource_Tbl.rsc_no_in <> 1795 ")
-      ' Old version, this was determined to be incorrect when we have an end date entered that was after our start/end date
-      '.AppendLine("AND (Resource_Master_Tbl.RscMaster_Thru_Da IS NULL OR Resource_Master_Tbl.RscMaster_Thru_Da BETWEEN @Start AND @End) ")
-      .AppendLine("AND (Resource_Master_Tbl.RscMaster_Thru_Da IS NULL OR Resource_Master_Tbl.RscMaster_Thru_Da >= @Start) ")
-      .AppendLine("GROUP BY Staffing_Tbl.Staffing_Calendar_Da,Shift_Tbl.Shift_Type_No_In,Staffing_Tbl.Rsc_No_In,Resource_Master_Tbl.RscMaster_No_In,")
-      .AppendLine("Resource_Master_Tbl.RscMaster_Name_Ch,Resource_Master_Tbl.RscMaster_EmployeeID_Ch,Resource_Master_Tbl.RscMaster_PayrollID_Ch,")
-      .AppendLine("Resource_Master_Tbl.RscMaster_Contact1_Ch,Resource_Master_Tbl.RscMaster_Contact2_Ch,Resource_Tbl.Rsc_Job_Level_Ch,")
-      .AppendLine("Resource_Tbl.Rsc_No_In,Job_Title_Tbl.Job_Abrv_Ch,Wstat_Type_Tbl.Wstat_Type_No_In,Wstat_Type_Tbl.Wstat_Type_desc_Ch,")
-      .AppendLine("Wstat_Cde_Tbl.Wstat_No_In,Wstat_Cde_Tbl.Wstat_Name_Ch,Wstat_Cde_Tbl.Wstat_Abrv_Ch,Wstat_Cde_Tbl.Wstat_Payroll_Ch,Staffing_tbl.Staffing_Note_Vc,")
-      .AppendLine("Pay_Information_Tbl.PayInfo_FlsaHours_In,shift_tbl.shift_abrv_ch, shift_tbl.Shift_TimeDuration_Ch,Staffing_Tbl.Staffing_Start_Dt,")
-      .AppendLine("Staffing_Tbl.Staffing_End_Dt, Staffing_Tbl.Staffing_Benign_Si,Wstat_Cde_Tbl.Wstat_FLSA_Si, Wstat_Cde_Tbl.Wstat_WageFactor_In,STRAT.strat_name_ch) AS AAA ")
-      .AppendLine("LEFT OUTER JOIN Resource_Tbl R ON AAA.RscMaster_No_In = R.RscMaster_No_In ")
-      .AppendLine("LEFT OUTER JOIN TimeStore.dbo.Disaster_Pay_Rules DRP ON AAA.Staffing_Calendar_Da = DRP.disaster_date ")
-      .AppendLine("WHERE staffing_calendar_da BETWEEN ISNULL(R.Rsc_From_Da, @Start) AND ISNULL(R.Rsc_Thru_Da, @End) ")
-      .AppendLine("ORDER BY AAA.RscMaster_Name_Ch ASC, AAA.staffing_calendar_da ASC, AAA.staffing_start_dt ASC") ' AND R.rsc_disable_si='N' ' Removed 8/20/2014
-    End With
-    Try
-      Dim ds As DataSet = dbc.Get_Dataset(sbQuery.ToString)
-      Dim tmp As New List(Of TelestaffTimeData)(
-        From dbRow In ds.Tables(0).AsEnumerable()
-        Select New TelestaffTimeData With {
-          .DisasterRule = dbRow("disaster_rule"),
-          .EmployeeId = dbRow("RscMaster_EmployeeID_Ch"),
-          .RequiresApproval = (dbRow("RequiresApproval") = "Y"),
-          .WorkCode = IsNull(dbRow("Wstat_Payroll_Ch"), "000"),
-          .WorkDate = dbRow("Staffing_Calendar_Da"),
-          .WorkHours = IsNull(dbRow("StaffingHours"), "0"),
-          .ShiftType = dbRow("shift_abrv_ch"),
-          .Comment = dbRow("Comment"),
-          .Job = dbRow("Job_Abrv_Ch"),
-          .ConstantShift = (dbRow("shift_type_no_in") = 0),
-          .ProfileType = dbRow("payinfo_no_in"),
-          .ProfileID = dbRow("rsc_no_in"),
-          .StratName = dbRow("StratName"),
-          .FLSAHoursRequirement = IsNull(dbRow("PayInfo_FlsaHours_In"), "0"),
-          .WorkType = dbRow("WstatName"),
-          .WorkTypeAbrv = dbRow("WstatAbrv"),
-          .StartTime = dbRow("Staffing_Start_Dt"),
-          .EndTime = dbRow("Staffing_End_Dt"),
-          .IsWorkingTime = (dbRow("Wstat_Type_desc_Ch").ToString.Trim.ToUpper <> "NON WORKING"),
-          .IsPaidTime = Not IsDBNull(dbRow("Wstat_WageFactor_In")),
-          .CountsTowardsOvertime = (dbRow("Wstat_FLSA_Si").ToString.Trim.ToUpper = "Y"),
-          .Specialties = dbRow("Specialties"),
-          .ProfileStartDate = IsNull(dbRow("Rsc_From_Da"), Date.MinValue),
-          .ProfileEndDate = IsNull(dbRow("Rsc_Thru_Da"), Date.MaxValue),
-          .PayRate = Calculate_PayRate_With_Incentives(IsNull(dbRow("Rsc_Hourwage_db"), 0), .Specialties, .Job, .WorkTypeAbrv, .ProfileType, I)})
-      '.ShiftDuration = dbRow("Shift_TimeDuration_Ch").ToString.Split(",")(1),
-      Return tmp
-    Catch ex As Exception
-      Log(ex)
-      Return Nothing
-    End Try
-  End Function
 
 
 
@@ -866,7 +766,7 @@ WHERE access_type >= " & accessType
     Dim PayPeriodEnding As Date = PayPeriodStart.AddDays(13)
     Dim gtc As New List(Of GenericTimecard)
     Dim std As List(Of Saved_Timecard_Data) = Get_All_Saved_Timecard_Data(PayPeriodEnding)
-    Dim teledata As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(PayPeriodStart)
+    Dim teledata As List(Of TelestaffTimeData) = TelestaffTimeData.GetEmployeeDataFromTelestaff(PayPeriodStart)
     Dim tcdata As List(Of TimecardTimeData) = GetEmployeeDataFromTimecard(PayPeriodStart)
     Dim tsdata As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(PayPeriodStart, PayPeriodEnding)
     Dim tsctedata As List(Of Saved_TimeStore_Comp_Time_Earned) = GetCompTimeEarnedDataFromTimeStore(PayPeriodStart)
@@ -1800,7 +1700,7 @@ ORDER BY S.orgn ASC, S.employee_id ASC
                                          (fd.TerminationDate >= StartDate And
                                          fd.TerminationDate <= EndDate))
                                        Select fd).ToList
-    Dim teledl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(StartDate, "", EndDate)
+    Dim teledl As List(Of TelestaffTimeData) = TelestaffTimeData.GetEmployeeDataFromTelestaff(StartDate, "", EndDate)
     Dim tcl As List(Of TimecardTimeData) = GetEmployeeDataFromTimecard(StartDate, 0, EndDate)
     Dim tsl As List(Of TimecardTimeData) = GetEmployeeDataFromTimeStore(StartDate, EndDate)
 
@@ -1963,7 +1863,8 @@ ORDER BY S.orgn ASC, S.employee_id ASC
       AND H.by_employeeid IS NULL
       AND H.hours_used > 0
       AND is_approved = 1
-      AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE()" ' this is how we handle the pay period cutoff.
+      AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE()
+      " ' this is how we handle the pay period cutoff.
     ' any leave requests after the pay period ends will be ignored.
     Return Get_Data(Of Integer)(query, dp, ConnectionStringType.Timestore)
   End Function
@@ -1978,6 +1879,7 @@ ORDER BY S.orgn ASC, S.employee_id ASC
     dp.Add("@ByUsername", SavingEmployee.UserName)
     dp.Add("@ByMachinename", SavingEmployee.MachineName)
     dp.Add("@ByIpAddress", SavingEmployee.IPAddress)
+    ' Disaster Change
     Dim query As String = "
       UPDATE H
       SET 
@@ -1995,7 +1897,8 @@ ORDER BY S.orgn ASC, S.employee_id ASC
         AND H.by_employeeid IS NULL
         AND H.hours_used > 0
         AND H.is_approved = 1
-        AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE();"
+        AND DATEADD(HOUR, 10, DATEADD(dd, 1, CAST(W.pay_period_ending AS DATETIME))) > GETDATE()
+        ;" ' 
     Try
       Return Exec_Query(query, dp, ConnectionStringType.Timestore)
     Catch ex As Exception

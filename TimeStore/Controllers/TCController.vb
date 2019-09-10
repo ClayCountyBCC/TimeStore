@@ -28,7 +28,11 @@ Namespace Controllers
     'End Function
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
+#If DEBUG Then
+      'UserName = "wanamakerh"
+#End If
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
+
       Dim myCookie As New HttpCookie("employeeid", EID.ToString)
       myCookie.Expires = Today.AddYears(1)
       myCookie.HttpOnly = False
@@ -713,9 +717,12 @@ Namespace Controllers
         payperiodstart = GetPayPeriodStart(StartDate)
       Else
         payperiodstart = GetPayPeriodStart(Today)
-        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then
+          payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        End If
+
       End If
-      Dim bUseDept As Boolean = (deptId.Length > 0)
+        Dim bUseDept As Boolean = (deptId.Length > 0)
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim jnr As New JsonNetResult
 

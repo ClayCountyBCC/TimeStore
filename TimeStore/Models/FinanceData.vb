@@ -27,6 +27,11 @@
         Return TerminationDate <> Date.MaxValue
       End Get
     End Property
+    Public ReadOnly Property IsExempt As Boolean
+      Get
+        Return EmployeeType = "E"
+      End Get
+    End Property
 
     Public Sub New(dr As DataRow, Optional RefreshDisplayName As Boolean = False)
       Try

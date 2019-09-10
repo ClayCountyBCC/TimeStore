@@ -124,7 +124,9 @@
 
     Public Shared Function GetEmployeeIDFromAD(UserName As String) As Integer
       If UserName.Contains("\") Then UserName = UserName.Split("\")(1).ToLower
-      'UserName = "burnellr"
+#If DEBUG Then
+      'UserName = "wanamakerh"
+#End If
       Try
         Dim adld As Dictionary(Of String, Integer) = myCache.GetItem("employee_lookup_data")
         If adld.ContainsKey(UserName) Then

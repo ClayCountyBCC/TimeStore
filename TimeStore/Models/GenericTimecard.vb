@@ -355,13 +355,7 @@
 
     Public ReadOnly Property Days_Since_PPE() As Integer
       Get
-        ' For Disaster Hurricane Dorian
-        ' Remove Later
-        If payPeriodStart = "8/21/2019" Then
-          Return Today.Subtract(payPeriodStart.AddDays(15)).TotalDays
-        Else
-          Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
-        End If
+        Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
       End Get
     End Property
 
@@ -599,7 +593,11 @@
       ' It will need to be smart enough to know which fields to use based on the datatype
       Handle_Saved_Holiday_Data()
       'allowDataSave = True ' For Hurricane Matthew special calculations ' 777
-      If Days_Since_PPE < 1 Or (Days_Since_PPE = 1 AndAlso Now.Hour < PayPeriodEndingCutoff) Or allowDataSave Then
+
+      ' Disaster 9/6/2019
+      Dim ppec = PayPeriodEndingCutoff
+
+      If Days_Since_PPE < 1 Or (Days_Since_PPE = 1 AndAlso Now.Hour < ppec) Or allowDataSave Then
         ' We don't want to save the data that's out of date.  No changes should be made past the first day of the next payperiod.
         If Current_Timecard_Data.Count = 0 Then
           Return Save_Time()
@@ -878,7 +876,7 @@
 
         Else
 
-          Dim ttdl As List(Of TelestaffTimeData) = GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
+          Dim ttdl As List(Of TelestaffTimeData) = TelestaffTimeData.GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
           Dim e As New EPP(ttdl, fd, payPeriodStart)
           Load_EPP(e)
 
@@ -1195,7 +1193,8 @@
           End Select
         Else
           calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
-          tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours
+          calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 10, p))
+          tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours - e.Disaster_Regular.TotalHours
           calculatedTimeList.Add(New WorkType("Regular Work", tmp, 0, "002", p))
         End If
 

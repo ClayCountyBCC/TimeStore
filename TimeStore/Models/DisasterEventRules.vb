@@ -35,8 +35,13 @@ Namespace Models
           CAST(StartDate AS DATE) <= @ppe
           AND CAST(EndDate AS DATE) >= @pps
         ORDER BY StartDate"
+      Dim rules = Get_Data(Of DisasterEventRules)(query, dp, ConnectionStringType.Timestore)
 
-      Return Get_Data(Of DisasterEventRules)(query, dp, ConnectionStringType.Timestore)
+      For Each rule In rules
+        If rule.EndDate.Second = 59 Then rule.EndDate = rule.EndDate.AddSeconds(1)
+      Next
+      Return rules
+
     End Function
 
     Public Shared Function Get_Cached_Disaster_Rules(pay_period_ending As Date) As List(Of DisasterEventRules)
