@@ -407,6 +407,7 @@ Namespace Controllers
              Order By a.employeeID Descending
              Select a).ToList
 
+
       Dim jnr As New JsonNetResult
       jnr.Data = New List(Of String)
       If Not tca.DepartmentsToApprove.Contains("LEAVE") Then

@@ -48,7 +48,16 @@
           If t.DisasterWorkTimes.Length > 0 Then
             workDate = t.WorkDate.ToShortDateString
 
-            Dim times = t.DisasterWorkTimes.Split("-")
+            Dim times As String()
+            times = t.DisasterWorkTimes.Split("-")
+
+            'If t.WorkHours > t.DisasterWorkHours Then
+            '  times = t.WorkTimes.Split("-")
+            'Else
+
+            'End If
+
+
             Dim max As Integer = times.GetUpperBound(0)
 
             If max + 1 Mod 2 = 1 Then max -= 1 '
@@ -67,8 +76,12 @@
                     tsEndTime = endTime
 
                     If startTime < dpr.StartDate Then
-                      If t.WorkDate = "8/29/2019" Then ErrorList.Add("Disaster hours entered on 8/29/2019 before the disaster was declared at 8:00 AM.")
-                      tsStartTime = dpr.StartDate
+                      If t.WorkDate = "8/29/2019" Then
+                        'ErrorList.Add("Disaster hours entered on 8/29/2019 before the disaster was declared at 8:00 AM.")
+                      Else
+                        tsStartTime = dpr.StartDate
+                      End If
+
                     End If
 
                     If endTime > dpr.EndDate Then tsEndTime = dpr.EndDate
@@ -459,7 +472,7 @@
 
           End If
         Next
-        Return hours
+        Return Math.Max(hours, 0)
         'If IsExempt Then
         '  Return 0
         'Else
@@ -486,11 +499,22 @@
             If t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.DisasterNormalScheduledHours <= 0 Then
               ' these would be double time
             Else
-              If t.DisasterWorkHoursByRule(2) > 0 Then
+              If t.DisasterWorkHoursByRule(2) > 0 Then 'if there are any full activation hours on this day, we don't check to see if they marked the day as normally scheduled.
                 hours += t.DisasterWorkHoursByRule(1)
               Else
                 If t.DisasterNormalScheduledHours > 0 Then
-                  hours += (t.DisasterWorkHoursByRule(1) + t.BreakCreditHours) - t.DisasterNormalScheduledHours
+
+                  Dim difference = t.WorkHours + t.BreakCreditHours - t.DisasterNormalScheduledHours
+                  If difference > 0 Then
+                    If difference > t.DisasterWorkHoursByRule(1) + t.BreakCreditHours Then
+                      hours += t.DisasterWorkHoursByRule(1) + t.BreakCreditHours
+                    Else
+                      hours += difference
+                    End If
+                  End If
+
+
+                  'hours += (t.DisasterWorkHoursByRule(1) + t.BreakCreditHours) - t.DisasterNormalScheduledHours
                 Else
                   hours += t.DisasterWorkHoursByRule(1) + t.BreakCreditHours
                 End If
@@ -501,7 +525,7 @@
 
 
         Next
-        Return hours
+        Return Math.Max(hours, 0)
 
         'If IsExempt Then
         '  Return 0
@@ -537,12 +561,20 @@
 
         For Each t In Week_TL(Week)
           If t.DisasterNormalScheduledHours > 0 Then
-            hours += ((t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)) - t.DisasterNormalScheduledHours)
+            Dim difference = t.WorkHours - t.DisasterNormalScheduledHours
+            If difference > 0 Then
+              If difference > t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2) Then
+                hours += t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)
+              Else
+                hours += difference
+              End If
+            End If
+            'hours += (difference - t.DisasterNormalScheduledHours)
           Else
             hours += t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)
           End If
         Next
-        Return hours
+        Return Math.Max(hours, 0)
         'If IsExempt Then
         '  ' old 8/31/2019
         '  'Dim weekday = (From t In Week_TL(Week)
@@ -869,8 +901,16 @@
             WarningList.Add("No breaks should be entered on this date.")
           End If
         End If
+
+        If t.DisasterWorkHours > 0 And t.DisasterWorkType.Trim.Length = 0 Then
+          ErrorList.Add("You must select what type of work was performed on the disaster on " & t.WorkDate.ToShortDateString & ".")
+        End If
+
+        If t.DisasterWorkHours > t.WorkHours Then
+          ErrorList.Add("The work hours entered on " & t.WorkDate.ToShortDateString & " are less than the disaster work hours entered.  If the disaster work hours are correct, then the work hours should be updated to reflect this.")
+        End If
         If t.ScheduledLWOPHours > 0 And EmployeeData.isFulltime Then
-          ErrorList.Add("Scheduled LWOP hours used.  These are to be used by part time employees only.")
+          ErrorList.Add("Scheduled LWOP hours used on " & t.WorkDate.ToShortDateString & ".  These are to be used by part time employees only.")
         End If
 
         If t.DisasterWorkHours > 0 Then

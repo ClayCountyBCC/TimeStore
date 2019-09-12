@@ -916,7 +916,7 @@ FROM (
       S.pay_period_ending,
       S2.TotalHours 
     FROM Saved_Time S 
-    LEFT OUTER JOIN [SQLCLUSFINANCE\FINANCE].finplus51.dbo.person P ON S.employee_id = P.empl_no
+    LEFT OUTER JOIN CLAYBCCFINDB.finplus51.dbo.person P ON S.employee_id = P.empl_no
     INNER JOIN (
       SELECT 
         employee_id, 

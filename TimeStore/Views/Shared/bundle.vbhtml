@@ -1683,9 +1683,6 @@
         <md-radio-button value="training">
           Training Database
         </md-radio-button>
-        <md-radio-button value="specialdisaster">
-          Special Disaster Payrun 9/3/2019
-        </md-radio-button>
       </md-radio-group>
     </div>
       <div layout="row"
