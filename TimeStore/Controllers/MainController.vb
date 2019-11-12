@@ -81,7 +81,7 @@ Namespace Controllers
     Function UploadFinanceData(ppdIndex As Integer, serverType As String) As JsonNetResult
       Dim cst As ConnectionStringType
       Select Case serverType
-        Case "training"
+        Case "training", "specialdisasterqa"
           cst = ConnectionStringType.FinplusTraining
         Case "normal", "specialdisaster"
           cst = ConnectionStringType.FinPlus
@@ -109,7 +109,7 @@ Namespace Controllers
         'End Select
         Dim t As Boolean
 
-        If serverType = "specialdisaster" Then
+        If serverType = "specialdisaster" Or serverType = "specialdisasterqa" Then
           t = SpecialDisasterSavedTimeToFinplusProcess(ppe, cst)
         Else
           t = SavedTimeToFinplusProcess(ppe, cst)

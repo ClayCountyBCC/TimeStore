@@ -1329,39 +1329,52 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
   Public Function GetRawTimestoreSavedTimeDataForDisaster(payPeriodEnding As Date) As DataSet
     Dim dbts As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
     Dim f As List(Of FinanceData) = GetAllEmployeeDataFromFinPlus()
-    Dim query As String = "
-DECLARE @pay_period_ending DATE = '9/3/2019';
+    '    Dim query As String = "
+    'DECLARE @pay_period_ending DATE = '9/3/2019';
 
-WITH TotalHours AS (
-  SELECT 
-    employee_id
-    ,SUM(hours) total_hours
-  FROM Saved_Time
-  WHERE orgn NOT IN ('1703', '2103')
-  AND paycode NOT IN ('230', '231', '232', '299', '300', '301', '302', '303', '046', '120')
-  AND pay_period_ending = @pay_period_ending
-  GROUP BY employee_id
-)
+    'WITH TotalHours AS (
+    '  SELECT 
+    '    employee_id
+    '    ,SUM(hours) total_hours
+    '  FROM Saved_Time
+    '  WHERE orgn NOT IN ('1703', '2103')
+    '  AND paycode NOT IN ('230', '231', '232', '299', '300', '301', '302', '303', '046', '120')
+    '  AND pay_period_ending = @pay_period_ending
+    '  GROUP BY employee_id
+    ')
+    'SELECT
+    '  S.employee_id
+    '  ,S.paycode
+    '  ,S.payrate
+    '  ,CASE WHEN paycode= '002' AND T.total_hours < 80 
+    '    THEN 80 - (T.total_hours - S.hours)
+    '    ELSE S.hours
+    '    END hours
+    '  ,S.amount
+    '  ,S.orgn
+    '  ,S.classify
+    'FROM Saved_Time S
+    'LEFT OUTER JOIN TotalHours T ON S.employee_id = T.employee_id
+    'WHERE 
+    '  pay_period_ending= @pay_period_ending
+    '  AND paycode <> 800
+    '  AND ((orgn NOT IN ('1703', '2103')
+    '  AND paycode NOT IN ('230', '231', '232', '299', '300', '301', '302', '303', '046', '120'))
+    '  OR orgn IN ('1703', '2103'))
+    'ORDER BY S.orgn ASC, S.employee_id ASC"
+
+    Dim query As String = "
 SELECT
-  S.employee_id
-  ,S.paycode
-  ,S.payrate
-  ,CASE WHEN paycode= '002' AND T.total_hours < 80 
-    THEN 80 - (T.total_hours - S.hours)
-    ELSE S.hours
-    END hours
-  ,S.amount
-  ,S.orgn
-  ,S.classify
-FROM Saved_Time S
-LEFT OUTER JOIN TotalHours T ON S.employee_id = T.employee_id
-WHERE 
-  pay_period_ending= @pay_period_ending
-  AND paycode <> 800
-  AND ((orgn NOT IN ('1703', '2103')
-  AND paycode NOT IN ('230', '231', '232', '299', '300', '301', '302', '303', '046', '120'))
-  OR orgn IN ('1703', '2103'))
-ORDER BY S.orgn ASC, S.employee_id ASC
+  empl_no employee_id
+  ,paycode
+  ,payrate
+  ,[Hours To Be Added] hours
+  ,0 amount
+  ,home_orgn orgn
+  ,classify
+FROM vw_CombinedPayroll
+ORDER BY home_orgn, empl_no
+
 "
     'Dim TimestoreQuery As New StringBuilder
     'With TimestoreQuery
@@ -1398,7 +1411,7 @@ ORDER BY S.orgn ASC, S.employee_id ASC
     Try
       ds = dbts.Get_Dataset(query, P)
       For Each d In ds.Tables(0).Rows
-        d("payrate") = GetPayrate(d("paycode"), d("payrate"))
+        'd("payrate") = GetPayrate(d("paycode"), d("payrate"))
         d("classify") = GetClassification(d("employee_id"), f, d("classify"))
       Next
       Return ds

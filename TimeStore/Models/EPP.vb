@@ -1267,8 +1267,10 @@
             If IsExempt Then
               Return 40
             Else
-              Dim tmp As Double = Regular.TotalHours_Week1 + Vacation.TotalHours_Week1 + Leave_Without_Pay.TotalHours_Week1 +
-                                                Sick.TotalHours_Week1 + Comp_Time_Used.TotalHours_Week1 + Union_Time_Pool.TotalHours_Week1 + Disaster_Regular.TotalHours_Week2
+              Dim tmp As Double = Regular.TotalHours_Week1 + Vacation.TotalHours_Week1 +
+                Leave_Without_Pay.TotalHours_Week1 + Sick.TotalHours_Week1 +
+                Comp_Time_Used.TotalHours_Week1 + Union_Time_Pool.TotalHours_Week1 +
+                Disaster_Regular.TotalHours_Week1 + Disaster_Doubletime.TotalHours_Week1
               Return tmp
             End If
           Case Else
@@ -1291,7 +1293,7 @@
               Dim tmp As Double = Regular.TotalHours_Week2 + Vacation.TotalHours_Week2 +
                 Leave_Without_Pay.TotalHours_Week2 + Sick.TotalHours_Week2 +
                 Comp_Time_Used.TotalHours_Week2 + Union_Time_Pool.TotalHours_Week2 +
-                Disaster_Regular.TotalHours_Week2
+                Disaster_Regular.TotalHours_Week2 + Disaster_Doubletime.TotalHours_Week2
               Return tmp
             End If
           Case Else

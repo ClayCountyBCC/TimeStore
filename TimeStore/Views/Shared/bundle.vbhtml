@@ -1683,6 +1683,12 @@
         <md-radio-button value="training">
           Training Database
         </md-radio-button>
+        <!--<md-radio-button value="specialdisaster">
+          Special Disaster Payrun - Production
+        </md-radio-button>
+        <md-radio-button value="specialdisasterqa">
+          Special Disaster Payrun - Training
+        </md-radio-button>-->
       </md-radio-group>
     </div>
       <div layout="row"
