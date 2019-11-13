@@ -99,7 +99,7 @@
           ORDER BY dept_id, employee_id, work_date;"
       Try
         Dim ld = Get_Data(Of Hours_To_Approve_Display)(query, dp, ConnectionStringType.Timestore)
-        Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
+        Dim aded As Dictionary(Of Integer, AD_EmployeeData) = AD_EmployeeData.GetCachedEmployeeDataFromAD()
         Dim fl = GetCachedEmployeeDataFromFinplus()
         Dim tsf As Dictionary(Of Integer, Timestore_Field) = Get_TimeStore_Fields_By_ID()
         For Each l In ld

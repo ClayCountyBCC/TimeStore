@@ -40,7 +40,7 @@
       var lowercaseQuery = angular.lowercase(query);
       return function filterFn(item)
       {
-        return (item.displayLower.indexOf(lowercaseQuery) >= 0);
+        return item.displayLower.indexOf(lowercaseQuery) >= 0;
       };
     }
 
@@ -62,6 +62,7 @@
 
     timestoredata.getMyAccess().then(function (data)
     {
+      console.log("my access", data);
       $scope.myAccess = data;
 
     });
@@ -76,6 +77,11 @@
         $scope.employeeid = employee.value.EmployeeID;
         timestoreNav.goDefaultEmployee($scope.employeeid);
       }
+    };
+
+    $scope.openPasswordExpirationMenu = function ()
+    {
+      $mdSidenav('passwordExpiring').toggle();
     };
 
     $scope.openAdminMenu = function ()

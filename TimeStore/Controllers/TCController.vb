@@ -887,7 +887,7 @@ Namespace Controllers
     Public Function GetBirthdays() As JsonNetResult
       Dim eid As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
       Dim fl As List(Of FinanceData) = GetEmployeeDataFromFinPlus(eid)
-      Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
+      Dim aded As Dictionary(Of Integer, AD_EmployeeData) = AD_EmployeeData.GetCachedEmployeeDataFromAD() 'GetADEmployeeData()
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim baseBdayList As List(Of Namedday) = Namedday.GetAllCachedBirthdays()
       Dim jnr As New JsonNetResult

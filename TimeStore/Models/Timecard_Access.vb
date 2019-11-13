@@ -7,7 +7,7 @@ Namespace Models
     Public Property EmployeeOutputList As List(Of EmployeeOutput)
     Public Property TimecardTimeExceptionList As List(Of TimecardTimeException)
 
-    Private Access_Types_As_Text() As String = {"None", "User Only", "Departmental 1", "Departmental 2", "Departmental 3", "Departmental 4", "Departmental 5", "All"}
+    Private ReadOnly Access_Types_As_Text() As String = {"None", "User Only", "Departmental 1", "Departmental 2", "Departmental 3", "Departmental 4", "Departmental 5", "All"}
     Private _Access As Access_Types = Access_Types.User_Only
 
     Public Enum Access_Types As Integer
@@ -20,6 +20,8 @@ Namespace Models
       Department_5 = 6
       All_Access = 7
     End Enum
+    Public Property PasswordExpirationDate As String = ""
+    Public Property PasswordExpiringSoon As Boolean = False
     Public Property ReportsToList As New List(Of Integer)
     Public Property PayPeriodDisplayDate As String = ""
     Public Property ReportsTo As Integer = 0
@@ -74,11 +76,23 @@ Namespace Models
     End Property
 
     Public Sub New()
-
+      UpdatePasswordData()
     End Sub
+
+    Private Sub UpdatePasswordData()
+      If EmployeeID < 1000 Then Exit Sub
+      Dim aded = AD_EmployeeData.GetCachedEmployeeDataFromAD()
+      If aded.ContainsKey(EmployeeID) Then
+        Dim e = aded(EmployeeID)
+        PasswordExpirationDate = e.PasswordExpirationDate.ToShortDateString()
+        PasswordExpiringSoon = e.PasswordExpiring
+      End If
+    End Sub
+
 
     Public Sub New(EID As Integer, dept As String)
       EmployeeID = EID
+      UpdatePasswordData()
       Select Case dept
         Case "2103", "1703"
           Data_Type = "telestaff"
@@ -102,6 +116,7 @@ Namespace Models
       RawDepartmentsToApprove = String.Join(" ", rawTCA.DepartmentsToApprove)
       'DepartmentsToApprove.AddRange(rawTCA.DepartmentsToApprove)
       EmployeeID = rawTCA.EmployeeId
+      UpdatePasswordData()
       ReportsTo = rawTCA.ReportsTo
       RequiresApproval = rawTCA.RequiresApproval
     End Sub
@@ -175,6 +190,7 @@ Namespace Models
       Dim al As List(Of Timecard_Access) = Get_Data(Of Timecard_Access)(query, ConnectionStringType.Timestore)
       Dim rt = Get_All_Cached_ReportsTo()
       For Each a In al
+        a.UpdatePasswordData()
         If rt.ContainsKey(a.EmployeeID) Then
           a.ReportsToList = rt(a.EmployeeID)
         End If

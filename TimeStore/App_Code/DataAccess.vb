@@ -104,14 +104,7 @@ Public Module ModuleDataAccess
     End Select
   End Function
 
-  Public Function GetADEmployeeData() As Dictionary(Of Integer, AD_EmployeeData)
-    Dim CIP As New CacheItemPolicy With {
-      .AbsoluteExpiration = Now.AddHours(12)
-    }
-    Dim key As String = "employee_ad_data"
-    Dim aded As Dictionary(Of Integer, AD_EmployeeData) = myCache.GetItem(key, CIP)
-    Return aded
-  End Function
+
 
   'Public Function GetADEmployeeData() As List(Of AD_EmployeeData)
   '  Dim key As String = "employee_ad_data"

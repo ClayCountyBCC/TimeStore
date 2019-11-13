@@ -50834,7 +50834,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var lowercaseQuery = angular.lowercase(query);
       return function filterFn(item)
       {
-        return (item.displayLower.indexOf(lowercaseQuery) >= 0);
+        return item.displayLower.indexOf(lowercaseQuery) >= 0;
       };
     }
 
@@ -50856,6 +50856,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     timestoredata.getMyAccess().then(function (data)
     {
+      console.log("my access", data);
       $scope.myAccess = data;
 
     });
@@ -50870,6 +50871,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         $scope.employeeid = employee.value.EmployeeID;
         timestoreNav.goDefaultEmployee($scope.employeeid);
       }
+    };
+
+    $scope.openPasswordExpirationMenu = function ()
+    {
+      $mdSidenav('passwordExpiring').toggle();
     };
 
     $scope.openAdminMenu = function ()

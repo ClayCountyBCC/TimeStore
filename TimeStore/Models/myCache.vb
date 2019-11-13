@@ -77,6 +77,7 @@ Namespace Models
           Return Incentive.Get_All_Incentive_Data()
         Case "employee_ad_data"
           Return AD_EmployeeData.GetEmployeeDataFromAD()
+
         Case "employee_lookup_data"
           Return AD_EmployeeData.GetEmployeeLookupData()
         Case "employeedata_dict"

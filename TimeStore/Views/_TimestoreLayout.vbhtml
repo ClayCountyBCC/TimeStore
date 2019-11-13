@@ -33,6 +33,17 @@ end code
           </md-tooltip>
         </a>
         <span flex></span>
+        <md-button ng-show="myAccess.PasswordExpiringSoon"
+                   ng-click="openPasswordExpirationMenu()"
+                   aria-label="Password Expiring Soon"                   
+                   class="md-fab md-mini md-hue-3">
+          <md-icon aria-label="collection icon"
+                   md-svg-src="images/warning-24px.svg">
+          </md-icon>
+          <md-tooltip md-direction="bottom">
+            Your network password is going to expire on {{ myAccess.PasswordExpirationDate }}.
+          </md-tooltip>
+        </md-button>
         <md-button ng-show="myAccess.Data_Type==='timecard'"
                    aria-label="View Leave Requests"
                    ng-click="viewLeaveRequests()"
@@ -74,7 +85,7 @@ end code
                 <span style="margin-left: 1em;">Termed: {{ employee.TerminationDateDisplay }}</span>
               </span>
             </span>
-          </md-item-template>          
+          </md-item-template>
           <md-not-found>
             No matches found.
           </md-not-found>
@@ -87,6 +98,7 @@ end code
         </md-button>
       </div>
     </md-toolbar>
+
     <md-sidenav md-component-id="adminRight" class="md-sidenav-right md-whiteframe-z2">
       <section>
         <md-toolbar class="md-primary">
@@ -141,6 +153,7 @@ end code
         </md-list>
       </section>
     </md-sidenav>
+
     <md-sidenav md-component-id="approvalRight"
                 class="md-sidenav-right md-whiteframe-z2">
       <section>
@@ -190,6 +203,39 @@ end code
         </md-list>
       </section>
     </md-sidenav>
+
+    <md-sidenav md-component-id="passwordExpiring" class="md-sidenav-right md-whiteframe-z2">
+      <section>
+        <md-toolbar class="md-primary">
+          <div class="md-toolbar-tools">
+            Password is Expiring
+          </div>
+        </md-toolbar>
+        <md-list layout="column">
+          <md-list-item style="margin-bottom: 1em;">
+            Your Windows password is set to expire on {{ myAccess.PasswordExpirationDate }}.
+          </md-list-item>
+          <md-list-item style="margin-bottom: 1em;">
+            <p>To change your password:</p>
+          </md-list-item>
+          <md-list-item style="margin-bottom: 1em;">
+            <p>From a county computer, please do a control-alt-delete</p>
+          </md-list-item>
+          <md-list-item style="margin-bottom: 1em;">
+            <p>Choose <strong>Change A Password</strong> from the menu</p>
+          </md-list-item>
+          <md-list-item style="margin-bottom: 1em;">
+            <p>You must be logged in to a County Computer as yourself in order to change your password.</p>
+          </md-list-item>
+          <md-list-item style="margin-bottom: 1em;">
+            <p>
+              Your password's expiration date is only checked once a day. After your password has been changed, this message should no longer show up the following day.
+            </p>
+          </md-list-item>
+        </md-list>
+      </section>
+    </md-sidenav>
+
   </div>
   @RenderBody()
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/@AngularVer/angular-cookies.min.js"></script>

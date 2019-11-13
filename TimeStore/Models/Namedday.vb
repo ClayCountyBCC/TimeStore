@@ -48,7 +48,7 @@
       ' but aren't in Active Directory.
       Try
 
-        Dim aded As Dictionary(Of Integer, AD_EmployeeData) = GetADEmployeeData()
+        Dim aded As Dictionary(Of Integer, AD_EmployeeData) = AD_EmployeeData.GetCachedEmployeeDataFromAD()
         Dim fl = GetCachedEmployeeDataFromFinplus()
         Dim flad = (From f In fl
                     Where Not f.IsTerminated And
