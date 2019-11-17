@@ -874,119 +874,125 @@
     'End Property
 
     Public Sub Catch_Exceptions()
-      ' Holiday time <= 8
-      If Now > CType("9/22/2015", Date) Then
-        If TL.Count > 1 AndAlso TL.First.DataSource = TimecardTimeData.TimeCardDataSource.Timecard Then
-          WarningList.Add("Employee has time in the timecard system.")
-        End If
-      End If
-      If EmployeeData.HireDate > PayPeriodStart Then
-        WarningList.Add("Employee just started this pay period.")
-      End If
-      For a As Integer = 1 To 2
-        If LWOP(a) > 40 Then
-          ErrorList.Add("Too many Leave Without Pay hours used in Week " & a.ToString & ".")
-        End If
-      Next
+      Try
 
 
-
-      For Each t In TL
-        'If t.AdminHours > 8 Then
-        '    WarningList.Add("8 or more Admin leave hours entered on " & t.WorkDate.ToShortDateString & ".")
-        'End If
-
-        If t.WorkDate = "9/2/2019" Or t.WorkDate = "9/3/2019" Or t.WorkDate = "9/4/2019" Then
-          If t.BreakCreditHours > 0 Then
-            WarningList.Add("No breaks should be entered on this date.")
+        ' Holiday time <= 8
+        If Now > CType("9/22/2015", Date) Then
+          If TL.Count > 1 AndAlso TL.First.DataSource = TimecardTimeData.TimeCardDataSource.Timecard Then
+            WarningList.Add("Employee has time in the timecard system.")
           End If
         End If
-
-        If t.DisasterWorkHours > 0 And t.DisasterWorkType.Trim.Length = 0 Then
-          ErrorList.Add("You must select what type of work was performed on the disaster on " & t.WorkDate.ToShortDateString & ".")
+        If EmployeeData.HireDate > PayPeriodStart Then
+          WarningList.Add("Employee just started this pay period.")
         End If
+        For a As Integer = 1 To 2
+          If LWOP(a) > 40 Then
+            ErrorList.Add("Too many Leave Without Pay hours used in Week " & a.ToString & ".")
+          End If
+        Next
 
-        If t.DisasterWorkHours > t.WorkHours Then
-          ErrorList.Add("The work hours entered on " & t.WorkDate.ToShortDateString & " are less than the disaster work hours entered.  If the disaster work hours are correct, then the work hours should be updated to reflect this.")
-        End If
-        If t.ScheduledLWOPHours > 0 And EmployeeData.isFulltime Then
-          ErrorList.Add("Scheduled LWOP hours used on " & t.WorkDate.ToShortDateString & ".  These are to be used by part time employees only.")
-        End If
 
-        If t.DisasterWorkHours > 0 Then
 
-          If t.DisasterWorkHoursByRule(2) > 0 And t.DisasterNormalScheduledHours > 0 Then
-            ErrorList.Add("No one was scheduled to work on " & t.WorkDate.ToShortDateString & ".  The normally scheduled hours should be removed.")
+        For Each t In TL
+          'If t.AdminHours > 8 Then
+          '    WarningList.Add("8 or more Admin leave hours entered on " & t.WorkDate.ToShortDateString & ".")
+          'End If
+
+          If t.WorkDate = "9/2/2019" Or t.WorkDate = "9/3/2019" Or t.WorkDate = "9/4/2019" Then
+            If t.BreakCreditHours > 0 Then
+              WarningList.Add("No breaks should be entered on this date.")
+            End If
           End If
 
-          If t.DisasterWorkTimes.Length = 0 Then
-            ErrorList.Add("The disaster work hours on " & t.WorkDate.ToShortDateString & " will need to be re-entered.")
+          If t.DisasterWorkHours > 0 And t.DisasterWorkType.Trim.Length = 0 Then
+            ErrorList.Add("You must select what type of work was performed on the disaster on " & t.WorkDate.ToShortDateString & ".")
           End If
 
-        End If
-
-        If t.AdminHours >= 8 Then
-          WarningList.Add("8+ hours of Admin leave on " & t.WorkDate.ToShortDateString & ".")
-        End If
-        If t.WorkTimes.Trim.Length > 0 AndAlso t.WorkTimes.Trim.Split("-").Length Mod 2 = 1 Then
-          ErrorList.Add("Missing a start or end time on " & t.WorkDate.ToShortDateString & ".")
-        End If
-        ' Catch time if regular hours are less than .25 hours
-        If t.WorkHours Mod 0.25 > 0 Then
-          ErrorList.Add("Regular working hours must be in 15 minute increments.")
-        End If
-        If t.WorkHours > 0 And t.HolidayHours > 0 Then
-          WarningList.Add("Employee has work hours on a Holiday.")
-        End If
-        If t.SickLeavePoolHours > 0 Then
-          WarningList.Add("Employee has hours in Sick Leave Pool.")
-        End If
-
-        If t.WorkHours < t.DoubleTimeHours Then
-          ErrorList.Add("Employee has double time hours but not enough work hours listed on " & t.WorkDate.ToShortDateString & ".")
-        End If
-
-        If t.WorkDate.Subtract(EmployeeData.HireDate).TotalDays < 91 Then
-          If t.VacationHours > 0 Or t.SickFamilyLeave > 0 Or t.SickHours > 0 Or
-              t.SickLeavePoolHours > 0 Then
-            ErrorList.Add("Employee has Sick or Vacation hours and is still in first 90 days.")
+          If t.DisasterWorkHours > t.WorkHours Then
+            ErrorList.Add("The work hours entered on " & t.WorkDate.ToShortDateString & " are less than the disaster work hours entered.  If the disaster work hours are correct, then the work hours should be updated to reflect this.")
           End If
+          If t.ScheduledLWOPHours > 0 And EmployeeData.isFulltime Then
+            ErrorList.Add("Scheduled LWOP hours used on " & t.WorkDate.ToShortDateString & ".  These are to be used by part time employees only.")
+          End If
+
+          If t.DisasterWorkHours > 0 And t.DisasterWorkHoursByRule.ContainsKey(2) Then
+
+            If t.DisasterWorkHoursByRule(2) > 0 And t.DisasterNormalScheduledHours > 0 Then
+              ErrorList.Add("No one was scheduled to work on " & t.WorkDate.ToShortDateString & ".  The normally scheduled hours should be removed.")
+            End If
+
+            If t.DisasterWorkTimes.Length = 0 Then
+              ErrorList.Add("The disaster work hours on " & t.WorkDate.ToShortDateString & " will need to be re-entered.")
+            End If
+
+          End If
+
+          If t.AdminHours >= 8 Then
+            WarningList.Add("8+ hours of Admin leave on " & t.WorkDate.ToShortDateString & ".")
+          End If
+          If t.WorkTimes.Trim.Length > 0 AndAlso t.WorkTimes.Trim.Split("-").Length Mod 2 = 1 Then
+            ErrorList.Add("Missing a start or end time on " & t.WorkDate.ToShortDateString & ".")
+          End If
+          ' Catch time if regular hours are less than .25 hours
+          If t.WorkHours Mod 0.25 > 0 Then
+            ErrorList.Add("Regular working hours must be in 15 minute increments.")
+          End If
+          If t.WorkHours > 0 And t.HolidayHours > 0 Then
+            WarningList.Add("Employee has work hours on a Holiday.")
+          End If
+          If t.SickLeavePoolHours > 0 Then
+            WarningList.Add("Employee has hours in Sick Leave Pool.")
+          End If
+
+          If t.WorkHours < t.DoubleTimeHours Then
+            ErrorList.Add("Employee has double time hours but not enough work hours listed on " & t.WorkDate.ToShortDateString & ".")
+          End If
+
+          If t.WorkDate.Subtract(EmployeeData.HireDate).TotalDays < 91 Then
+            If t.VacationHours > 0 Or t.SickFamilyLeave > 0 Or t.SickHours > 0 Or
+                t.SickLeavePoolHours > 0 Then
+              ErrorList.Add("Employee has Sick or Vacation hours and is still in first 90 days.")
+            End If
+          End If
+
+        Next
+
+        If Term_Hours(0) > 0 Then
+          WarningList.Add("Employee has term hours entered.")
+        End If
+        ' Catch if using more sick / vacation / comp time than accrued
+        If Sick(0) > EmployeeData.Banked_Sick_Hours Then
+          ErrorList.Add("Using too many Sick hours, only " & EmployeeData.Banked_Sick_Hours & " banked.")
+        End If
+        If Vacation(0) > EmployeeData.Banked_Vacation_Hours Then
+          ErrorList.Add("Using too many Vacation hours, only " & EmployeeData.Banked_Vacation_Hours & " banked.")
+        End If
+        If Comp_Time_Used(1) > EmployeeData.Banked_Comp_Hours Then
+          ErrorList.Add("Using too many Comp Time Used hours, only " & EmployeeData.Banked_Comp_Hours & " banked.")
+        End If
+        If Comp_Time_Used(2) > EmployeeData.Banked_Comp_Hours + (CompTimeEarnedWeek1 * 1.5) Then
+          ErrorList.Add("Using too many Comp Time Used hours, only " & EmployeeData.Banked_Comp_Hours + (CompTimeEarnedWeek1 * 1.5) & " banked.")
+        End If
+        If TL.Count = 0 AndAlso Now > PayPeriodStart.AddDays(11) Then
+          ' we only want to show this message near the end of the pay period, or after the pay period is over.
+          ErrorList.Add("Employee has no time entered this pay period.")
         End If
 
-      Next
+        If (From t In TL Select t.AdminBereavement + t.AdminHours + t.AdminDisaster +
+                           t.AdminJuryDuty + t.AdminMilitaryLeave +
+                           t.AdminOther + t.AdminWorkersComp).Sum > 24 Then
+          WarningList.Add("More than 24 hours of Admin Leave used.")
+        End If
 
-      If Term_Hours(0) > 0 Then
-        WarningList.Add("Employee has term hours entered.")
-      End If
-      ' Catch if using more sick / vacation / comp time than accrued
-      If Sick(0) > EmployeeData.Banked_Sick_Hours Then
-        ErrorList.Add("Using too many Sick hours, only " & EmployeeData.Banked_Sick_Hours & " banked.")
-      End If
-      If Vacation(0) > EmployeeData.Banked_Vacation_Hours Then
-        ErrorList.Add("Using too many Vacation hours, only " & EmployeeData.Banked_Vacation_Hours & " banked.")
-      End If
-      If Comp_Time_Used(1) > EmployeeData.Banked_Comp_Hours Then
-        ErrorList.Add("Using too many Comp Time Used hours, only " & EmployeeData.Banked_Comp_Hours & " banked.")
-      End If
-      If Comp_Time_Used(2) > EmployeeData.Banked_Comp_Hours + (CompTimeEarnedWeek1 * 1.5) Then
-        ErrorList.Add("Using too many Comp Time Used hours, only " & EmployeeData.Banked_Comp_Hours + (CompTimeEarnedWeek1 * 1.5) & " banked.")
-      End If
-      If TL.Count = 0 AndAlso Now > PayPeriodStart.AddDays(11) Then
-        ' we only want to show this message near the end of the pay period, or after the pay period is over.
-        ErrorList.Add("Employee has no time entered this pay period.")
-      End If
-
-      If (From t In TL Select t.AdminBereavement + t.AdminHours + t.AdminDisaster +
-                         t.AdminJuryDuty + t.AdminMilitaryLeave +
-                         t.AdminOther + t.AdminWorkersComp).Sum > 24 Then
-        WarningList.Add("More than 24 hours of Admin Leave used.")
-      End If
-
-      If IsExempt Then
-        Catch_Exempt_Exceptions()
-      Else
-        Catch_Non_Exempt_Exceptions()
-      End If
+        If IsExempt Then
+          Catch_Exempt_Exceptions()
+        Else
+          Catch_Non_Exempt_Exceptions()
+        End If
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, "")
+      End Try
     End Sub
 
     Private Sub Catch_Non_Exempt_Exceptions()
