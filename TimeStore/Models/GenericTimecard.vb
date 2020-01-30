@@ -264,11 +264,19 @@
                 hourType = "Ineligible"
             End Select
 
-            Dim val = tmp(i).totalHours / holidayIncrement
-            For d As Integer = 1 To val
-              choices(i) = hourType
-              If d < val Then i += 1
-            Next
+            If tmp(i).totalHours > holidayIncrement Then
+              Try
+
+                Dim val = tmp(i).totalHours / holidayIncrement
+                For d As Integer = 1 To val
+                  choices(i) = hourType
+                  If d < val Then i += 1
+                Next
+
+              Catch ex As Exception
+                Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
+              End Try
+            End If
 
           Next
         End If
@@ -353,9 +361,16 @@
       End Get
     End Property
 
+    Public ReadOnly Property PayPeriodCutoffDate As Date
+      Get
+        Return GetPayperiodCutOffDateTime(payPeriodStart)
+      End Get
+    End Property
+
     Public ReadOnly Property Days_Since_PPE() As Integer
       Get
-        Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
+        Return Today.Subtract(PayPeriodCutoffDate.AddDays(-1).Date).TotalDays
+        'Return Today.Subtract(payPeriodStart.AddDays(13)).TotalDays
       End Get
     End Property
 
@@ -595,9 +610,9 @@
       'allowDataSave = True ' For Hurricane Matthew special calculations ' 777
 
       ' Disaster 9/6/2019
-      Dim ppec = PayPeriodEndingCutoff
-
-      If Days_Since_PPE < 1 Or (Days_Since_PPE = 1 AndAlso Now.Hour < ppec) Or allowDataSave Then
+      'Dim ppec = PayPeriodEndingCutoff
+      If Now < PayPeriodCutoffDate Or allowDataSave Then
+        'If Days_Since_PPE < 1 Or (Days_Since_PPE = 1 AndAlso Now.Hour < ppec) Or allowDataSave Then '
         ' We don't want to save the data that's out of date.  No changes should be made past the first day of the next payperiod.
         If Current_Timecard_Data.Count = 0 Then
           Return Save_Time()

@@ -579,28 +579,56 @@ WHERE access_type >= " & accessType
 
   Public Function GetTelestaffGroupingData() As Dictionary(Of Integer, String)
     Dim query As String = "
-      USE Telestaff;
-      Select distinct RM.RscMaster_EmployeeID_Ch As EmployeeID,
-      (Case When RIGHT(LTRIM(RTRIM(ST.station_abrv_ch)), 2) In ('15', '17', '18', '20', '22', '24') 
-      THEN 'BC1 - Shift ' + SH.shift_abrv_ch ELSE 
-    Case WHEN RIGHT(LTRIM(RTRIM(ST.station_abrv_ch)), 2) IN ('11', '13', '14', '23', '25', '26') 
-    THEN 'BC2 - Shift ' + SH.shift_abrv_ch ELSE 
-    Case WHEN U.unit_abrv_ch IN ('BC1', 'BC2') 
-    THEN U.unit_abrv_ch + ' - Shift ' + SH.shift_abrv_ch ELSE 
-    Case WHEN U.unit_abrv_ch = 'CCU' THEN 'Dispatch' ELSE
-    Case WHEN U.unit_abrv_ch = 'LTH'THEN 'LOGISTICS' ELSE
-    U.unit_name_ch END END END END END) AS OtherGroup
-    FROM Staffing_tbl S INNER JOIN Shift_Tbl SH ON SH.Shift_No_In=S.Shift_No_In
-    INNER Join Resource_Tbl R ON S.rsc_no_in = R.rsc_no_in 
-    INNER JOIN resource_master_tbl RM ON R.RscMaster_No_In = RM.RscMaster_No_In 
-    INNER Join Wstat_Cde_Tbl W ON W.Wstat_No_In=S.Wstat_No_In 
-    INNER JOIN Position_Tbl P ON P.Pos_No_In=S.Pos_No_In 
-    INNER Join Unit_Tbl U ON U.Unit_No_In=P.Unit_No_In 
-    INNER JOIN Station_Tbl ST ON U.station_no_in = ST.station_no_in
-    WHERE S.staffing_calendar_da BETWEEN CAST(DATEADD(dd, -2, GETDATE()) As Date)
-    AND CAST(GETDATE() AS DATE)
-    And W.wstat_abrv_ch Not IN ('MWI') AND LEFT(LTRIM(RTRIM(W.wstat_abrv_ch)), 2) <> 'OT'
-    ORDER BY RM.RscMaster_EmployeeID_Ch ASC"
+      SELECT DISTINCT
+        RM.RscMaster_EmployeeID_Ch AS EmployeeID
+        ,( CASE
+             WHEN RIGHT(LTRIM(RTRIM(ST.station_abrv_ch))
+                        ,2) IN ( '15', '17', '18', '20',
+                                 '22', '24' )
+             THEN 'BC1 - Shift ' + SH.shift_abrv_ch
+             ELSE
+               CASE
+                 WHEN RIGHT(LTRIM(RTRIM(ST.station_abrv_ch))
+                            ,2) IN ( '11', '13', '14', '23',
+                                     '25', '26' )
+                 THEN 'BC2 - Shift ' + SH.shift_abrv_ch
+                 ELSE
+                   CASE
+                     WHEN U.unit_abrv_ch IN ( 'BC1', 'BC2' )
+                     THEN U.unit_abrv_ch + ' - Shift '
+                          + SH.shift_abrv_ch
+                     ELSE
+                       CASE
+                         WHEN U.unit_abrv_ch = 'CCU'
+                         THEN 'Dispatch'
+                         ELSE
+                           CASE
+                             WHEN U.unit_abrv_ch = 'LTH'
+                             THEN 'LOGISTICS'
+                             ELSE U.unit_name_ch
+                           END
+                       END
+                   END
+               END
+           END ) AS OtherGroup
+      FROM
+        WorkForceTelestaff.dbo.Staffing_tbl S
+        INNER JOIN WorkForceTelestaff.dbo.Shift_Tbl SH ON SH.Shift_No_In = S.Shift_No_In
+        INNER JOIN WorkForceTelestaff.dbo.Resource_Tbl R ON S.rsc_no_in = R.rsc_no_in
+        INNER JOIN WorkForceTelestaff.dbo.resource_master_tbl RM ON R.RscMaster_No_In = RM.RscMaster_No_In
+        INNER JOIN WorkForceTelestaff.dbo.Wstat_Cde_Tbl W ON W.Wstat_No_In = S.Wstat_No_In
+        INNER JOIN WorkForceTelestaff.dbo.Position_Tbl P ON P.Pos_No_In = S.Pos_No_In
+        INNER JOIN WorkForceTelestaff.dbo.Unit_Tbl U ON U.Unit_No_In = P.Unit_No_In
+        INNER JOIN WorkForceTelestaff.dbo.Station_Tbl ST ON U.station_no_in = ST.station_no_in
+      WHERE
+        S.staffing_calendar_da BETWEEN CAST(DATEADD(dd
+                                                    ,-2
+                                                    ,GETDATE()) AS DATE) AND CAST(GETDATE() AS DATE)
+        AND W.wstat_abrv_ch NOT IN ( 'MWI' )
+        AND LEFT(LTRIM(RTRIM(W.wstat_abrv_ch))
+                 ,2) <> 'OT'
+      ORDER  BY
+        RM.RscMaster_EmployeeID_Ch ASC"
     'Dim sbQ As New StringBuilder
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Telestaff), toolsAppId, toolsDBError)
     'With sbQ

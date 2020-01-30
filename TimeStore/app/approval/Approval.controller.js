@@ -110,9 +110,14 @@
       // Here we're going to check to see if we're on the first day of the new pay period.
       // If we are, we want to show them the data from the lay pay period.
       // We may choose to add in a time condition to this later.
-      if ($scope.filteredData[idx].Days_Since_PPE === 1) {
-        ppdIndex = -1;
-      }
+      //var ppe = moment($routeParams.payPeriod, 'YYYYMMDD');
+      //if (new moment().isAfter(ppe)) //($scope.filteredData[idx].Days_Since_PPE === 1)
+      //{
+      //  //moment($routeParams.payPeriod, 'YYYYMMDD')
+        
+      //  //console.log('new moment test', new moment(), new moment().isAfter(ppe));
+      //  ppdIndex = -1;
+      //}
       if ($scope.filteredData[idx].showTimecard === false) {
         timestoredata.getEmployee(ppdIndex, $scope.filteredData[idx].employeeID)
             .then(function (data) {

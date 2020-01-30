@@ -355,7 +355,7 @@
     <Content Include="Main.min.css">
       <DependentUpon>Main.css</DependentUpon>
     </Content>
-    <Content Include="app\access\Access.controller.js" />
+    <None Include="app\access\Access.controller.js" />
     <Content Include="app\addtime\AddTimeView.controller.js" />
     <Content Include="app\main\app.js" />
     <Content Include="app\approval\Approval.controller.js" />

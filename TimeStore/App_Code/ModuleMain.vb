@@ -37,7 +37,23 @@ Public Module ModuleMain
     'Else
     '  Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
     'End If
-    Return Now > GetPayPeriodStart(WorkDate).AddDays(14).AddHours(PayPeriodEndingCutoff)
+    Return Now > GetPayperiodCutOffDateTime(WorkDate)
+  End Function
+
+  Public Function GetPayperiodCutOffDateTime(WorkDate As Date) As Date
+    Dim PayPeriodStart = GetPayPeriodStart(WorkDate)
+    Select Case PayPeriodStart
+      Case "11/13/2019"
+        Return PayPeriodStart.AddDays(12).AddHours(17).AddMinutes(30)
+      Case "12/11/2019"
+        Return PayPeriodStart.AddDays(12).AddHours(16)
+      Case Else
+        Return PayPeriodStart.AddDays(14).AddHours(PayPeriodEndingCutoff)
+    End Select
+
+
+
+
   End Function
 
   Public Sub Log(e As Exception, Query As String)
