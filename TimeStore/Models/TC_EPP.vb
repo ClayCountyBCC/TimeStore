@@ -381,7 +381,7 @@
             Dim PubWorksDepartments() As String = {"3701", "3711", "3712"}
             Return (From t In Week_TL(Week)
                     Where t.OutOfClass And PubWorksDepartments.Contains(t.DepartmentNumber)
-                    Select t.WorkHours).Sum
+                    Select t.WorkHours + t.BreakCreditHours).Sum
 
           Case Else
             Return Out_Of_Class(1) + Out_Of_Class(2)

@@ -267,6 +267,21 @@ Public Module ModuleMain
 
   End Function
 
+  Public Function Is_Stepup(WorkType As String) As Boolean
+    Select Case WorkType
+      Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12", "SU10", "OT10", "OTLC10",
+           "OTLR10", "OTM10", "SU10", "OT10", "OTLC10", "OTLR10", "SUE", "OTSUE",
+           "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG", "SUO", "OTSUO", "OTMSUO",
+           "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUBC", "OTSUBC", "OTMSUBC",
+           "OLTRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG", "DOTSUBC", "DOTSUO", "DOTSUE",
+           "ST10", "ST12", "STE", "STO", "STBC"
+        Return True
+      Case Else
+        Return False
+    End Select
+  End Function
+
+
   Public Function Calculate_PayRate_With_Incentives(PR As Double,
                                                     Specialties As String,
                                                     Job As String,

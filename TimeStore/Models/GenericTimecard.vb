@@ -254,30 +254,33 @@
                    Select New With {PayCode, totalHours})
         If tmp.Count > 0 Then
           For i As Integer = 0 To choices.GetUpperBound(0)
-            Dim hourType As String = ""
-            Select Case tmp(i).PayCode
-              Case "122"
-                hourType = "Bank"
-              Case "134"
-                hourType = "Paid"
-              Case "800"
-                hourType = "Ineligible"
-            End Select
+            Try
+              Dim hourType As String = ""
+              Select Case tmp(i).PayCode
+                Case "122"
+                  hourType = "Bank"
+                Case "134"
+                  hourType = "Paid"
+                Case "800"
+                  hourType = "Ineligible"
+              End Select
 
-            If tmp(i).totalHours > holidayIncrement Then
-              Try
+              If tmp(i).totalHours > holidayIncrement Then
+                Try
 
-                Dim val = tmp(i).totalHours / holidayIncrement
-                For d As Integer = 1 To val
-                  choices(i) = hourType
-                  If d < val Then i += 1
-                Next
+                  Dim val = tmp(i).totalHours / holidayIncrement
+                  For d As Integer = 1 To val
+                    choices(i) = hourType
+                    If d < val Then i += 1
+                  Next
 
-              Catch ex As Exception
-                Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
-              End Try
-            End If
-
+                Catch ex As Exception
+                  Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
+                End Try
+              End If
+            Catch ex As Exception
+              Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
+            End Try
           Next
         End If
         'For Each pc In tmp

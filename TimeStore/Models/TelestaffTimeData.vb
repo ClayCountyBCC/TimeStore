@@ -28,6 +28,7 @@ Namespace Models
     Property IsWorkingTime As Boolean = False
     Property CountsTowardsOvertime As Boolean = False ' This is whether or not the hours count towards your total hours for overtime.
     Property Specialties As String = ""
+    Property ProfileSpecialties As String = "" ' If this is different from the Specialties, it means that the staffing entry was created before their specialties changed, and will need to be fixed.
     Property ProfileStartDate As Date
     Property ProfileEndDate As Date
 
@@ -50,6 +51,7 @@ Namespace Models
       x.StratName = StratName
       x.PayRate = PayRate
       x.Specialties = Specialties
+      x.ProfileSpecialties = ProfileSpecialties
       x.Job = Job
       x.FLSAHoursRequirement = FLSAHoursRequirement
       x.EndTime = EndTime
@@ -295,6 +297,7 @@ ORDER  BY
             .IsPaidTime = Not IsDBNull(dbRow("Wstat_WageFactor_In")),
             .CountsTowardsOvertime = (dbRow("Wstat_FLSA_Si").ToString.Trim.ToUpper = "Y"),
             .Specialties = dbRow("Specialties"),
+            .ProfileSpecialties = dbRow("ProfileSpecialties"),
             .ProfileStartDate = IsNull(dbRow("Rsc_From_Da"), Date.MinValue),
             .ProfileEndDate = IsNull(dbRow("Rsc_Thru_Da"), Date.MaxValue),
             .PayRate = Calculate_PayRate_With_Incentives(IsNull(dbRow("Rsc_Hourwage_db"), 0), .Specialties, .Job, .WorkTypeAbrv, .ProfileType, I)})

@@ -1656,32 +1656,29 @@
       Select Case t.WorkTypeAbrv
         Case "SLWP"
           TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Sick Leave Without Pay, these hours will need to be manually added to the Green sheet."))
-        Case "ST12", "ST10", "SU10", "SU12", "OT10",
-             "OT12", "OTLC10", "OTLC12", "OTLR10",
-             "OTLR12", "SUO", "SUE", "SUBC", "STO",
-             "STE", "STBC", "OTSUE", "OTSUO", "OTSUO",
-             "OTSUBC", "OTMSUO", "OTMSUBC", "OTMSUE",
-             "OTLCSUO", "OTLCSUBC", "OTLCSUE", "OTLRSUO",
-             "OLTRSUBC", "OTLRSUE", "OTSUED", "OTSUOD"
-          TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Step up pay, double check that this employee's rate was correct."))
+        'Case "ST12", "ST10", "SU10", "SU12", "OT10",
+        '     "OT12", "OTLC10", "OTLC12", "OTLR10",
+        '     "OTLR12", "SUO", "SUE", "SUBC", "STO",
+        '     "STE", "STBC", "OTSUE", "OTSUO", "OTSUO",
+        '     "OTSUBC", "OTMSUO", "OTMSUBC", "OTMSUE",
+        '     "OTLCSUO", "OTLCSUBC", "OTLCSUE", "OTLRSUO",
+        '     "OLTRSUBC", "OTLRSUE", "OTSUED", "OTSUOD"
+
         Case "OTLR"
           If t.WorkHours > 3 Then
             TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "OLTR longer than 3 hours, please verify that this is correct."))
           End If
       End Select
-      Select Case t.WorkTypeAbrv
-        Case "ST12", "ST10", "SU10", "SU12", "OT10",
-             "OT12", "OTLC10", "OTLC12", "OTLR10",
-             "OTLR12", "SUO", "SUE", "SUBC", "STO",
-             "STE", "STBC", "OTSUE", "OTSUO", "OTSUO",
-             "OTSUBC", "OTMSUO", "OTMSUBC", "OTMSUE",
-             "OTLCSUO", "OTLCSUBC", "OTLCSUE", "OTLRSUO",
-             "OLTRSUBC", "OTLRSUE", "OTSUED", "OTSUOD"
-        Case Else
+      If Is_Stepup(t.WorkTypeAbrv) Then
+        TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Step up pay, double check that this employee's rate was correct."))
+        If t.Specialties <> t.ProfileSpecialties Then
+          TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "Telestaff has stored the wrong specialties on " & t.WorkDate.ToShortDateString + ". This will need to be corrected in order to calculate the step up pay correctly."))
+        End If
+      Else
           If t.PayRate <> e.EmployeeData.Base_Payrate Then
-            TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee's payrate in Telestaff different than Finplus rate."))
-          End If
-      End Select
+          TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee's payrate in Telestaff different than Finplus rate."))
+        End If
+      End If
 
       If t.RequiresApproval Then
         TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "Exception Hours require approval."))

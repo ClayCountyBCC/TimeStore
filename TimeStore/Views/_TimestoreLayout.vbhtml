@@ -158,11 +158,11 @@ end code
                 class="md-sidenav-right md-whiteframe-z2">
       <section>
         <md-toolbar class="md-primary">
-          <div class="md-toolbar-tools" ng-if="myAccess.Data_Type==='timecard' || myAccess.Raw_Access_Type > 3">
+          <div class="md-toolbar-tools" ng-if="myAccess.Data_Type==='timecard' || myAccess.Raw_Access_Type > 2">
             Leave Requests
           </div>
         </md-toolbar>
-        <md-list layout="column" ng-if="myAccess.Data_Type==='timecard' || myAccess.Raw_Access_Type > 3">
+        <md-list layout="column" ng-if="myAccess.Data_Type==='timecard' || myAccess.Raw_Access_Type > 2">
           <md-list-item>
             <md-button ng-click="viewLeaveApproval()">
               Approve Leave Requests
