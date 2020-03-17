@@ -16,6 +16,7 @@
     viewOptions.viewOptions.showSearch = false;
     viewOptions.viewOptions.share();
     $scope.serverType = 'normal';
+    $scope.projectCode = "CORVIRUS";
     $scope.PostToFinance = function ()
     {
       console.log('server Type', $scope.serverType);
@@ -26,7 +27,7 @@
       {
         $scope.showProgress = true;
         var m = moment($scope.selectedPayPeriod, 'M/D/YYYY');
-        timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m), $scope.serverType)
+        timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m), $scope.serverType, $scope.projectCode)
           .then(onComplete);
       }
     };

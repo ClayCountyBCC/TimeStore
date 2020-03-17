@@ -48874,9 +48874,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         ];
       };
 
-      var financePostProcess = function (ppdIndex, serverType)
+      var financePostProcess = function (ppdIndex, serverType, projectCode)
       {
-        var ppd = { ppdIndex: ppdIndex, serverType: serverType };
+        var ppd = { ppdIndex: ppdIndex, serverType: serverType, projectCode: projectCode };
         return $http
           .post("Main/UploadFinanceData", ppd)
           .then(function (response)
@@ -53054,6 +53054,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     viewOptions.viewOptions.showSearch = false;
     viewOptions.viewOptions.share();
     $scope.serverType = 'normal';
+    $scope.projectCode = "CORVIRUS";
     $scope.PostToFinance = function ()
     {
       console.log('server Type', $scope.serverType);
@@ -53064,7 +53065,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         $scope.showProgress = true;
         var m = moment($scope.selectedPayPeriod, 'M/D/YYYY');
-        timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m), $scope.serverType)
+        timestoredata.financePostProcess(timestoredata.getPayPeriodIndex(m), $scope.serverType, $scope.projectCode)
           .then(onComplete);
       }
     };

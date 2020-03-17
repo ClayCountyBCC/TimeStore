@@ -32,22 +32,40 @@ Namespace Models
 
       Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Telestaff), toolsAppId, toolsDBError)
       Dim query As String = "
-        USE Telestaff;
         SELECT TOP 1
-          ISNULL(R.rsc_thru_da, @DateToCheck) rsc_thru_da,
-          R.rsc_hourwage_db, 
-          R.PayInfo_No_In 
-        FROM Resource_Tbl R
-        INNER JOIN Resource_Master_Tbl RMT ON R.RscMaster_No_In = RMT.RscMaster_No_In
-        WHERE 
-          RMT.RscMaster_EmployeeID_Ch = @EmployeeId
-        ORDER BY ISNULL(R.Rsc_Thru_Da, @DateToCheck) DESC"
+          ISNULL(R.rsc_thru_da
+                 ,@WorkDate) Rsc_Thru_Da
+          ,W.rscmaster_wage_db Rsc_Hourwage_db
+          ,R.PayInfo_No_In
+        FROM
+          WorkForceTelestaff.dbo.Resource_Tbl R
+          LEFT OUTER JOIN WorkForceTelestaff.dbo.Resource_Master_Tbl RMT ON R.RscMaster_No_In = RMT.RscMaster_No_In
+          LEFT OUTER JOIN WorkForceTelestaff.dbo.resource_master_wage_tbl W ON RMT.rscmaster_no_in = W.rscmaster_no_in
+                                                                               AND
+                 CAST(W.rscmaster_wage_effective_da AS DATE) <= @WorkDate
+                                                                               AND ISNULL(W.rscmaster_wage_expiration_da
+                                                                                          ,@WorkDate) >= @WorkDate
+        WHERE
+          Rsc_From_Da <= @WorkDate
+          AND ISNULL(Rsc_Thru_Da
+                     ,@WorkDate) >= @WorkDate
+          AND RMT.RscMaster_EmployeeID_Ch = @EmployeeID"
+      'USE Telestaff;
+      'SELECT TOP 1
+      '  ISNULL(R.rsc_thru_da, @DateToCheck) rsc_thru_da,
+      '  R.rsc_hourwage_db, 
+      '  R.PayInfo_No_In 
+      'FROM Resource_Tbl R
+      'INNER JOIN Resource_Master_Tbl RMT ON R.RscMaster_No_In = RMT.RscMaster_No_In
+      'WHERE 
+      '  RMT.RscMaster_EmployeeID_Ch = @EmployeeId
+      'ORDER BY ISNULL(R.Rsc_Thru_Da, @DateToCheck) DESC"
       '--AND R.Rsc_From_Da <= @DateToCheck 
       'AND ISNULL(R.Rsc_Thru_Da, @DateToCheck) >= @DateToCheck
 
       Dim P(1) As SqlParameter
-      P(0) = New SqlParameter("@EmployeeId", Data.SqlDbType.VarChar, 30) With {.Value = EmployeeID.ToString}
-      P(1) = New SqlParameter("@DateToCheck", Data.SqlDbType.Date) With {.Value = DateToCheck}
+      P(0) = New SqlParameter("@EmployeeID", Data.SqlDbType.VarChar, 30) With {.Value = EmployeeID.ToString}
+      P(1) = New SqlParameter("@WorkDate", Data.SqlDbType.Date) With {.Value = DateToCheck}
       Dim ds As DataSet
       Try
         ds = dbc.Get_Dataset(query, P)

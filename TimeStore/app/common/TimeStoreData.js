@@ -310,9 +310,9 @@
         ];
       };
 
-      var financePostProcess = function (ppdIndex, serverType)
+      var financePostProcess = function (ppdIndex, serverType, projectCode)
       {
-        var ppd = { ppdIndex: ppdIndex, serverType: serverType };
+        var ppd = { ppdIndex: ppdIndex, serverType: serverType, projectCode: projectCode };
         return $http
           .post("Main/UploadFinanceData", ppd)
           .then(function (response)

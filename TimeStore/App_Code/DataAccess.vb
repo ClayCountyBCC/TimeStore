@@ -624,6 +624,7 @@ WHERE access_type >= " & accessType
         S.staffing_calendar_da BETWEEN CAST(DATEADD(dd
                                                     ,-2
                                                     ,GETDATE()) AS DATE) AND CAST(GETDATE() AS DATE)
+        AND RM.RscMaster_EmployeeID_Ch IS NOT NULL                                                    
         AND W.wstat_abrv_ch NOT IN ( 'MWI' )
         AND LEFT(LTRIM(RTRIM(W.wstat_abrv_ch))
                  ,2) <> 'OT'
@@ -659,7 +660,12 @@ WHERE access_type >= " & accessType
       Dim ds As DataSet = dbc.Get_Dataset(query)
       Dim tg As New Dictionary(Of Integer, String)
       For Each d In ds.Tables(0).Rows
-        If Not tg.TryGetValue(d("EmployeeID"), d("OtherGroup").ToString.Trim) Then tg.Add(d("EmployeeID"), d("OtherGroup").ToString.Trim)
+        Try
+          If Not tg.TryGetValue(d("EmployeeID"), d("OtherGroup").ToString.Trim) Then tg.Add(d("EmployeeID"), d("OtherGroup").ToString.Trim)
+        Catch ex As Exception
+          Log(ex)
+        End Try
+
 
       Next
       Return tg
@@ -1018,7 +1024,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     End Try
   End Function
 
-  Public Function InsertSavedTimeToFinplus(tsds As DataSet, cst As ConnectionStringType) As Boolean
+  Public Function InsertSavedTimeToFinplus(tsds As DataSet, cst As ConnectionStringType, projectCode As String) As Boolean
     Dim sbQ As New StringBuilder
     'Dim dbf As New Tools.DB(GetCS(ConnectionStringType.FinPlus), toolsAppId, toolsDBError)
     'Dim cs As ConnectionStringType
@@ -1101,7 +1107,9 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
         ' at the end here, we need to add a row updating the project code for
         ' any disaster hours.
         ' HI-09/17 Irma project code
-        '.AppendLine("UPDATE timecard SET proj='HI-09/17' WHERE pay_code IN ('299', '300', '301', '302', '303');")
+        If projectCode.Length > 0 Then
+          .Append("UPDATE timecard SET proj='").Append(projectCode.Trim()).AppendLine("' WHERE pay_code IN ('299', '300', '301', '302', '303');")
+        End If
       End With
       Try
 
@@ -1451,20 +1459,20 @@ ORDER BY home_orgn, empl_no
     End If
   End Function
 
-  Public Function SavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType) As Boolean
+  Public Function SavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType, projectCode As String) As Boolean
     Dim tc As List(Of GenericTimecard) = GetTimeCards(payPeriodEnding.AddDays(-13), True)
     Dim tsds As DataSet = GetRawTimestoreSavedTimeData(payPeriodEnding)
     'If Not UpdateFinplusWithSavedTime(tsds, UseProduction) Then Return False
     UpdateFinplusWithSavedTime(tsds, cst)
-    Return InsertSavedTimeToFinplus(tsds, cst)
+    Return InsertSavedTimeToFinplus(tsds, cst, projectCode)
   End Function
 
-  Public Function SpecialDisasterSavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType) As Boolean
+  Public Function SpecialDisasterSavedTimeToFinplusProcess(payPeriodEnding As Date, cst As ConnectionStringType, projectCode As String) As Boolean
     Dim tc As List(Of GenericTimecard) = GetTimeCards(payPeriodEnding.AddDays(-13), True)
     Dim tsds As DataSet = GetRawTimestoreSavedTimeDataForDisaster(payPeriodEnding)
     'If Not UpdateFinplusWithSavedTime(tsds, UseProduction) Then Return False
     UpdateFinplusWithSavedTime(tsds, cst)
-    Return InsertSavedTimeToFinplus(tsds, cst)
+    Return InsertSavedTimeToFinplus(tsds, cst, projectCode)
   End Function
 
   Public Function Save_Hours(EmployeeID As Integer,

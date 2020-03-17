@@ -1072,13 +1072,13 @@
             If Now > PayPeriodStart.AddDays(6) Then
               If ((From t In Week_TL(1) Select t Where t.TotalHours >= 9.5).Count < 4) AndAlso
                 ((From t In Week_TL(1) Select t Where t.TotalHours >= 7.5).Count < 5) Then
-                WarningList.Add("Not enough workdays of at least 9.5 hours recorded in Week 1.")
+                WarningList.Add("You have must either 4 work days of at least 9.5 hours worked, or 5 work days of at least 7.5 hours worked in Week 1.")
               End If
             End If
             If Now > PayPeriodStart.AddDays(12) Then
               If ((From t In Week_TL(2) Select t Where t.TotalHours >= 9.5).Count < 4) AndAlso
                   ((From t In Week_TL(2) Select t Where t.TotalHours >= 7.5).Count < 5) Then
-                WarningList.Add("Not enough workdays of at least 9.5 hours recorded in Week 2.")
+                WarningList.Add("You have must either 4 work days of at least 9.5 hours worked, or 5 work days of at least 7.5 hours worked in Week 1.")
               End If
             End If
           Else

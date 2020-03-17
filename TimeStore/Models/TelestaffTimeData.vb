@@ -139,7 +139,7 @@ SELECT
   ,WT.wstat_type_desc_ch
   ,W.Wstat_WageFactor_In
   ,J.Job_Abrv_Ch
-  ,PAY.PayInfo_FlsaHours_In
+  ,ISNULL(PAY.PayInfo_FlsaHours_In, 0) PayInfo_FlsaHours_In
   ,SH.shift_abrv_ch
   ,SH.Shift_TimeDuration_Ch
   ,SH.shift_type_no_in
@@ -183,7 +183,7 @@ FROM
   --                                     AND FIX.shift_no_in = ST.shift_no_in
 WHERE
   ST.staffing_calendar_da BETWEEN @Start AND @End
-  AND RMT.RscMaster_Login_Disable_Si = 'N'
+  --AND RMT.RscMaster_Login_Disable_Si = 'N'
   AND W.Wstat_Abrv_Ch NOT IN ( 'OTR', 'OTRR', 'ORD', 'ORRD',
                                'NO', 'DPRN' )  
   AND RMT.RscMaster_EmployeeID_Ch = COALESCE(NULLIF(@EmployeeID, ''), RMT.RscMaster_EmployeeID_Ch)
