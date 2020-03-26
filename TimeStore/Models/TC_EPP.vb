@@ -1040,14 +1040,14 @@
 
     Private Sub Catch_Exempt_Exceptions()
       Dim shiftTen() As String = {"1055"}
-      Dim shiftMax As Double = 8
+      Dim shiftMax As Double = 10 ' 10 hour shift  change from 8 hours
       If shiftTen.Contains(EmployeeData.Classify) Then shiftMax = 10
       For Each t In TL
 
         If t.WorkHours < 7.5 Then
           If t.Total_Non_Working_Hours > 0 Then
             If t.WorkHours + t.Total_Non_Working_Hours < 8 Then
-              ErrorList.Add("Not enough hours entered on " & t.WorkDate.ToShortDateString & ". You must have 8 total hours if you are using any leave hours.")
+              ErrorList.Add("Not enough hours entered on " & t.WorkDate.ToShortDateString & ". You must have 8 total hours or 10 total hours if you are using any leave hours, depending on the length of your work shift.")
             End If
           End If
         End If

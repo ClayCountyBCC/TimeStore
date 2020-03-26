@@ -819,10 +819,17 @@
             Scheduled_Regular_Overtime.TotalHours -
             Disaster_StraightTime.TotalHours) > 0 Then
             ' This is the total number of unscheduled OT
-            Dim e As New ErrorLog("Found Telestaff calculation condition " + EmployeeData.EmployeeId.ToString, "please validate", "", "", "")
-            toMove = diff - (Total_Non_Working_Hours - Scheduled_Regular_Overtime.TotalHours)
-            Regular.Move_First(toMove, _unscheduled_overtime, Timelist)
-            Regular.Move_First(diff - toMove, _unscheduled_overtime, Timelist)
+            'Dim e As New ErrorLog("Found Telestaff calculation condition " + EmployeeData.EmployeeId.ToString, "please validate", "", "", "")
+            toMove = diff - (Total_Non_Working_Hours - Scheduled_Regular_Overtime.TotalHours - Disaster_StraightTime.TotalHours)
+            If Regular.TotalHours > 0 And toMove > 0 Then
+              Dim regular_diff = Math.Max(Regular.TotalHours, toMove)
+              toMove = toMove - regular_diff
+              Regular.Move_First(regular_diff, _unscheduled_overtime, Timelist)
+              'Regular.Move_First(diff - toMove, _unscheduled_overtime, Timelist) ' Not sure why this is here
+            End If
+            If (Disaster_Regular.TotalHours > 0 And toMove > 0) Then
+              Disaster_Regular.Move_First(toMove, _disaster_overtime, Timelist)
+            End If
           End If
         End If
 

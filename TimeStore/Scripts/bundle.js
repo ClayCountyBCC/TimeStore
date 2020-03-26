@@ -50044,7 +50044,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         cache.put("showOnCall", cache.get("callMin") > 0);
         cache.put("shiftMin", 0);
         cache.put("shiftStep", 0.25);
-        cache.put("shiftMax", 8); //(isExempt ? 7.5 : 8)
+        cache.put("shiftMax", 10); // 10 hour shift  change from 8 hours
         var s = _.result(
           _.find(timestoredata.classShiftTen(), { class: classify }),
           "shiftLength"
