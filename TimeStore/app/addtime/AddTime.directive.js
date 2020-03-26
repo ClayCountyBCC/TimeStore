@@ -369,14 +369,15 @@
       //      Not enough time entered for the day (scheduled work days only)
       if (
         $scope.TCTD.TotalHours.value < $scope.shiftMaxHours &&
-        $scope.isCurrentPPD
+        $scope.isCurrentPPD && $scope.timecard.exemptStatus !== "Exempt"
       )
       {
-        $scope.warningList.push(
-          "You may not have entered enough time, you must have a minimum of " +
-          $scope.shiftMaxHours +
-          " hours entered if this is a scheduled work day."
-        );
+        var warningmessage = "";
+        if ($scope.TCTD.TotalHours.value < 8 || ($scope.TCTD.TotalHours.value > 8 && $scope.TCTD.TotalHours.value < 10))
+        {
+          warningmessage = "If this is a normally scheduled work day, you have not entered enough hours. You must have 8 total hours or 10 total hours, depending on your work shift. ";
+          $scope.warningList.push(warningmessage);
+        }        
       }
       //      Too much non-working time entered on a scheduled work day.
       if ($scope.TCTD.TotalHours.value > $scope.shiftMaxHours)
@@ -390,11 +391,20 @@
           $scope.TCTD.LWOPHours.value > 0
         )
         {
-          $scope.warningList.push(
-            "Too many Non-Working hours entered. You should reduce your Non-Working hours until you have a total of " +
-            $scope.shiftMaxHours +
-            " hours."
-          );
+          if ($scope.timecard.exemptStatus !== "Exempt")
+          {
+            $scope.warningList.push(
+              "Too many Non-Working hours entered. You should reduce your Non-Working hours until you have a total of " +
+              $scope.shiftMaxHours +
+              " hours."
+            );
+          }
+          else
+          {
+            $scope.warningList.push(
+              "Please check your leave hours entered. You will only need a maximum of 8 hours or 10 Total hours, depending on what shift you are working, when you are including leave."
+            );
+          }
         }
       }
       // If full day of admin, make sure a comment is entered.
@@ -631,7 +641,7 @@
       console.log("saving tctd", $scope.TCTD);
 
       var basetctd = addtimeFunctions.getBaseTCTD($scope.TCTD, $scope.timecard);
-      console.log('basetctd after save', basetctd);
+      //console.log('basetctd after save', basetctd);
       timestoredata.saveTCTD(basetctd).then(onTCTDSave, onError);
     };
 
