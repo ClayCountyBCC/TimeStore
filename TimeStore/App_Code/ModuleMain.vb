@@ -274,7 +274,7 @@ Public Module ModuleMain
            "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG", "SUO", "OTSUO", "OTMSUO",
            "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUBC", "OTSUBC", "OTMSUBC",
            "OLTRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG", "DOTSUBC", "DOTSUO", "DOTSUE",
-           "ST10", "ST12", "STE", "STO", "STBC"
+           "ST10", "ST12", "STE", "STO", "STBC", "SUED"
         Return True
       Case Else
         Return False
@@ -311,7 +311,7 @@ Public Module ModuleMain
              "SU10", "OT10", "OTLC10", "OTLR10"
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
-        Case "SUE", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG"  ' Step up engineer 
+        Case "SUE", "SUED", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG"  ' Step up engineer 
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
         Case "SUO", "OTSUO", "OTMSUO", "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG" ' Step up Officer

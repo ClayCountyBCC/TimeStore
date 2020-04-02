@@ -147,7 +147,7 @@
              "OTLRSUE", "OTSUED", "SUEG", "SUO", "OTSUO", "OTMSUO",
              "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUBC",
              "OTSUBC", "OTMSUBC", "OLTRSUBC", "OTLCSUBC",
-             "OTSUBCD", "SUBCG"
+             "OTSUBCD", "SUBCG", "SUED"
           StepUp = ttd.WorkHours
         Case "ST10", "ST12", "STE", "STO", "STBC"
           ShiftTrade = ttd.WorkHours
