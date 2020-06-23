@@ -187,6 +187,7 @@ WHERE
   AND W.Wstat_Abrv_Ch NOT IN ( 'OTR', 'OTRR', 'ORD', 'ORRD',
                                'NO', 'DPRN' )  
   AND RMT.RscMaster_EmployeeID_Ch = COALESCE(NULLIF(@EmployeeID, ''), RMT.RscMaster_EmployeeID_Ch)
+  AND ST.staffing_request_state <> 20 -- 20 is the state for a denied leave request.
 ORDER  BY
   RMT.RscMaster_Name_Ch
   ,ST.staffing_start_dt "

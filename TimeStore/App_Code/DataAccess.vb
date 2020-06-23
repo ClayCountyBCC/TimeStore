@@ -1146,7 +1146,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     Return Math.Round(newRate * hours, 2)
   End Function
 
-  Private Function GetPayrate(paycode As String, payrate As Double) As Decimal
+  Public Function GetPayrate(paycode As String, payrate As Double) As Decimal
     Dim newRate As Double = payrate
     Select Case paycode.Trim
       Case "090", "095", "120", "122" ' 6/23/2015 added 122 for Holiday Time Banked
