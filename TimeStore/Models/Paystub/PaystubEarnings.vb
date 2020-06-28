@@ -29,7 +29,7 @@ Namespace Models.Paystub
         LEFT OUTER JOIN paytable P ON CH2.code = P.pay_code AND CH2.earn_ded='P'
         WHERE   
           CH2.earn_ded='P'
-          AND CH2.empl_no=@employee_id
+          AND CH2.empl_no=CAST(@employee_id AS VARCHAR(10))
           AND CH2.check_no=@check_number
         ORDER BY CH2.code"
 

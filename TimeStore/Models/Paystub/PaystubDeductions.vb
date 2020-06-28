@@ -55,7 +55,7 @@ Namespace Models.Paystub
         LEFT OUTER JOIN bnktable B ON CD.bank = B.code
         WHERE
           CD.check_no=@check_number
-          AND CD.empl_no=@employee_id  
+          AND CD.empl_no=CAST(@employee_id AS VARCHAR(10))
           AND 
             (CD.taken_y > 0  
             OR ISNULL(CH2.amt, 0) > 0

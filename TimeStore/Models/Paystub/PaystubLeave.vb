@@ -30,7 +30,7 @@ Namespace Models.Paystub
         FROM check_leave CL
         INNER JOIN levtable LT ON CL.lv_code=LT.lv_code
         WHERE
-          empl_no=@employee_id
+          empl_no=CAST(@employee_id AS VARCHAR(10))
           AND check_no = @check_number
           AND CL.lv_code NOT IN ('900');"
 

@@ -441,6 +441,7 @@
     <Compile Include="Models\Paystub\PaystubDeductions.vb" />
     <Compile Include="Models\Paystub\PaystubEarnings.vb" />
     <Compile Include="Models\Paystub\PaystubLeave.vb" />
+    <Compile Include="Models\Paystub\PaystubList.vb" />
     <Compile Include="Models\Raw_Timecard_Access.vb" />
     <Compile Include="Models\Saved_Timecard_Data.vb" />
     <Compile Include="Models\Saved_Timestore_Comp_Time_Earned.vb" />
