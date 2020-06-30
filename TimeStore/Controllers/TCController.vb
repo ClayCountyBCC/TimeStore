@@ -79,6 +79,40 @@ Namespace Controllers
       Return jnr
     End Function
 
+    <HttpPost>
+    <OutputCache(VaryByParam:="*", Duration:=0, NoStore:=True)>
+    Function PaystubListByEmployee(ByVal EmployeeId As Integer) As JsonNetResult
+      Dim jnr As New JsonNetResult
+      Try
+        Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        Dim paystub_list As List(Of Paystub.PaystubList) = Paystub.PaystubList.Get_Paystubs_By_Employee(eidToUse)
+        jnr.Data = paystub_list
+        'jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, EmployeeId.ToString)
+      End Try
+
+      Return jnr
+    End Function
+
+    <HttpPost>
+    <OutputCache(VaryByParam:="*", Duration:=0, NoStore:=True)>
+    Function EmployeePaystub(ByVal EmployeeId As Integer, ByVal CheckNumber As String) As JsonNetResult
+      Dim jnr As New JsonNetResult
+      Try
+        Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
+        If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        Dim current_paystub As Paystub.Paystub = Paystub.Paystub.Get_Paystub(eidToUse, CheckNumber)
+        jnr.Data = current_paystub
+        'jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
+      Catch ex As Exception
+        Dim e As New ErrorLog(ex, EmployeeId.ToString)
+      End Try
+      Return jnr
+    End Function
+
+
     Public Function EmployeeList() As JsonNetResult
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim edl As List(Of Employee_Data) = myCache.GetItem("employeelist") 'HttpContext.Cache("employeeList")

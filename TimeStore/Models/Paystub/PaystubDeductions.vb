@@ -42,8 +42,8 @@ Namespace Models.Paystub
         )
 
         SELECT
-          ISNULL(B.desc_x, DT.title) ded_code_full_name
-          ,ISNULL(B.ck_title, DT.ck_title) ded_code_short_name
+          LTRIM(RTRIM(ISNULL(B.desc_x, DT.title))) ded_code_full_name
+          ,LTRIM(RTRIM(ISNULL(B.ck_title, DT.ck_title))) ded_code_short_name
           ,ISNULL(CH2.amt, 0) amount
           ,CD.taken_y year_to_date_deductions
           ,ISNULL(CH2.fringe, 0) contributions

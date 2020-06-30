@@ -45,6 +45,8 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "recent_paystubs"
+          Return Paystub.PaystubList.Get_All_Recent_Paystubs()
         Case "disaster_rules"
           Dim ppe As Date = Date.Parse(s(1))
           Return DisasterEventRules.Get_Disaster_Rules(ppe)

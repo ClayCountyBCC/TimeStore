@@ -19,8 +19,8 @@ Namespace Models.Paystub
 
       Dim Query As String = $"
         SELECT
-          P.title pay_code_name
-          ,P.ck_title pay_code_short_name
+          LTRIM(RTRIM(P.title)) pay_code_name
+          ,LTRIM(RTRIM(P.ck_title)) pay_code_short_name
           ,CH2.payrate
           ,CH2.hours
           ,CH2.amt amount

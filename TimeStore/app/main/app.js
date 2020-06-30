@@ -55,6 +55,36 @@
             }]
           }
         })
+        .when('/e/:employeeId/paystub/', {
+          controller: 'PaystubViewController',
+          templateUrl: 'PaystubView.controller.tmpl.html',
+          resolve: {
+            paystub_list: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              var eid = $route.current.params.employeeId;
+              return timestoredata.getPayStubListByEmployee(eid)
+                .then(function (data)
+                {
+                  return data;
+                });
+            }]
+          }
+        })
+        .when('/e/:employeeId/paystub/:checkNumber', {
+          controller: 'PaystubViewController',
+          templateUrl: 'PaystubView.controller.tmpl.html',
+          resolve: {
+            paystub_list: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              var eid = $route.current.params.employeeId;
+              return timestoredata.getPayStubListByEmployee(eid)
+                .then(function (data)
+                {
+                  return data;
+                });
+            }]
+          }
+        })
         .when('/timeclockview/day/:workDate', {
           controller: 'TimeclockViewController',
           templateUrl: 'TimeclockView.controller.tmpl.html',

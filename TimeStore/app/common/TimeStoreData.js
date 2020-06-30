@@ -96,6 +96,34 @@
           });
       };
 
+      var getPayStubListByEmployee = function (eId)
+      {
+        return $http
+          .post(
+            "TC/PaystubListByEmployee",
+            { employeeId: eId },
+            { cache: false }
+          )
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var getPayStubByEmployee = function (eId, checkNumber)
+      {
+        return $http
+          .post(
+            "TC/EmployeePaystub",
+            { employeeId: eId, checkNumber: checkNumber },
+            { cache: false }
+          )
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
       var getAllLeaveRequestsByEmployee = function (eId)
       {
         return $http
@@ -556,6 +584,8 @@
       };
 
       return {
+        getPayStubListByEmployee: getPayStubListByEmployee,
+        getPayStubByEmployee: getPayStubByEmployee,
         timeclockData: timeclockData,
         finalizeLeaveRequest: finalizeLeaveRequest,
         finalizeAllLeaveRequests: finalizeAllLeaveRequests,

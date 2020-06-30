@@ -3460,3 +3460,210 @@
 
 
 </script>
+<script type="text/ng-template" id="PaystubView.controller.tmpl.html">
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         layout="row"
+         ng-show="paystubList.length > 0"
+         layout-align="center center">
+
+      <md-input-container flex="25">
+        <label>Select a Check</label>
+        <md-select ng-model="checkNumber"
+                   multiple="false"
+                   md-on-close="selectCheck()"
+                   aria-label="Select A Check">
+          <md-option ng-repeat="p in filtered_paystub_list track by $index"
+                     ng-value="p.check_number">
+            <span style="text-align: center;">
+              {{ FormatDate(p.check_date) }} - {{ p.check_number }}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <md-input-container flex="25">
+        <label>Filter Pay Stubs by Year</label>
+        <md-select ng-model="filter_year"
+                   multiple="false"
+                   md-on-close="selectYear()"
+                   aria-label="Select A Year">
+          <md-option value="">
+            Show All
+          </md-option>
+          <md-option ng-repeat="p in paystub_years track by $index"
+                     ng-value="p">
+            <span style="text-align: center;">
+              {{ p }}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <div layout="row"
+           layout-align="end center"
+           flex="100">
+        <md-button ng-click="returnToTimeStore()"
+                   class="md-raised md-primary">
+          Return to TimeStore
+        </md-button>
+      </div>
+    </div>
+
+    <div flex="90"
+         layout="row"
+         ng-show="currentPaystub !== null"
+         layout-align="center center"
+         layout-wrap>
+
+
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>YTD Gross</th>
+            <th>Current Earnings</th>
+            <th>Pay Period Ending</th>
+            <th>Pay Date</th>
+            <th>Stub No</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+            <td>{{currentPaystub.total_earnings_amount}}</td>
+            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+            <td>{{currentPaystub.formatted_pay_date}}</td>
+            <td>{{currentPaystub.check_number}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Earnings
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Earnings</th>
+            <th>Hours</th>
+            <th>Payrate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="e in currentPaystub.earnings">
+            <td>{{e.pay_code_name}}</td>
+            <td>{{e.hours.toFixed(2).toString()}}</td>
+            <td>{{e.payrate}}</td>
+            <td>{{e.amount}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_hours }}
+            </td>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_amount }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Leave
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Leave</th>
+            <th>Balance</th>
+            <th>Taken YTD</th>
+            <th>Earned YTD</th>
+            <th>Accrual Rate</th>
+            <th>Bank Maximum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="l in currentPaystub.leave">
+            <td>{{l.leave_code_name}}</td>
+            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+            <td>{{l.leave_earned.toFixed(2).toString()}}</td>
+            <td>{{(l.accrual_rate * 100).toFixed(2)}} hours/ppd</td>
+            <td>{{l.bank_maximum > 9000 ? '' : l.bank_maximum.toString()}}</td>
+          </tr>
+        </tbody>
+
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Deductions
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Deductions</th>
+            <th>Amount</th>
+            <th>YTD Deduct</th>
+            <th>Contribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="d in currentPaystub.deductions">
+            <td>{{d.ded_code_full_name}}</td>
+            <td>{{d.amount.toFixed(2).toString()}}</td>
+            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+            <td>{{d.contributions.toFixed(2).toString()}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{currentPaystub.total_deductions_amount}}
+            </td>
+            <td>
+              {{currentPaystub.total_deductions_year_to_date}}
+            </td>
+            <td>
+              {{currentPaystub.total_contributions}}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+
+
+    </div>
+
+    <div flex="90"
+         layout="row"
+         ng-show="currentPaystub === null"
+         layout-align="center center"
+         layout-wrap>
+        No check data was found, or an error was encountered.  Please try again, and contact MIS if the problem continues.
+      </div>
+
+    </div>
+</script>

@@ -33,13 +33,13 @@ Namespace Models.Paystub
 
       Dim Query As String = $"
         SELECT
-          E.home_orgn department
-          ,LTRIM(RTRIM(E.f_name)) + ' ' + ISNULL(LTRIM(RTRIM(E.m_name)) + ' ', '') + LTRIM(RTRIM(E.l_name)) + ' ' + LTRIM(RTRIM(E.name_suffix)) employee_name 
-          ,ISNULL(E.addr1, '') address_line_1
-          ,ISNULL(E.addr2, '') address_line_2
-          ,ISNULL(LTRIM(RTRIM(E.city)), '') + ' ' + E.state_id + ' ' + E.zip address_line_3
-          ,CY.empl_no
-          ,CY.check_no
+          LTRIM(RTRIM(E.home_orgn)) department
+          ,LTRIM(RTRIM(LTRIM(RTRIM(E.f_name)) + ' ' + ISNULL(LTRIM(RTRIM(E.m_name)) + ' ', '') + LTRIM(RTRIM(E.l_name)) + ' ' + LTRIM(RTRIM(E.name_suffix)))) employee_name 
+          ,ISNULL(LTRIM(RTRIM(E.addr1)), '') address_line_1
+          ,ISNULL(LTRIM(RTRIM(E.addr2)), '') address_line_2
+          ,LTRIM(RTRIM(ISNULL(LTRIM(RTRIM(E.city)), '') + ' ' + E.state_id + ' ' + E.zip)) address_line_3
+          ,LTRIM(RTRIM(CY.empl_no)) employee_id
+          ,LTRIM(RTRIM(CY.check_no)) check_number
           ,CY.tearn_y year_to_date_gross  
           ,CH.iss_date pay_date
           ,CH.trans_date pay_period_ending

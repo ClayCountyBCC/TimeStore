@@ -48420,6 +48420,36 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             }]
           }
         })
+        .when('/e/:employeeId/paystub/', {
+          controller: 'PaystubViewController',
+          templateUrl: 'PaystubView.controller.tmpl.html',
+          resolve: {
+            paystub_list: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              var eid = $route.current.params.employeeId;
+              return timestoredata.getPayStubListByEmployee(eid)
+                .then(function (data)
+                {
+                  return data;
+                });
+            }]
+          }
+        })
+        .when('/e/:employeeId/paystub/:checkNumber', {
+          controller: 'PaystubViewController',
+          templateUrl: 'PaystubView.controller.tmpl.html',
+          resolve: {
+            paystub_list: ['timestoredata', '$route', function (timestoredata, $route)
+            {
+              var eid = $route.current.params.employeeId;
+              return timestoredata.getPayStubListByEmployee(eid)
+                .then(function (data)
+                {
+                  return data;
+                });
+            }]
+          }
+        })
         .when('/timeclockview/day/:workDate', {
           controller: 'TimeclockViewController',
           templateUrl: 'TimeclockView.controller.tmpl.html',
@@ -48653,6 +48683,34 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           "TC/Leave_Requests_By_Employee",
           { employeeId: eId },
           { cache: false }
+          )
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var getPayStubListByEmployee = function (eId)
+      {
+        return $http
+          .post(
+            "TC/PaystubListByEmployee",
+            { employeeId: eId },
+            { cache: false }
+          )
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var getPayStubByEmployee = function (eId, checkNumber)
+      {
+        return $http
+          .post(
+            "TC/EmployeePaystub",
+            { employeeId: eId, checkNumber: checkNumber },
+            { cache: false }
           )
           .then(function (response)
           {
@@ -49120,6 +49178,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       };
 
       return {
+        getPayStubListByEmployee: getPayStubListByEmployee,
+        getPayStubByEmployee: getPayStubByEmployee,
         timeclockData: timeclockData,
         finalizeLeaveRequest: finalizeLeaveRequest,
         finalizeAllLeaveRequests: finalizeAllLeaveRequests,
@@ -49223,6 +49283,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function ($route, $http, $location, timestoredata, $window)
       {
         return {
+          goSwitchUser: goSwitchUser,
+          goPaystub: goPaystub,
           goTimeclockView: goTimeclockView,
           goHome: goHome,
           goDefaultEmployee: goDefaultEmployee,
@@ -49244,6 +49306,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           goLeaveRequest: goLeaveRequest
         };
 
+        function goSwitchUser()
+        {
+          // switch back to the default view
+          console.log('goswitchuser');
+          go('/switchuser');
+        }
+
         function goCalendar()
         {
           // going to use moment to navigate to the current year and month
@@ -49259,6 +49328,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           // going to use moment to navigate to the current year and month
           go('/LeaveRequest/');
+        }
+
+        function goPaystub(eid)
+        {
+          go('/e/' + eid + '/paystub');
         }
 
         function goSignatureRequired()
@@ -49385,7 +49459,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           $window.location.href = '#' + url;
         }
-
+        
       }]);
 
 })();
@@ -50487,7 +50561,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     function getPayPeriodList() {
       var end = moment().add(1, 'years')
       var current = moment(timestoredata.getPayPeriodEnd(moment().format('M/D/YYYY')), 'YYYYMMDD');
-      var start = moment(timestoredata.getPayPeriodEnd(moment().subtract(1, 'years').format('M/D/YYYY')), 'YYYYMMDD');
+      var start = moment(timestoredata.getPayPeriodEnd(moment().subtract(2, 'years').format('M/D/YYYY')), 'YYYYMMDD');
       var ppl = [];
       while (start.isBefore(end)) {
         var s = start.add(14, 'days');
@@ -50803,7 +50877,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   function Header($scope, $mdSidenav, $routeParams, timestoredata,
     viewOptions, timestoreNav)
   {
-
     $scope.hideToolbar = false;
     $scope.myAccess = null;
     $scope.employeelist = [];
@@ -50812,6 +50885,21 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.employee = null;
     $scope.isDev = true;
     $scope.initiallyApproved = [];
+    if ($scope.employeeid === undefined || $scope.employeeid === null)
+    {
+      timestoredata.getDefaultEmployeeId()
+        .then(function (eid)
+        {
+          $scope.employeeid = eid;
+        });
+    }
+    console.log('routeparams employeeid', $routeParams.employeeId);
+    console.log('scope employeeid', $scope.employeeid);
+
+    $scope.$on('employeeChange'), function ()
+    {
+      $scope.employeeid = $routeParams.employeeId;
+    }
 
     $scope.$on('shareShowSearch', function ()
     {
@@ -50933,6 +51021,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       timestoreNav.goLeaveRequest();
     };
 
+    $scope.viewPaystubs = function ()
+    {
+      var eid = $scope.employeeid;
+      if (eid === null || eid === undefined)
+      {
+
+        timestoredata.getDefaultEmployeeId()
+          .then(function (defaulteid)
+          {
+            $scope.employeeid = defaulteid;
+            timestoreNav.goPaystub(defaulteid);
+          });
+
+      }
+      else
+      {
+        timestoreNav.goPaystub(eid);
+      }
+      
+    };
+
     $scope.viewDailyCheckoff = function ()
     {
       $mdSidenav('approvalRight').toggle();
@@ -50968,6 +51077,22 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $mdSidenav('approvalRight').toggle();
       timestoreNav.goLeaveApprovals();
     };
+
+    $scope.switchUser = function ()
+    {
+      console.log('header controller switch user');
+      timestoredata.getDefaultEmployeeId()
+        .then(function (data)
+        {
+          console.log('default employeeid', data);
+          $scope.employeeid = data;
+          console.log('header controller switch user inside');
+          timestoreNav.goSwitchUser();
+          //href = "#/switchuser"
+          //timestoreNav.goDefaultEmployee(data);
+        });
+
+    }
 
 
   }
@@ -54541,6 +54666,107 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     String.prototype.toProperCase = function () {
       return this.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
     };
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PaystubViewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', 'paystub_list', '$routeParams', PaystubViewController]);
+
+
+  function PaystubViewController($scope, viewOptions, timestoredata, timestoreNav, paystub_list, $routeParams)
+  {
+    $scope.checkNumber = "";
+    $scope.filter_year = "";
+    $scope.currentPaystub = null;
+    function FilterPaystubList()
+    {
+      console.log('paystub year', $scope.filter_year);
+      if ($scope.filter_year.length === 0) return $scope.paystubList;
+      
+      var list = $scope.paystubList.filter(function (j) { return j.pay_stub_year.toString() === $scope.filter_year });
+      return list;
+    }
+    console.log('paystub list', paystub_list);
+    $scope.employeeId = $routeParams.employeeId;
+
+    $scope.paystubList = paystub_list;
+    $scope.filtered_paystub_list = FilterPaystubList();
+    
+    $scope.paystub_years = [];
+    $scope.paystubList.map(function (j)
+    {
+      if ($scope.paystub_years.indexOf(j.pay_stub_year.toString()) === -1)
+      {
+        $scope.paystub_years.push(j.pay_stub_year.toString());
+      }
+    });
+
+    $scope.returnToTimeStore = function ()
+    {
+      timestoreNav.goDefaultEmployee($routeParams.employeeId);
+    };
+
+    if ($routeParams.checkNumber !== undefined && $routeParams.checkNumber !== null)
+    {
+      $scope.checkNumber = $routeParams.checkNumber;
+    }
+    else
+    {
+      $scope.checkNumber = $scope.paystubList[0].check_number;
+    }
+
+    if ($scope.checkNumber.length > 0)
+    {
+      LoadCheck();
+    }
+    else
+    {
+      // Work out no checks here
+    }
+              
+    $scope.FormatDate = function (date)
+    {
+      if (date instanceof Date)
+      {
+        return date.toLocaleDateString('en-us');
+      }
+      var d = new Date(date);
+      return d.toLocaleDateString('en-US');
+    }
+
+    $scope.selectYear = function ()
+    {
+      $scope.filtered_paystub_list = FilterPaystubList();
+    }
+
+    $scope.selectCheck = function ()
+    {
+      LoadCheck();
+    }
+
+    function LoadCheck()
+    {
+      timestoredata.getPayStubByEmployee($scope.employeeId, $scope.checkNumber)
+        .then(function (paystub)
+        {
+          paystub.formatted_pay_period_ending = new Date(paystub.pay_period_ending).toLocaleDateString('en-us');
+          paystub.formatted_pay_date = new Date(paystub.pay_date).toLocaleDateString('en-us');
+          paystub.total_earnings_hours = paystub.earnings.reduce(function (a, b) { return a + b.hours; }, 0).toFixed(2).toString();
+          paystub.total_earnings_amount = paystub.earnings.reduce(function (a, b) { return a + b.amount; }, 0).toFixed(2).toString();
+          paystub.total_deductions_amount = paystub.deductions.reduce(function (a, b) { return a + b.amount }, 0).toFixed(2).toString();
+          paystub.total_deductions_year_to_date = paystub.deductions.reduce(function (a, b) { return a + b.year_to_date_deductions }, 0).toFixed(2).toString();
+          paystub.total_contributions = paystub.deductions.reduce(function (a, b) { return a + b.contributions }, 0).toFixed(2).toString();
+          console.log('paystub', paystub);
+          $scope.currentPaystub = paystub;
+
+        });
+    }
+
   }
 
 })();

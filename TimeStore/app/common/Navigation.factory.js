@@ -7,6 +7,8 @@
       function ($route, $http, $location, timestoredata, $window)
       {
         return {
+          goSwitchUser: goSwitchUser,
+          goPaystub: goPaystub,
           goTimeclockView: goTimeclockView,
           goHome: goHome,
           goDefaultEmployee: goDefaultEmployee,
@@ -28,6 +30,13 @@
           goLeaveRequest: goLeaveRequest
         };
 
+        function goSwitchUser()
+        {
+          // switch back to the default view
+          console.log('goswitchuser');
+          go('/switchuser');
+        }
+
         function goCalendar()
         {
           // going to use moment to navigate to the current year and month
@@ -43,6 +52,11 @@
         {
           // going to use moment to navigate to the current year and month
           go('/LeaveRequest/');
+        }
+
+        function goPaystub(eid)
+        {
+          go('/e/' + eid + '/paystub');
         }
 
         function goSignatureRequired()
@@ -169,7 +183,7 @@
         {
           $window.location.href = '#' + url;
         }
-
+        
       }]);
 
 })();

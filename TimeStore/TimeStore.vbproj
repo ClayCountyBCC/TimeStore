@@ -216,6 +216,8 @@
     <Content Include="app\main\DefaultController.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.tmpl.html" />
+    <Content Include="app\paystub\PaystubView.controller.tmpl.html" />
+    <Content Include="app\paystub\PaystubView.controller.js" />
     <Content Include="app\signatureview\TimeCardSignatureView.tmpl.min.html">
       <DependentUpon>TimecardSignatures.controller.tmpl.html</DependentUpon>
     </Content>

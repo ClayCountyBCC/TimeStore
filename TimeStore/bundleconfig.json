@@ -30,7 +30,8 @@
         "app/timecard/TimeCardWeek.directive.tmpl.html",
         "app/timecard/TimeList.directive.tmpl.html",
         "app/calendar/CalendarView.controller.tmpl.html",
-        "app/calendar/LeaveCalendar.directive.tmpl.html"
+        "app/calendar/LeaveCalendar.directive.tmpl.html",
+        "app/paystub/PaystubView.controller.tmpl.html"
       ],
         "minify": {
             "enabled": true
@@ -84,7 +85,7 @@
         "app/notapproved/TimecardNotApproved.controller.js",
         "app/signatureview/TimecardSignatures.controller.js",
         "app/fema/FemaView.controller.js",
-        "app/timeclockview/TimeclockView.controller.js",        
+        "app/timeclockview/TimeclockView.controller.js",
         "app/timecard/TimeApproval.directive.js",
         "app/timecard/TimeCardDetail.directive.js",
         "app/timecard/TimeCardHeader.directive.js",
@@ -95,7 +96,8 @@
         "app/timecard/TimeCardWeek.directive.js",
         "app/timecard/TimeList.directive.js",
         "app/calendar/CalendarView.controller.js",
-        "app/calendar/LeaveCalendar.directive.js"
+        "app/calendar/LeaveCalendar.directive.js",
+        "app/paystub/PaystubView.controller.js"
       ],
         "minify": {
             "enabled": true

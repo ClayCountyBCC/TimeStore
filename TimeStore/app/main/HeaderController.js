@@ -9,7 +9,6 @@
   function Header($scope, $mdSidenav, $routeParams, timestoredata,
     viewOptions, timestoreNav)
   {
-
     $scope.hideToolbar = false;
     $scope.myAccess = null;
     $scope.employeelist = [];
@@ -18,6 +17,21 @@
     $scope.employee = null;
     $scope.isDev = true;
     $scope.initiallyApproved = [];
+    if ($scope.employeeid === undefined || $scope.employeeid === null)
+    {
+      timestoredata.getDefaultEmployeeId()
+        .then(function (eid)
+        {
+          $scope.employeeid = eid;
+        });
+    }
+    console.log('routeparams employeeid', $routeParams.employeeId);
+    console.log('scope employeeid', $scope.employeeid);
+
+    $scope.$on('employeeChange'), function ()
+    {
+      $scope.employeeid = $routeParams.employeeId;
+    }
 
     $scope.$on('shareShowSearch', function ()
     {
@@ -139,6 +153,27 @@
       timestoreNav.goLeaveRequest();
     };
 
+    $scope.viewPaystubs = function ()
+    {
+      var eid = $scope.employeeid;
+      if (eid === null || eid === undefined)
+      {
+
+        timestoredata.getDefaultEmployeeId()
+          .then(function (defaulteid)
+          {
+            $scope.employeeid = defaulteid;
+            timestoreNav.goPaystub(defaulteid);
+          });
+
+      }
+      else
+      {
+        timestoreNav.goPaystub(eid);
+      }
+      
+    };
+
     $scope.viewDailyCheckoff = function ()
     {
       $mdSidenav('approvalRight').toggle();
@@ -174,6 +209,22 @@
       $mdSidenav('approvalRight').toggle();
       timestoreNav.goLeaveApprovals();
     };
+
+    $scope.switchUser = function ()
+    {
+      console.log('header controller switch user');
+      timestoredata.getDefaultEmployeeId()
+        .then(function (data)
+        {
+          console.log('default employeeid', data);
+          $scope.employeeid = data;
+          console.log('header controller switch user inside');
+          timestoreNav.goSwitchUser();
+          //href = "#/switchuser"
+          //timestoreNav.goDefaultEmployee(data);
+        });
+
+    }
 
 
   }

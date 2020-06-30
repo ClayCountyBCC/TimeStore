@@ -26,7 +26,7 @@
     function getPayPeriodList() {
       var end = moment().add(1, 'years')
       var current = moment(timestoredata.getPayPeriodEnd(moment().format('M/D/YYYY')), 'YYYYMMDD');
-      var start = moment(timestoredata.getPayPeriodEnd(moment().subtract(1, 'years').format('M/D/YYYY')), 'YYYYMMDD');
+      var start = moment(timestoredata.getPayPeriodEnd(moment().subtract(2, 'years').format('M/D/YYYY')), 'YYYYMMDD');
       var ppl = [];
       while (start.isBefore(end)) {
         var s = start.add(14, 'days');
