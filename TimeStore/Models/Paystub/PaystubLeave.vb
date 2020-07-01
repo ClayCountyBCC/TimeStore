@@ -12,6 +12,7 @@ Namespace Models.Paystub
     Property leave_earned As Decimal
     Property accrual_rate As Decimal
     Property bank_maximum As Decimal
+    Property calculated_accrual_rate As Decimal
 
     Public Shared Function Get_Leave(employee_id As Integer, check_number As String) As List(Of PaystubLeave)
       Dim dp As New DynamicParameters()
@@ -26,11 +27,12 @@ Namespace Models.Paystub
           ,lv_tak leave_taken
           ,lv_ear leave_earned
           ,LT.acc_rate accrual_rate
-          ,LT.roll_lim bank_maximum
+          ,LT.roll_lim bank_maximum          
+          ,LT.acc_rate * CASE WHEN LT.lv_code IN ('300', '400', '401', '402', '403', '404', '405', '406', '407') THEN 106 ELSE 80 END  calculated_accrual_rate
         FROM check_leave CL
-        INNER JOIN levtable LT ON CL.lv_code=LT.lv_code
+        INNER JOIN levtable LT ON CL.lv_code=LT.lv_code        
         WHERE
-          empl_no=CAST(@employee_id AS VARCHAR(10))
+          CL.empl_no=CAST(@employee_id AS VARCHAR(10))
           AND check_no = @check_number
           AND CL.lv_code NOT IN ('900');"
 

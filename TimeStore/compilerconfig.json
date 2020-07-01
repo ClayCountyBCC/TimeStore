@@ -4,9 +4,10 @@
     "inputFile": "CSS/Main.scss",
     "minify": {
       "enabled": true
-    },
-    "includeInProject": true,
-    "sourceMap": false,
-    "options": {}
+    }
+  },
+  {
+    "outputFile": "CSS/paystubPrint.css",
+    "inputFile": "CSS/paystubPrint.scss"
   }
 ]

@@ -34,7 +34,7 @@ Namespace Models.Paystub
       Dim Query As String = $"
         SELECT
           LTRIM(RTRIM(E.home_orgn)) department
-          ,LTRIM(RTRIM(LTRIM(RTRIM(E.f_name)) + ' ' + ISNULL(LTRIM(RTRIM(E.m_name)) + ' ', '') + LTRIM(RTRIM(E.l_name)) + ' ' + LTRIM(RTRIM(E.name_suffix)))) employee_name 
+          ,LTRIM(RTRIM(E.f_name)) + ' ' + ISNULL(LTRIM(RTRIM(E.m_name)) + ' ', '') + LTRIM(RTRIM(ISNULL(E.l_name, ''))) + ' ' + LTRIM(RTRIM(ISNULL(E.name_suffix, ''))) employee_name 
           ,ISNULL(LTRIM(RTRIM(E.addr1)), '') address_line_1
           ,ISNULL(LTRIM(RTRIM(E.addr2)), '') address_line_2
           ,LTRIM(RTRIM(ISNULL(LTRIM(RTRIM(E.city)), '') + ' ' + E.state_id + ' ' + E.zip)) address_line_3

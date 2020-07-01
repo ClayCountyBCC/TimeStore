@@ -1,0 +1,68 @@
+﻿.paystub_table
+{
+  width: 100%;
+
+  td, th
+  {
+    text-align: right;
+    padding-right: 1em;
+    border-bottom: solid 1px rgba(0, 0, 0, 0.12);   
+  }
+}
+#paystubPrintView
+{
+  display: none;
+}
+
+
+
+
+/* this css file is to be included only for pay stub printing. */
+@media print
+{
+  
+  @page
+  {
+    margin: .3in .3in .3in .3in;
+    size: 11in 8.5in portrait;
+    //overflow-y: visible !important;
+    //overflow-x: visible !important;
+  }
+
+  body, html
+  {
+    height: auto !important;
+  }
+
+  #paystubDetailedView, #paystubSelector
+  {
+    display: none;
+  }
+
+  #paystubPrintView
+  {
+    width: 100%;
+    display: block;
+    font-size: 12px;
+
+    td, th
+    {
+      text-align: right;
+      padding-right: 1em;      
+    }
+
+    thead th
+    {
+      border-bottom: 1px solid black;
+    }
+    tfoot td
+    {
+      border-top: 1px solid black;
+    }
+    
+  }
+  #paystubHeader_right td
+  {
+    text-align: center;
+  }
+}

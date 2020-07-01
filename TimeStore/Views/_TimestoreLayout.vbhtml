@@ -44,8 +44,7 @@ end code
             Your network password is going to expire on {{ myAccess.PasswordExpirationDate }}.
           </md-tooltip>
         </md-button>
-        <md-button ng-show="myAccess.Data_Type==='timecard'"
-                   aria-label="View Paystubs"
+        <md-button aria-label="View Paystubs"
                    ng-click="viewPaystubs()"
                    class="md-fab md-mini">
           <svg class="fabWhite"

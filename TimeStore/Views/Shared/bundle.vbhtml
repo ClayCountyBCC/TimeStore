@@ -3462,6 +3462,8 @@
 </script>
 <script type="text/ng-template" id="PaystubView.controller.tmpl.html">
 
+ <link rel="stylesheet" href="../css/paystubPrint.css" />
+
   <div flex="100"
        layout="row"
        layout-align="center start"
@@ -3470,6 +3472,7 @@
 
     <div flex="90"
          layout="row"
+         id="paystubSelector"
          ng-show="paystubList.length > 0"
          layout-align="center center">
 
@@ -3516,7 +3519,8 @@
       </div>
     </div>
 
-    <div flex="90"
+    <div id="paystubDetailedView"
+         flex="90"
          layout="row"
          ng-show="currentPaystub !== null"
          layout-align="center center"
@@ -3606,7 +3610,7 @@
             <td>{{l.leave_balance.toFixed(2).toString()}}</td>
             <td>{{l.leave_taken.toFixed(2).toString()}}</td>
             <td>{{l.leave_earned.toFixed(2).toString()}}</td>
-            <td>{{(l.accrual_rate * 100).toFixed(2)}} hours/ppd</td>
+            <td>{{l.calculated_accrual_rate.toFixed(2)}} hours/ppd</td>
             <td>{{l.bank_maximum > 9000 ? '' : l.bank_maximum.toString()}}</td>
           </tr>
         </tbody>
@@ -3662,8 +3666,261 @@
          ng-show="currentPaystub === null"
          layout-align="center center"
          layout-wrap>
-        No check data was found, or an error was encountered.  Please try again, and contact MIS if the problem continues.
-      </div>
-
+      No check data was found, or an error was encountered.  Please try again, and contact MIS if the problem continues.
     </div>
+
+    <div id="paystubPrintView"
+         flex="100">
+      <table style="width: 100%;">
+        <tbody>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%;">
+                      <p style="padding-left: 2em; text-align: left;">
+                        <strong>BOARD OF COUNTY COMMISSIONERS</strong><br />
+                        STATE OF FLORIDA - CLAY COUNTY<br />
+                        P.O. BOX 988<br />
+                        GREEN COVE SPRINGS, FLORIDA 32043-0988<br />
+                        PAYROLL CHECK
+                      </p>
+                    </td>
+                    <td style="width: 20%; padding: 0 0 0 0; margin: 0;">
+                      <div style="height: 100%; max-height: 128px; max-width: 128px;">
+                        <img style="object-fit: contain; object-position: 50% 50%;  width: 100%; height: 100%;"
+                             src="../images/ClayCountySeal-64x64.png" />
+                      </div>
+                    </td>
+                    <td style="width: 40%;">
+                      <table id="paystubHeader_right"
+                             style="width: 100%;">
+                        <thead>
+                          <tr>
+                            <td style="width: 20%;"></td>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB DATE</th>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB NO.</th>
+                            <td style="width: 20%;"></td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td></td>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                            <td>{{currentPaystub.check_number}}</td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-left: 4em; text-align: left;"
+                        colspan="3">
+                      <p>
+                        {{currentPaystub.department}}<br />
+                        {{currentPaystub.employee_name}}<br />
+                        {{currentPaystub.address_line_1}}<br />
+                        {{currentPaystub.address_line_2 }}<br ng-show="currentPaystub.address_line_2.length > 0" />
+                        {{currentPaystub.address_line_3}}<br />
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr>
+                    <td style="text-align: left;">
+                      CLAY COUNTY BOARD OF COMMISSIONERS
+                    </td>
+                    <td style="text-align: right;">
+                      {{currentPaystub.employee_name}}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: center; font-size: smaller;"
+                        colspan="2">
+                      STATEMENT OF EARNINGS AND DEDUCTIONS
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%; border: 2px solid black;">
+                <tbody>
+                  <tr>
+                    <td style="width: 30%; vertical-align: top;">
+                      <table style="width: 100%;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Earnings
+                            </th>
+                            <th style="width: 20%;">
+                              Hours
+                            </th>
+                            <th style="width: 40%;">
+                              Amount
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="e in currentPaystub.earnings">
+                            <td>{{e.pay_code_short_name}}</td>
+                            <td>{{e.hours.toFixed(2).toString()}}</td>
+                            <td>{{e.amount}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td></td>
+                            <td>
+                              {{ currentPaystub.total_earnings_hours }}
+                            </td>
+                            <td>
+                              {{ currentPaystub.total_earnings_amount }}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      <table style="width: 100%; margin-top: 1em;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Leave
+                            </th>
+                            <th style="width: 20%;">
+                              Balance
+                            </th>
+                            <th style="width: 40%;">
+                              Taken YTD
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="l in currentPaystub.leave">
+                            <td>{{l.leave_code_short_name}}</td>
+                            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+                            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                    <td style="width: 50%; vertical-align: top; border-left: 1px solid black;">
+
+                      <table style="width: 100%;">
+                        <thead>
+                          <tr>
+                            <th>Deductions</th>
+                            <th>Amount</th>
+                            <th>YTD Deduct</th>
+                            <th>Contribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="d in currentPaystub.deductions">
+                            <td>{{d.ded_code_short_name}}</td>
+                            <td>{{d.amount.toFixed(2).toString()}}</td>
+                            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+                            <td>{{d.contributions.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>
+                              Total
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_amount}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_year_to_date}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_contributions}}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+
+
+                    </td>
+                    <td style="width: 20%; vertical-align: top; border-left: 1px solid black;">
+                      <table style="width: 100%;">
+                        <tbody>
+                          <tr>
+                            <th>YTD Gross</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <th>Current Earnings</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.total_earnings_amount}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Period Ending</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Date</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                          </tr>
+                          <tr>
+                            <th>Stub No</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.check_number}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
 </script>
