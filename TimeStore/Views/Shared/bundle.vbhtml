@@ -3462,7 +3462,7 @@
 </script>
 <script type="text/ng-template" id="PaystubView.controller.tmpl.html">
 
- <link rel="stylesheet" href="../css/paystubPrint.css" />
+ <link rel="stylesheet" href="css/paystubPrint.css" />
 
   <div flex="100"
        layout="row"
@@ -3690,7 +3690,7 @@
                     <td style="width: 20%; padding: 0 0 0 0; margin: 0;">
                       <div style="height: 100%; max-height: 128px; max-width: 128px;">
                         <img style="object-fit: contain; object-position: 50% 50%;  width: 100%; height: 100%;"
-                             src="../images/ClayCountySeal-64x64.png" />
+                             src="images/ClayCountySeal-258b.png" />
                       </div>
                     </td>
                     <td style="width: 40%;">

@@ -273,9 +273,11 @@
     </Content>
     <Content Include="CSS\paystubPrint.css">
       <DependentUpon>paystubPrint.scss</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="CSS\paystubPrint.min.css">
       <DependentUpon>paystubPrint.css</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Global.asax" />
     <Content Include="CSS\Main.scss" />
@@ -342,7 +344,15 @@
     </None>
     <None Include="My Project\PublishProfiles\DeployFolder.pubxml" />
     <None Include="My Project\PublishProfiles\DV10.pubxml" />
-    <Content Include="images\ClayCountySeal-64x64.png" />
+    <Content Include="images\ClayCountySeal-128b.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="images\ClayCountySeal-258b.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="images\ClayCountySeal-64x64.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="images\ic_alarm_24px.svg" />
     <Content Include="images\ic_alarm_add_24px.svg" />
     <Content Include="images\ic_alarm_black_48dp_2x.png" />
