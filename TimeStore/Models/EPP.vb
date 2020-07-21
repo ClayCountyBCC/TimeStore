@@ -1269,7 +1269,8 @@
           Case TelestaffProfileType.Field, TelestaffProfileType.Dispatch
             Return Regular.TotalHours_Week1 + Vacation.TotalHours_Week1 + Holiday_Time_Used.TotalHours_Week1 +
                                 Leave_Without_Pay.TotalHours_Week1 + Sick.TotalHours_Week1 + Comp_Time_Used.TotalHours_Week1 +
-                                Union_Time_Pool.TotalHours_Week1 + Disaster_Regular.TotalHours_Week1
+                                Union_Time_Pool.TotalHours_Week1 + Disaster_Regular.TotalHours_Week1 +
+                                Admin_Leave_Disaster.TotalHours_Week1
           Case TelestaffProfileType.Office
             If IsExempt Then
               Return 40
@@ -1277,7 +1278,8 @@
               Dim tmp As Double = Regular.TotalHours_Week1 + Vacation.TotalHours_Week1 +
                 Leave_Without_Pay.TotalHours_Week1 + Sick.TotalHours_Week1 +
                 Comp_Time_Used.TotalHours_Week1 + Union_Time_Pool.TotalHours_Week1 +
-                Disaster_Regular.TotalHours_Week1 + Disaster_Doubletime.TotalHours_Week1
+                Disaster_Regular.TotalHours_Week1 + Disaster_Doubletime.TotalHours_Week1 +
+                Admin_Leave_Disaster.TotalHours_Week1
               Return tmp
             End If
           Case Else
@@ -1292,7 +1294,8 @@
           Case TelestaffProfileType.Field, TelestaffProfileType.Dispatch
             Return Regular.TotalHours_Week2 + Vacation.TotalHours_Week2 + Holiday_Time_Used.TotalHours_Week2 +
                                 Leave_Without_Pay.TotalHours_Week2 + Sick.TotalHours_Week2 + Comp_Time_Used.TotalHours_Week2 +
-                                Union_Time_Pool.TotalHours_Week2 + Disaster_Regular.TotalHours_Week2
+                                Union_Time_Pool.TotalHours_Week2 + Disaster_Regular.TotalHours_Week2 +
+                                Admin_Leave_Disaster.TotalHours_Week2
           Case TelestaffProfileType.Office
             If IsExempt Then
               Return 40
@@ -1300,7 +1303,8 @@
               Dim tmp As Double = Regular.TotalHours_Week2 + Vacation.TotalHours_Week2 +
                 Leave_Without_Pay.TotalHours_Week2 + Sick.TotalHours_Week2 +
                 Comp_Time_Used.TotalHours_Week2 + Union_Time_Pool.TotalHours_Week2 +
-                Disaster_Regular.TotalHours_Week2 + Disaster_Doubletime.TotalHours_Week2
+                Disaster_Regular.TotalHours_Week2 + Disaster_Doubletime.TotalHours_Week2 +
+                Admin_Leave_Disaster.TotalHours_Week2
               Return tmp
             End If
           Case Else
