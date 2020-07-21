@@ -1261,13 +1261,13 @@
         calculatedTimeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006", Payrate))
       End If
 
-      approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", GetPayrate("090", Payrate)))
-      'approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", Payrate))
-      approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
-      'approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", Payrate))
+      'approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", GetPayrate("090", Payrate)))
+      approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", Payrate))
+      'approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
+      approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", Payrate))
       approvalTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", Payrate))
-      approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
-      'approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
+      'approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
+      approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
       approvalTimeList.Add(New WorkType("Sick", e.Sick(0), 4, "110", Payrate))
       approvalTimeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110", Payrate))
 
@@ -1276,14 +1276,14 @@
         calculatedTimeList.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", Payrate * 1.05))
       End If
       calculatedTimeList.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(0), 0, "299", Payrate))
-      calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
-      'calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", Payrate))
-      calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", GetPayrate("090", Payrate)))
-      'calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", Payrate))
+      'calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
+      calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", Payrate))
+      'calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", GetPayrate("090", Payrate)))
+      calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", Payrate))
       calculatedTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", Payrate))
       calculatedTimeList.Add(New WorkType("Sick", e.Sick_All(0), 4, "110", Payrate))
-      'calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
-      calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
+      calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
+      'calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
 
 
       If e.Holiday(0) > 0 Then
@@ -1333,18 +1333,18 @@
               If e.Out_Of_Class(0) > 0 Then
                 c.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", Payrate * 1.05))
               End If
-              c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", Payrate))
-              c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", GetPayrate("095", Payrate)))
-              c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", GetPayrate("090", Payrate)))
-              c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
-              c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
-              c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", GetPayrate("046", Payrate)))
               'c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", Payrate))
-              'c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", Payrate))
-              'c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", Payrate))
+              'c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", GetPayrate("095", Payrate)))
+              'c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", GetPayrate("090", Payrate)))
               'c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
               'c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
-              'c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", Payrate))
+              'c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", GetPayrate("046", Payrate)))
+              c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", Payrate))
+              c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", Payrate))
+              c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", Payrate))
+              c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
+              c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
+              c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", Payrate))
           End Select
           c.Add(New WorkType("Unscheduled OT 1.0", e.Regular_Overtime(a), 5, "230", Payrate))
           c.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(a), 1, "231", Payrate))
