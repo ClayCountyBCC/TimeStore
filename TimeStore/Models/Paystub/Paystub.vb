@@ -20,6 +20,7 @@ Namespace Models.Paystub
     Property earnings As List(Of PaystubEarnings) = New List(Of PaystubEarnings)
     Property leave As List(Of PaystubLeave) = New List(Of PaystubLeave)
     Property deductions As List(Of PaystubDeductions) = New List(Of PaystubDeductions)
+    Property is_voided As Boolean = False
 
 
     Public Sub New()
@@ -43,6 +44,7 @@ Namespace Models.Paystub
           ,CY.tearn_y year_to_date_gross  
           ,CH.iss_date pay_date
           ,CH.trans_date pay_period_ending
+          ,CASE WHEN ISNULL(CH.man_void, '') = 'V' THEN 1 ELSE 0 END is_voided
         FROM check_ytd CY
         LEFT OUTER JOIN checkhis CH ON CY.empl_no = CH.empl_no
           AND CY.check_no = CH.check_no

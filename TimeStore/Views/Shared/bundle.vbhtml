@@ -3485,7 +3485,7 @@
           <md-option ng-repeat="p in filtered_paystub_list track by $index"
                      ng-value="p.check_number">
             <span style="text-align: center;">
-              {{ FormatDate(p.check_date) }} - {{ p.check_number }}
+              {{ FormatDate(p.check_date) }} - {{ p.check_number }} {{ p.is_voided ? '(VOIDED)' : ''}}
             </span>
           </md-option>
         </md-select>
@@ -3544,6 +3544,11 @@
             <td>{{currentPaystub.formatted_pay_period_ending}}</td>
             <td>{{currentPaystub.formatted_pay_date}}</td>
             <td>{{currentPaystub.check_number}}</td>
+          </tr>
+          <tr ng-show="currentPaystub.is_voided">
+            <td colspan="5" style="text-align: center; font-weight: bold; color: red; font-size: x-large;">
+              CHECK IS VOIDED
+            </td>
           </tr>
         </tbody>
       </table>
@@ -3738,6 +3743,11 @@
             <td>
               <table style="width: 100%;">
                 <tbody>
+                  <tr ng-show="currentPaystub.is_voided">
+                    <td colspan="2" style="text-align: center; font-weight: bold; font-size: x-large;">
+                      CHECK IS VOIDED
+                    </td>
+                  </tr>
                   <tr>
                     <td style="text-align: left;">
                       CLAY COUNTY BOARD OF COMMISSIONERS
