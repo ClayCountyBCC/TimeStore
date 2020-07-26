@@ -10,6 +10,7 @@ Namespace Models.Paystub
     Property transaction_date As Date
     Property pay_period_start_date As Date
     Property pay_stub_year As Integer
+    Property is_voided As Boolean
 
     Public Shared Function Get_Paystubs_By_Employee(employee_id As Integer) As List(Of PaystubList)
       Dim dp As New DynamicParameters()
@@ -23,10 +24,12 @@ Namespace Models.Paystub
           ,trans_date transaction_date
           ,start_date pay_period_start_date
           ,YEAR(iss_date) pay_stub_year
+          ,CASE WHEN ISNULL(H.man_void, '') = 'V' THEN 1 ELSE 0 END is_voided
         FROM checkhis H
         INNER JOIN check_ytd Y ON H.empl_no = Y.empl_no AND H.check_no = Y.check_no
         WHERE
           H.empl_no = CAST(@employee_id AS VARCHAR(10))
+          AND ISNULL(H.man_void, '') != 'V'
         ORDER BY
           iss_date DESC"
       Return Get_Data(Of PaystubList)(Query, dp, ConnectionStringType.FinPlus)
@@ -41,7 +44,7 @@ Namespace Models.Paystub
           ,iss_date check_date
           ,trans_date transaction_date
           ,start_date pay_period_start_date
-          ,YEAR(iss_date) pay_stub_year
+          ,YEAR(iss_date) pay_stub_year      
         FROM checkhis
         WHERE
           iss_date = @check_date

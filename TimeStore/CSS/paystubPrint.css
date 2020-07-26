@@ -21,6 +21,8 @@
     width: 100%;
     display: block;
     font-size: 12px; }
+    #paystubPrintView table {
+      border-spacing: 0; }
     #paystubPrintView td, #paystubPrintView th {
       text-align: right;
       padding-right: 1em; }
@@ -30,4 +32,3 @@
       border-top: 1px solid black; }
   #paystubHeader_right td {
     text-align: center; } }
-

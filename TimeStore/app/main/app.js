@@ -49,7 +49,7 @@
               return timestoredata.getEmployee(ppi, eid)
                 .then(function (data)
                 {
-                  console.log('timecard data, add time', data);
+                  //console.log('timecard data, add time', data);
                   return data;
                 });
             }]
