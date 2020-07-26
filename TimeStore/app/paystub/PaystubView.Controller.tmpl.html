@@ -68,6 +68,36 @@
       <table class="paystub_table md-whiteframe-z1">
         <thead>
           <tr>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Employee Name
+            </th>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Department
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.employee_name}}
+            </td>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.department}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Paystub Information
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
             <th>YTD Gross</th>
             <th>Current Earnings</th>
             <th>Pay Period Ending</th>
@@ -309,8 +339,8 @@
               <table style="width: 100%; border: 2px solid black;">
                 <tbody>
                   <tr>
-                    <td style="width: 30%; vertical-align: top;">
-                      <table style="width: 100%;">
+                    <td style="width: 30%; vertical-align: top; padding-right: 0;">
+                      <table style="width: 100%; border-spacing: 0;">
                         <thead>
                           <tr>
                             <th style="width: 40%;">
@@ -372,9 +402,9 @@
                       </table>
 
                     </td>
-                    <td style="width: 50%; vertical-align: top; border-left: 1px solid black;">
+                    <td style="width: 50%; vertical-align: top; border-left: 1px solid black; padding-right: 0;">
 
-                      <table style="width: 100%;">
+                      <table style="width: 100%; border-spacing: 0;">
                         <thead>
                           <tr>
                             <th>Deductions</th>

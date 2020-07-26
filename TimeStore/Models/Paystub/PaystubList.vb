@@ -29,6 +29,7 @@ Namespace Models.Paystub
         INNER JOIN check_ytd Y ON H.empl_no = Y.empl_no AND H.check_no = Y.check_no
         WHERE
           H.empl_no = CAST(@employee_id AS VARCHAR(10))
+          AND ISNULL(H.man_void, '') != 'V'
         ORDER BY
           iss_date DESC"
       Return Get_Data(Of PaystubList)(Query, dp, ConnectionStringType.FinPlus)
@@ -43,7 +44,7 @@ Namespace Models.Paystub
           ,iss_date check_date
           ,trans_date transaction_date
           ,start_date pay_period_start_date
-          ,YEAR(iss_date) pay_stub_year
+          ,YEAR(iss_date) pay_stub_year      
         FROM checkhis
         WHERE
           iss_date = @check_date

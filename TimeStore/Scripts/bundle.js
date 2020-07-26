@@ -48414,7 +48414,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               return timestoredata.getEmployee(ppi, eid)
                 .then(function (data)
                 {
-                  console.log('timecard data, add time', data);
+                  //console.log('timecard data, add time', data);
                   return data;
                 });
             }]
@@ -54685,13 +54685,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.currentPaystub = null;
     function FilterPaystubList()
     {
-      console.log('paystub year', $scope.filter_year);
+      //console.log('paystub year', $scope.filter_year);
       if ($scope.filter_year.length === 0) return $scope.paystubList;
       
       var list = $scope.paystubList.filter(function (j) { return j.pay_stub_year.toString() === $scope.filter_year });
       return list;
     }
-    console.log('paystub list', paystub_list);
+    //console.log('paystub list', paystub_list);
     $scope.employeeId = $routeParams.employeeId;
 
     $scope.paystubList = paystub_list;
@@ -54761,7 +54761,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           paystub.total_deductions_amount = paystub.deductions.reduce(function (a, b) { return a + b.amount }, 0).toFixed(2).toString();
           paystub.total_deductions_year_to_date = paystub.deductions.reduce(function (a, b) { return a + b.year_to_date_deductions }, 0).toFixed(2).toString();
           paystub.total_contributions = paystub.deductions.reduce(function (a, b) { return a + b.contributions }, 0).toFixed(2).toString();
-          console.log('paystub', paystub);
+          //console.log('paystub', paystub);
           $scope.currentPaystub = paystub;
 
         });

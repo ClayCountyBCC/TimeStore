@@ -51,7 +51,8 @@ Namespace Models.Paystub
         INNER JOIN employee E ON CY.empl_no=E.empl_no
         WHERE
           CY.empl_no=CAST(@employee_id AS VARCHAR(10))
-          AND CY.check_no=@check_number"
+          AND CY.check_no=@check_number
+          AND ISNULL(CH.man_void, '') != 'V'"
 
       Dim paystubs = Get_Data(Of Paystub)(Query, dp, ConnectionStringType.FinPlus)
       If paystubs.Count() <> 1 Then

@@ -1,6 +1,6 @@
 ﻿.paystub_table
 {
-  width: 100%;
+  width: 100%;  
 
   td, th
   {
@@ -45,21 +45,26 @@
     display: block;
     font-size: 12px;
 
+    table
+    {
+      border-spacing: 0;
+    }
+
     td, th
     {
       text-align: right;
-      padding-right: 1em;      
+      padding-right: 1em;
     }
 
     thead th
     {
       border-bottom: 1px solid black;
     }
+
     tfoot td
     {
       border-top: 1px solid black;
     }
-    
   }
   #paystubHeader_right td
   {
