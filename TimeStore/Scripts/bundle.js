@@ -49762,10 +49762,17 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             var disaster_period = tc.Disaster_Periods[i];
             if (DisasterNameToUse.length === 0)
             {
-              if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
+              var wd_test = wd.toDate();
+              var start = new Date(disaster_period.StartDate);
+              var end = new Date(disaster_period.EndDate);              
+              if (wd_test >= start && wd_test <= end)
               {
                 DisasterNameToUse = disaster_period.Name;
               }
+              //if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
+              //{
+              //  DisasterNameToUse = disaster_period.Name;
+              //}
             }
           }
         }
