@@ -36,6 +36,8 @@
     timestoreNav
   )
   {
+    var ppd = $routeParams.payPeriod;
+    $scope.TaxWitholdingCutoff = moment(ppd, "YYYYMMDD").format("M/D/YYYY") + " 5:00 PM";
     var ctrl = this;
     ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();

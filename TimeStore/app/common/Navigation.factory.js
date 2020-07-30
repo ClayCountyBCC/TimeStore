@@ -17,6 +17,9 @@
           goIncentives: goIncentives,
           goAccessChange: goAccessChange,
           goFinanceTools: goFinanceTools,
+          goPayrollOverallProcess: goPayrollOverallProcess,
+          goPayrollEditProcess: goPayrollEditProcess,
+          goPayrollReviewProcess: goPayrollReviewProcess,
           goTimecardApprovals: goTimecardApprovals,
           goLeaveApprovals: goLeaveApprovals,
           goAddTime: goAddTime,
@@ -103,6 +106,42 @@
         {
           go('/FinanceTools/');
           //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollOverallProcess(ppd)
+        {
+          if (!ppd)
+          {
+            // let's add some logic here.
+            // If the current date is the current pay period start
+            // or the current pay period start + 1 or 2 days (ie: that Wednesday, Thursday, or Friday)
+            // then let's load the previous pay period.
+            if (timestoredata.checkNewPayPeriod())
+            {
+              var previousPPE = moment(timestoredata.getPayPeriodEnd(), "YYYYMMDD").add(-14, "days").format("YYYYMMDD");
+              go('/PayrollOverall/ppd/' + previousPPE);
+            }
+            else
+            {
+              go('/PayrollOverall/ppd/' + timestoredata.getPayPeriodEnd());
+            }
+            
+          }
+          else
+          {
+            go('/PayrollOverall/ppd/' + ppd);
+          }
+          //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollEditProcess(ppd)
+        {
+          go('/PayrollEdit/ppd/' + ppd);
+        }
+
+        function goPayrollReviewProcess(ppd)
+        {
+          go('/PayrollReview/ppd/' + ppd);
         }
 
         function goAccessChange()

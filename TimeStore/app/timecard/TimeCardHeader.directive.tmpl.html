@@ -49,12 +49,21 @@
                      flex="100"
                      layout-align="center center"
                      layout-wrap>
-                    <span>
-                        Payrate {{ ::timecard.shortPayrate}} {{ ::timecard.exemptStatus }}
-                        <md-tooltip md-direction="right">
-                            {{ ::timecard.Payrate }}
-                        </md-tooltip>
-                    </span>
+                  <md-button class="md-primary"
+                          style="text-decoration: underline;"
+                          ng-click="showPayrate = !showPayrate;">
+                    {{ showPayrate ? 'Hide' : 'Show' }} Payrate
+                  </md-button>
+                  <span style="margin-right: .5em;"
+                        ng-show="showPayrate">
+                    Payrate {{ ::timecard.shortPayrate }} 
+                    <md-tooltip md-direction="right">
+                      ${{  ::timecard.Payrate }}
+                    </md-tooltip>
+                  </span>
+                  <span>
+                    {{ ::timecard.exemptStatus }}
+                  </span>
                 </div>
             </md-grid-tile>
             <md-grid-tile md-rowspan="1"

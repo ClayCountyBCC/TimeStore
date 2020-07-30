@@ -1147,6 +1147,7 @@
   </div>
 </script>
 <script type="text/ng-template" id="DateSelect.tmpl.html">
+
   <div layout="row"
        layout-align="start center"
        layout-wrap
@@ -2570,6 +2571,9 @@
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
+           layout-align="center center"
+           layout="row"
+           layout-wrap
            flex="100">
         <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
@@ -2637,6 +2641,25 @@
              ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
           You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
+        <div flex="90"
+             layout-align="center center"
+             layout="row">
+          <ul>
+            <li>
+              If you are interested in changing your tax withholding for this pay period, please access the form here (<a href="images/2020%20W4.pdf">2020 W4.pdf</a>).
+            </li>
+            <li>
+              You will be required to complete a second form to revert to the original tax withholding status.
+            </li>
+            <li>
+              This form must be completed and returned to HR before {{TaxWitholdingCutoff}} for it to be effective this pay period.
+            </li>
+            <li>
+              Questions can be directed to Human Resources at <a href="mailto:bcchr@claycountygov.com">bcchr@claycountygov.com</a>.
+            </li>
+          </ul>            
+        </div>
+
         <div layout="row"
              layout-align="center center"
              flex="100">
@@ -2720,12 +2743,21 @@
                      flex="100"
                      layout-align="center center"
                      layout-wrap>
-                    <span>
-                        Payrate {{ ::timecard.shortPayrate}} {{ ::timecard.exemptStatus }}
-                        <md-tooltip md-direction="right">
-                            {{ ::timecard.Payrate }}
-                        </md-tooltip>
-                    </span>
+                  <md-button class="md-primary"
+                          style="text-decoration: underline;"
+                          ng-click="showPayrate = !showPayrate;">
+                    {{ showPayrate ? 'Hide' : 'Show' }} Payrate
+                  </md-button>
+                  <span style="margin-right: .5em;"
+                        ng-show="showPayrate">
+                    Payrate {{ ::timecard.shortPayrate }} 
+                    <md-tooltip md-direction="right">
+                      ${{  ::timecard.Payrate }}
+                    </md-tooltip>
+                  </span>
+                  <span>
+                    {{ ::timecard.exemptStatus }}
+                  </span>
                 </div>
             </md-grid-tile>
             <md-grid-tile md-rowspan="1"
@@ -3963,4 +3995,213 @@
     </div>
 
   </div>
+</script>
+
+<script type="text/ng-template" id="PayrollOverall.tmpl.html">
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         class="md-whiteframe-z1">
+      <date-selector title="Pay Period Ending:"
+                     label="Select Pay Period"
+                     datetype="ppd"
+                     flex="100">
+      </date-selector>
+    </div>
+
+    <div style="margin-top: 3em;"
+         layout="row"
+         layout-align="start center"
+         class="md-whiteframe-z1"
+         layout-wrap
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Set up Payroll Process
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button class="md-primary md-raised">Start</md-button>
+      </div>
+      <div flex="100">
+        <p>{{setUpDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            Pull current Payrates from Finplus
+          </li>
+          <li>
+            Pull current leave banks from Finplus
+          </li>
+          <li>
+            If changes are made in Finplus after this process has been started, they will not be reflected in this process.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          View / Edit Timestore / Finplus Data
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="!setUpCompleted"
+                   class="md-primary md-raised">View Edits</md-button>
+      </div>
+      <div flex="100">
+        <p>{{editDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            Change Payrates, hours, and paycodes as necessary
+          </li>
+          <li>
+            Depending on the need, it may be possible to unlock someone's Timestore for the pay period in process so that they can make any changes or additions as needed.  This will most likely apply to to people who did not complete their hours.
+          </li>
+          <li>
+            Provide justification for changes
+          </li>
+          <li>
+            Indiciate when the changes are complete
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Approve Timestore Payroll changes
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="!setUpCompleted || !editCompleted"
+                   class="md-primary md-raised">View Changes</md-button>
+
+      </div>
+      <div flex="100">
+        <p>{{changeDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
+          </li>
+          <li>
+            This is done by the Finance director or their designee
+          </li>
+          <li>
+            This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Post Timestore Data / Changes to Finplus
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-input-container flex="35">
+          <label>Target Database</label>
+          <md-select ng-model="postDatabase"
+                     multiple="false"
+                     md-on-close="selectDatabase()"
+                     aria-label="Select the target Database">
+            <md-option value="finplus51">
+              Production (finplus51)
+            </md-option>
+            <md-option value="trnfinplus51">
+              Training (trnfinplus51)
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="35">
+          <label>Select Pay Run</label>
+          <md-select ng-model="postPayrun"
+                     multiple="false"
+                     md-on-close="selectPayRun()"
+                     aria-label="Select the target payrun">
+            <md-option ng-value="">
+              No payrun
+            </md-option>
+            <md-option ng-repeat="p in foundPayRuns track by $index"
+                       ng-value="p.pay_run_number">
+              {{p.pay_run_number}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+      <div flex="100">
+        <p>{{postDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the Approve Timestore Payroll changes step.
+          </li>
+          <li>
+            Show a list of the manual corrections that need to be made (like manually updating Leave banks, etc)
+          </li>
+          <li>
+            Prior to the migration of this process to the clerk's office, this will be done by our Payroll department.
+          </li>
+          <li>
+            After the migration, this will be done by the Clerk's designee.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+
+
+</script>
+<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+
+ 
+</script>
+
+<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+
+ 
 </script>

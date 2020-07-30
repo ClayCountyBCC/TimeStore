@@ -129,6 +129,11 @@ end code
             </md-button>
           </md-list-item>
           <md-list-item>
+            <md-button ng-click="viewPayrollProcess()">
+              Payroll Process
+            </md-button>
+          </md-list-item>
+          <md-list-item>
             <md-button ng-if="myAccess.Data_Type==='timecard'" href="main/crosstab">
               View Crosstab
             </md-button>

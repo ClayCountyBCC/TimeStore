@@ -297,6 +297,7 @@
             var disaster_period = tc.Disaster_Periods[i];
             if (DisasterNameToUse.length === 0)
             {
+              console.log('isbetween test', moment('2020-07-31').isBetween('2020-07-30', '2020-08-02'));
               if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
               {
                 DisasterNameToUse = disaster_period.Name;

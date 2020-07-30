@@ -244,6 +244,18 @@
           .format("YYYYMMDD");
       }
 
+      function checkNewPayPeriod()
+      {
+        // this function will return true if it is the first Wednesday, Thursday, or Friday of 
+        // a new pay period.
+        var pps = moment(getPayPeriodStart(), "YYYYMMDD");
+        var wednesday = pps.format("YYYYMMDD");
+        var thursday = moment(getPayPeriodStart(), "YYYYMMDD").add(1, "days").format("YYYYMMDD");
+        var friday = moment(getPayPeriodStart(), "YYYYMMDD").add(2, "days").format("YYYYMMDD");        
+        var today = moment().startOf("day").format("YYYYMMDD");
+        return today === wednesday || today === thursday || today === friday;
+      }
+
       var getGenericTimeData = function (startDate, endDate, fieldsToDisplay)
       {
         var x = {
@@ -624,7 +636,8 @@
         saveCompTimeEarned: saveCompTimeEarned,
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
-        getBirthdays: getBirthdays
+        getBirthdays: getBirthdays,
+        checkNewPayPeriod: checkNewPayPeriod
       };
     }
   ]);

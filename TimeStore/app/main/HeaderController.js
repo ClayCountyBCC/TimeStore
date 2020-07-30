@@ -198,6 +198,12 @@
       timestoreNav.goFinanceTools();
     };
 
+    $scope.viewPayrollProcess = function ()
+    {
+      $mdSidenav('adminRight').toggle();
+      timestoreNav.goPayrollOverallProcess();
+    };
+
     $scope.viewFinalApprovals = function ()
     {
       $mdSidenav('approvalRight').toggle();

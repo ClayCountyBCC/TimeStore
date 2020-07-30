@@ -161,6 +161,18 @@
           controller: 'FinanceToolsController',
           templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
         })
+        .when('/PayrollOverall/ppd/:payPeriod', {
+          controller: 'PayrollOverallController',
+          templateUrl: 'PayrollOverall.tmpl.html' 
+        })
+        .when('/PayrollEdit/ppd/:payPeriod', {
+          controller: 'PayrollEditController',
+          templateUrl: 'PayrollEdit.tmpl.html'
+        })
+        .when('/PayrollReview/ppd/:payPeriod', {
+          controller: 'PayrollReviewController',
+          templateUrl: 'PayrollReview.tmpl.html'
+        })
         .when('/LeaveCalendar/', {
           controller: 'CalendarViewController',
           templateUrl: 'CalendarView.controller.tmpl.html',

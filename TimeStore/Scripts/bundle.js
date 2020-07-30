@@ -48526,6 +48526,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           controller: 'FinanceToolsController',
           templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
         })
+        .when('/PayrollOverall/ppd/:payPeriod', {
+          controller: 'PayrollOverallController',
+          templateUrl: 'PayrollOverall.tmpl.html' 
+        })
+        .when('/PayrollEdit/ppd/:payPeriod', {
+          controller: 'PayrollEditController',
+          templateUrl: 'PayrollEdit.tmpl.html'
+        })
+        .when('/PayrollReview/ppd/:payPeriod', {
+          controller: 'PayrollReviewController',
+          templateUrl: 'PayrollReview.tmpl.html'
+        })
         .when('/LeaveCalendar/', {
           controller: 'CalendarViewController',
           templateUrl: 'CalendarView.controller.tmpl.html',
@@ -48836,6 +48848,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         return moment(getPayPeriodStart(d), "YYYYMMDD")
           .add(13, "days")
           .format("YYYYMMDD");
+      }
+
+      function checkNewPayPeriod()
+      {
+        // this function will return true if it is the first Wednesday, Thursday, or Friday of 
+        // a new pay period.
+        var pps = moment(getPayPeriodStart(), "YYYYMMDD");
+        var wednesday = pps.format("YYYYMMDD");
+        var thursday = moment(getPayPeriodStart(), "YYYYMMDD").add(1, "days").format("YYYYMMDD");
+        var friday = moment(getPayPeriodStart(), "YYYYMMDD").add(2, "days").format("YYYYMMDD");        
+        var today = moment().startOf("day").format("YYYYMMDD");
+        return today === wednesday || today === thursday || today === friday;
       }
 
       var getGenericTimeData = function (startDate, endDate, fieldsToDisplay)
@@ -49218,7 +49242,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         saveCompTimeEarned: saveCompTimeEarned,
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
-        getBirthdays: getBirthdays
+        getBirthdays: getBirthdays,
+        checkNewPayPeriod: checkNewPayPeriod
       };
     }
   ]);
@@ -49293,6 +49318,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           goIncentives: goIncentives,
           goAccessChange: goAccessChange,
           goFinanceTools: goFinanceTools,
+          goPayrollOverallProcess: goPayrollOverallProcess,
+          goPayrollEditProcess: goPayrollEditProcess,
+          goPayrollReviewProcess: goPayrollReviewProcess,
           goTimecardApprovals: goTimecardApprovals,
           goLeaveApprovals: goLeaveApprovals,
           goAddTime: goAddTime,
@@ -49379,6 +49407,42 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           go('/FinanceTools/');
           //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollOverallProcess(ppd)
+        {
+          if (!ppd)
+          {
+            // let's add some logic here.
+            // If the current date is the current pay period start
+            // or the current pay period start + 1 or 2 days (ie: that Wednesday, Thursday, or Friday)
+            // then let's load the previous pay period.
+            if (timestoredata.checkNewPayPeriod())
+            {
+              var previousPPE = moment(timestoredata.getPayPeriodEnd(), "YYYYMMDD").add(-14, "days").format("YYYYMMDD");
+              go('/PayrollOverall/ppd/' + previousPPE);
+            }
+            else
+            {
+              go('/PayrollOverall/ppd/' + timestoredata.getPayPeriodEnd());
+            }
+            
+          }
+          else
+          {
+            go('/PayrollOverall/ppd/' + ppd);
+          }
+          //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollEditProcess(ppd)
+        {
+          go('/PayrollEdit/ppd/' + ppd);
+        }
+
+        function goPayrollReviewProcess(ppd)
+        {
+          go('/PayrollReview/ppd/' + ppd);
         }
 
         function goAccessChange()
@@ -49762,6 +49826,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             var disaster_period = tc.Disaster_Periods[i];
             if (DisasterNameToUse.length === 0)
             {
+              console.log('isbetween test', moment('2020-07-31').isBetween('2020-07-30', '2020-08-02'));
               if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
               {
                 DisasterNameToUse = disaster_period.Name;
@@ -51064,6 +51129,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       $mdSidenav('adminRight').toggle();
       timestoreNav.goFinanceTools();
+    };
+
+    $scope.viewPayrollProcess = function ()
+    {
+      $mdSidenav('adminRight').toggle();
+      timestoreNav.goPayrollOverallProcess();
     };
 
     $scope.viewFinalApprovals = function ()
@@ -54131,6 +54202,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     timestoreNav
   )
   {
+    var ppd = $routeParams.payPeriod;
+    $scope.TaxWitholdingCutoff = moment(ppd, "YYYYMMDD").format("M/D/YYYY") + " 5:00 PM";
     var ctrl = this;
     ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();
@@ -54248,21 +54321,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 })();
 
 /* global moment, _ */
-(function () {
-    "use strict";
-    angular.module('timestoreApp')
-        .directive('timecardHeader', function () {
-            return {
-                restrict: 'E',
-                templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
-                scope: {
-                    timecard: '=',
-                    shortheader: '='
-                },
-                controller: function ($scope) {
-                }
-            };
-        });
+(function ()
+{
+  "use strict";
+  angular.module('timestoreApp')
+    .directive('timecardHeader', function ()
+    {
+      return {
+        restrict: 'E',
+        templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
+        scope: {
+          timecard: '=',
+          shortheader: '='
+        },
+        controller: function ($scope)
+        {
+          $scope.showPayrate = false;
+        }
+      };
+    });
 }());
 /* global moment, _ */
 (function () {
@@ -54766,6 +54843,82 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
         });
     }
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollOverallController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollOverallController]);
+
+
+  function PayrollOverallController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+    console.log('payroll overall process');
+    $scope.showSetUpDetails = false;
+    $scope.setUpDetails = "";
+    $scope.setUpCompleted = false;    
+
+    $scope.showEditDetails = false;
+    $scope.editDetails = "";
+    $scope.editCompleted = false;
+
+    $scope.showChangeDetails = false;
+    $scope.changeDetails = "";
+    $scope.changeCompleted = false;
+
+    $scope.showPostDetails = false;
+    $scope.postDetails = "";
+    $scope.postCompleted = false;
+
+    $scope.postDatabase = "finplus51";
+
+    $scope.foundPayRuns = [];
+
+
+    $scope.selectDatabase = function ()
+    {
+      console.log('selectDatabase', $scope.postDatabase);
+    }
+
+    $scope.selectPayRun = function ()
+    {
+      console.log('selectPayRun');
+    }
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollEditController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollEditController]);
+
+
+  function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollReviewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollReviewController]);
+
+
+  function PayrollReviewController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
 
   }
 
