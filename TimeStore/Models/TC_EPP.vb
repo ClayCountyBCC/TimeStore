@@ -108,95 +108,95 @@
 
     End Sub
 
-    Function CalculateDisasterHours(TL As List(Of TimecardTimeData),
-                                  DisasterStart As Date,
-                                  DisasterEnd As Date) As Double
-      Dim TotalHours As Double = 0
-      Dim TotalDayHours As Double = 0
-      Dim workDate As String = ""
-      For Each t In TL
-        Try
+    'Function CalculateDisasterHours(TL As List(Of TimecardTimeData),
+    '                              DisasterStart As Date,
+    '                              DisasterEnd As Date) As Double
+    '  Dim TotalHours As Double = 0
+    '  Dim TotalDayHours As Double = 0
+    '  Dim workDate As String = ""
+    '  For Each t In TL
+    '    Try
 
-          TotalDayHours = 0
-          workDate = t.WorkDate.ToShortDateString
-          Dim times = t.WorkTimes.Split("-")
-          Dim max As Integer = times.GetUpperBound(0)
-          If max + 1 Mod 2 = 1 Then
-            max -= 1 '
-          End If
-          For i As Integer = 0 To max Step 2
-            Dim startTime As Date = Date.Parse(workDate & " " & times(i).Trim)
-            Dim endTime As Date = Date.Parse(workDate & " " & times(i + 1).Trim)
-            If startTime >= DisasterStart Or
-            (endTime <= DisasterEnd And
-            endTime >= DisasterStart) Then
-              ' This is how we find out that this chunk of time is in our range.
-              If startTime < DisasterStart Then startTime = DisasterStart
-              If endTime > DisasterEnd Then endTime = DisasterEnd
-              If endTime.Minute = 59 Then endTime = endTime.AddSeconds(1)
-              Dim ts = endTime.Subtract(startTime)
-              TotalDayHours += ts.Hours
-              TotalDayHours += ts.Minutes / 60
-              If TotalDayHours > 8 Then
-                TotalDayHours = 8
-                Exit For
-              End If
+    '      TotalDayHours = 0
+    '      workDate = t.WorkDate.ToShortDateString
+    '      Dim times = t.WorkTimes.Split("-")
+    '      Dim max As Integer = times.GetUpperBound(0)
+    '      If max + 1 Mod 2 = 1 Then
+    '        max -= 1 '
+    '      End If
+    '      For i As Integer = 0 To max Step 2
+    '        Dim startTime As Date = Date.Parse(workDate & " " & times(i).Trim)
+    '        Dim endTime As Date = Date.Parse(workDate & " " & times(i + 1).Trim)
+    '        If startTime >= DisasterStart Or
+    '        (endTime <= DisasterEnd And
+    '        endTime >= DisasterStart) Then
+    '          ' This is how we find out that this chunk of time is in our range.
+    '          If startTime < DisasterStart Then startTime = DisasterStart
+    '          If endTime > DisasterEnd Then endTime = DisasterEnd
+    '          If endTime.Minute = 59 Then endTime = endTime.AddSeconds(1)
+    '          Dim ts = endTime.Subtract(startTime)
+    '          TotalDayHours += ts.Hours
+    '          TotalDayHours += ts.Minutes / 60
+    '          If TotalDayHours > 8 Then
+    '            TotalDayHours = 8
+    '            Exit For
+    '          End If
 
-            End If
-            'If endTime.Subtract(startTime)
-          Next
-          TotalHours += TotalDayHours
-        Catch ex As Exception
-          Log(ex)
-        End Try
-      Next
-      Return TotalHours
-    End Function
+    '        End If
+    '        'If endTime.Subtract(startTime)
+    '      Next
+    '      TotalHours += TotalDayHours
+    '    Catch ex As Exception
+    '      Log(ex)
+    '    End Try
+    '  Next
+    '  Return TotalHours
+    'End Function
 
-    Function CalculateDisasterOT(TL As List(Of TimecardTimeData),
-                                DisasterStart As Date,
-                                DisasterEnd As Date) As Double
-      Dim TotalHours As Double = 0
-      Dim TotalDayHours As Double = 0
-      Dim workDate As String = ""
-      For Each t In TL
-        Try
+    'Function CalculateDisasterOT(TL As List(Of TimecardTimeData),
+    '                            DisasterStart As Date,
+    '                            DisasterEnd As Date) As Double
+    '  Dim TotalHours As Double = 0
+    '  Dim TotalDayHours As Double = 0
+    '  Dim workDate As String = ""
+    '  For Each t In TL
+    '    Try
 
-          TotalDayHours = 0
-          workDate = t.WorkDate.ToShortDateString
-          Dim times = t.WorkTimes.Split("-")
-          Dim max As Integer = times.GetUpperBound(0)
-          If max + 1 Mod 2 = 1 Then
-            max -= 1 '
-          End If
-          For i As Integer = 0 To max Step 2
-            Dim startTime As Date = Date.Parse(workDate & " " & times(i).Trim)
-            Dim endTime As Date = Date.Parse(workDate & " " & times(i + 1).Trim)
-            If startTime >= DisasterStart Or
-            (endTime <= DisasterEnd And
-            endTime >= DisasterStart) Then
-              ' This is how we find out that this chunk of time is in our range.
-              If startTime < DisasterStart Then startTime = DisasterStart
-              If endTime > DisasterEnd Then endTime = DisasterEnd
-              If endTime.Minute = 59 Then endTime = endTime.AddSeconds(1)
-              Dim ts = endTime.Subtract(startTime)
-              TotalDayHours += ts.Hours
-              TotalDayHours += ts.Minutes / 60
-            End If
-            'If endTime.Subtract(startTime)
-          Next
-          If TotalDayHours > 8 Then
-            TotalDayHours -= 8
-          Else
-            TotalDayHours = 0
-          End If
-          TotalHours += TotalDayHours
-        Catch ex As Exception
-          Log(ex)
-        End Try
-      Next
-      Return TotalHours
-    End Function
+    '      TotalDayHours = 0
+    '      workDate = t.WorkDate.ToShortDateString
+    '      Dim times = t.WorkTimes.Split("-")
+    '      Dim max As Integer = times.GetUpperBound(0)
+    '      If max + 1 Mod 2 = 1 Then
+    '        max -= 1 '
+    '      End If
+    '      For i As Integer = 0 To max Step 2
+    '        Dim startTime As Date = Date.Parse(workDate & " " & times(i).Trim)
+    '        Dim endTime As Date = Date.Parse(workDate & " " & times(i + 1).Trim)
+    '        If startTime >= DisasterStart Or
+    '        (endTime <= DisasterEnd And
+    '        endTime >= DisasterStart) Then
+    '          ' This is how we find out that this chunk of time is in our range.
+    '          If startTime < DisasterStart Then startTime = DisasterStart
+    '          If endTime > DisasterEnd Then endTime = DisasterEnd
+    '          If endTime.Minute = 59 Then endTime = endTime.AddSeconds(1)
+    '          Dim ts = endTime.Subtract(startTime)
+    '          TotalDayHours += ts.Hours
+    '          TotalDayHours += ts.Minutes / 60
+    '        End If
+    '        'If endTime.Subtract(startTime)
+    '      Next
+    '      If TotalDayHours > 8 Then
+    '        TotalDayHours -= 8
+    '      Else
+    '        TotalDayHours = 0
+    '      End If
+    '      TotalHours += TotalDayHours
+    '    Catch ex As Exception
+    '      Log(ex)
+    '    End Try
+    '  Next
+    '  Return TotalHours
+    'End Function
 
 
     Public Sub New(ByRef TCTD As List(Of TimecardTimeData),

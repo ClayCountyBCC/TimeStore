@@ -273,7 +273,7 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-
+          place
         </div>
 
         <div ng-if="showDisaster && TCTD.WorkHours.value > 0 && isCurrentPPD"
@@ -3963,4 +3963,8 @@
     </div>
 
   </div>
+</script>
+
+<script type="text/ng-template" id="DisasterHours.directive.tmpl.html">
+
 </script>

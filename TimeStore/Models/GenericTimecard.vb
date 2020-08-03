@@ -41,6 +41,7 @@
 
     Public Class WorkType
       Property name As String = ""
+      Property projectCode As String = ""
       Property payCode As String = ""
       Property hours As Double = 0
       Property leftToRightOrder As Integer = 0
@@ -55,7 +56,8 @@
 
       End Sub
 
-      Public Sub New(NameToUse As String, GH As GroupedHours, LeftToRightOrderToUse As Integer, Optional pr As Double = 0)
+      Public Sub New(NameToUse As String, GH As GroupedHours, LeftToRightOrderToUse As Integer,
+                     projectCodeToUse As String, Optional pr As Double = 0)
         If pr > 0 Then
           payRate = pr
           hours = GH.TotalHours(pr)
@@ -65,25 +67,41 @@
         name = NameToUse
         leftToRightOrder = LeftToRightOrderToUse
         payCode = GH.PayCode
+        projectCode = projectCodeToUse
       End Sub
 
-      Public Sub New(NameToUse As String, HoursToUse As Double, LeftToRightOrderToUse As Integer, payCodeToUse As String, Optional pr As Double = 0)
+      Public Sub New(NameToUse As String, HoursToUse As Double, LeftToRightOrderToUse As Integer,
+                     payCodeToUse As String, projectCodeToUse As String, Optional pr As Double = 0)
         name = NameToUse
         hours = HoursToUse
         leftToRightOrder = LeftToRightOrderToUse
         payRate = pr
         payCode = payCodeToUse
+        projectCode = projectCodeToUse
       End Sub
 
-      Public Sub New(HoursToUse As Double, payCodeToUse As String, pr As Double)
+      Public Sub New(HoursToUse As Double, payCodeToUse As String, projectCodeToUse As String,
+                     pr As Double)
         Dim Paycodes As Dictionary(Of String, String) = myCache.GetItem("paycodes")
         Dim ltrOrder As Dictionary(Of String, Integer) = myCache.GetItem("ltrorder")
-        name = PayCodes(payCodeToUse)
+        name = Paycodes(payCodeToUse)
         hours = HoursToUse
         leftToRightOrder = ltrOrder(payCodeToUse)
         payRate = pr
         payCode = payCodeToUse
+        projectCode = projectCodeToUse
       End Sub
+
+      Public Shared Function Disaster_Handling(NameToUse As String, GH As GroupedHours,
+                                               LeftToRightOrderToUse As Integer, pr As Double) As List(Of WorkType)
+
+        Dim projectcodes As List(Of String) = GH.ProjectCodes()
+        Dim workTypes As New List(Of WorkType)
+        For Each pc In projectcodes
+          workTypes.Add(New WorkType(NameToUse & " " & pc, GH.TotalHours(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+        Next
+        Return workTypes
+      End Function
 
     End Class
 
@@ -776,6 +794,7 @@
         Dim std As New Saved_Timecard_Data
         std.EmployeeId = employeeID
         std.DataType = "timecard"
+        std.ProjectCode = c.projectCode
         If PS.Contains(departmentNumber) Then
           If GroupName = "PREVENTION" Then
             If payPeriodStart < CType("5/8/2019", Date) Then
@@ -810,7 +829,7 @@
       For Each c In (From ctd In Current_Timecard_Data
                      Where Not ignorePaycodes.Contains(ctd.PayCode)
                      Select ctd).ToList
-        If Not Save_Hours(employeeID, payPeriodStart.AddDays(13), c.PayCode, c.Hours, c.PayRate, c.DepartmentNumber, c.Classify) Then
+        If Not Save_Hours(employeeID, payPeriodStart.AddDays(13), c.PayCode, c.ProjectCode, c.Hours, c.PayRate, c.DepartmentNumber, c.Classify) Then
           Return False
           Exit For
         End If
@@ -1107,6 +1126,7 @@
           wt.name = wtName
           wt.hours = t.WorkHours
           wt.leftToRightOrder = wtLROrder
+          wt.projectCode = ""
           Check_Work_Type(wt)
           x.workHoursList.Add(wt)
         End If
@@ -1142,102 +1162,113 @@
     Private Sub Add_Timelists(e As EPP)
       Dim w() As String = {"ML", "EL", "ADM", "OJI"}
       Dim pnw As Double = 0, tmp As Double = 0
+      Try
 
-      For Each p In e.Payrates
-        pnw = 0
-        ' timeList has the data we're going to use to let the person approve their time.
-        'Dim tl As List(Of TelestaffTimeData) = (From t In e.Timelist Where w.Contains(t.WorkTypeAbrv) _
-        '                                                And t.PayRate = p Select t).ToList
-        'For Each t In tl
-        '  timeList.Add(New WorkType(t.WorkType, t.WorkHours, 12, "002", p))
-        '  pnw += t.WorkHours
-        'Next
 
-        Dim mytl = (From t In e.Timelist
-                    Where w.Contains(t.WorkTypeAbrv) And t.PayRate = p
-                    Group By WorkType = t.WorkType Into WorkTypeGroup = Group,
-                   totalHours = Sum(t.WorkHours)
-                    Select New With {WorkType, totalHours})
-        pnw = 0
-        For Each t In mytl
-          timeList.Add(New WorkType(t.WorkType, t.totalHours, 12, "002", p))
-          pnw += t.totalHours
+        For Each p In e.Payrates
+          pnw = 0
+          ' timeList has the data we're going to use to let the person approve their time.
+          'Dim tl As List(Of TelestaffTimeData) = (From t In e.Timelist Where w.Contains(t.WorkTypeAbrv) _
+          '                                                And t.PayRate = p Select t).ToList
+          'For Each t In tl
+          '  timeList.Add(New WorkType(t.WorkType, t.WorkHours, 12, "002", p))
+          '  pnw += t.WorkHours
+          'Next
+
+          Dim mytl = (From t In e.Timelist
+                      Where w.Contains(t.WorkTypeAbrv) And t.PayRate = p
+                      Group By WorkType = t.WorkType, ProjectCode = t.Finplus_Project_Code Into WorkTypeGroup = Group,
+                     totalHours = Sum(t.WorkHours)
+                      Select New With {WorkType, ProjectCode, totalHours})
+          pnw = 0
+          For Each t In mytl
+            timeList.Add(New WorkType(t.WorkType, t.totalHours, 12, "002", t.ProjectCode, p))
+            pnw += t.totalHours
+          Next
+
+
+          tmp = e.Regular.TotalHours(p) + e.Scheduled_Overtime.TotalHours(p) +
+                    e.Scheduled_Regular_Overtime.TotalHours(p) + e.Unscheduled_Overtime.TotalHours(p) +
+                    e.Unscheduled_Regular_Overtime.TotalHours(p) + e.Unscheduled_Double_Overtime.TotalHours(p) -
+                    pnw
+
+          Dim totaldisasterhours = e.Disaster_Regular.TotalHours(p) + e.Disaster_Doubletime.TotalHours(p) +
+            e.Disaster_Overtime.TotalHours(p) + e.Disaster_StraightTime.TotalHours(p)
+
+          timeList.Add(New WorkType("Regular Work", tmp, 0, "002", "", p))
+          timeList.Add(New WorkType("Disaster Regular Work", totaldisasterhours, 0, "002", "", p))
+
+          If e.Union_Time_Pool.TotalHours(p) > 0 Then
+            timeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, "", p))
+            calculatedTimeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, "", p))
+          End If
+          If Not isExempt Then
+            calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, "", p))
+            calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, "", p))
+            calculatedTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1, "", p))
+            calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, "", p))
+            calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, "", p))
+            calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, "", p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 10, p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.5", e.Disaster_Overtime, 11, p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Hours 1.5", e.Disaster_Overtime, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p))
+            Select Case e.TelestaffProfileType
+              Case TelestaffProfileType.Dispatch, TelestaffProfileType.Field
+                timeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6, "", p))
+                timeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10, "", p))
+                timeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11, "", p))
+                'timeList.Add(New WorkType("Banked Holiday Time Paid", ))
+                calculatedTimeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6, "", p))
+                calculatedTimeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10, "", p))
+                calculatedTimeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11, "", p))
+
+              Case TelestaffProfileType.Office
+                timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
+                timeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, "", p))
+
+                calculatedTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
+                calculatedTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, "", p))
+
+                If e.Holiday_Time_Used.TotalHours > 0 Then
+                  timeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, "", p))
+                  calculatedTimeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, "", p))
+                End If
+
+            End Select
+          Else
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 10, p))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
+            'calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 10, p))
+            tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours - e.Disaster_Regular.TotalHours
+            calculatedTimeList.Add(New WorkType("Regular Work", tmp, 0, "002", "", p))
+          End If
+
+          timeList.Add(New WorkType("Term Hours", e.Term_Hours, 2, "", p))
+          timeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2, "", p))
+          timeList.Add(New WorkType("Vacation", e.Vacation, 3, "", p))
+          timeList.Add(New WorkType("Sick", e.Sick, 4, "", p))
+
+          calculatedTimeList.Add(New WorkType("Term Hours", e.Term_Hours, 2, "", p))
+          calculatedTimeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2, "", p))
+          calculatedTimeList.Add(New WorkType("Vacation", e.Vacation, 3, "", p))
+          calculatedTimeList.Add(New WorkType("Sick", e.Sick, 4, "", p))
         Next
 
-
-        tmp = e.Regular.TotalHours(p) + e.Scheduled_Overtime.TotalHours(p) +
-                  e.Scheduled_Regular_Overtime.TotalHours(p) + e.Unscheduled_Overtime.TotalHours(p) +
-                  e.Unscheduled_Regular_Overtime.TotalHours(p) + e.Unscheduled_Double_Overtime.TotalHours(p) -
-                  pnw
-
-        Dim totaldisasterhours = e.Disaster_Regular.TotalHours(p) + e.Disaster_Doubletime.TotalHours(p) +
-          e.Disaster_Overtime.TotalHours(p) + e.Disaster_StraightTime.TotalHours(p)
-
-        timeList.Add(New WorkType("Regular Work", tmp, 0, "002", p))
-        timeList.Add(New WorkType("Disaster Regular Work", totaldisasterhours, 0, "002", p))
-
-        If e.Union_Time_Pool.TotalHours(p) > 0 Then
-          timeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, p))
-          calculatedTimeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, p))
-        End If
-        If Not isExempt Then
-          calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, p))
-          calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, p))
-          calculatedTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1, p))
-          calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, p))
-          calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, p))
-          calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, p))
-          calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 11, p))
-          calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p))
-          calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
-          calculatedTimeList.Add(New WorkType("Disaster Hours 1.5", e.Disaster_Overtime, 11, p))
-          calculatedTimeList.Add(New WorkType("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p))
-          Select Case e.TelestaffProfileType
-            Case TelestaffProfileType.Dispatch, TelestaffProfileType.Field
-              timeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6, p))
-              timeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10, p))
-              timeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11, p))
-              'timeList.Add(New WorkType("Banked Holiday Time Paid", ))
-              calculatedTimeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6, p))
-              calculatedTimeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10, p))
-              calculatedTimeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11, p))
-
-            Case TelestaffProfileType.Office
-              timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, p))
-              timeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, p))
-
-              calculatedTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, p))
-              calculatedTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, p))
-
-              If e.Holiday_Time_Used.TotalHours > 0 Then
-                timeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, p))
-                calculatedTimeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, p))
-              End If
-
-          End Select
-        Else
-          calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
-          calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 10, p))
-          tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours - e.Disaster_Regular.TotalHours
-          calculatedTimeList.Add(New WorkType("Regular Work", tmp, 0, "002", p))
-        End If
-
-        timeList.Add(New WorkType("Term Hours", e.Term_Hours, 2, p))
-        timeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2, p))
-        timeList.Add(New WorkType("Vacation", e.Vacation, 3, p))
-        timeList.Add(New WorkType("Sick", e.Sick, 4, p))
-
-        calculatedTimeList.Add(New WorkType("Term Hours", e.Term_Hours, 2, p))
-        calculatedTimeList.Add(New WorkType("LWOP", e.Leave_Without_Pay, 2, p))
-        calculatedTimeList.Add(New WorkType("Vacation", e.Vacation, 3, p))
-        calculatedTimeList.Add(New WorkType("Sick", e.Sick, 4, p))
-      Next
-
-      timeList.RemoveAll(Function(x) x.hours = 0)
-      approvalTimeList.Clear()
-      approvalTimeList.AddRange(calculatedTimeList)
-      approvalTimeList.RemoveAll(Function(x) x.hours = 0)
-
+        timeList.RemoveAll(Function(x) x.hours = 0)
+        approvalTimeList.Clear()
+        approvalTimeList.AddRange(calculatedTimeList)
+        approvalTimeList.RemoveAll(Function(x) x.hours = 0)
+      Catch ex As Exception
+        Dim el As New ErrorLog(ex, "")
+      End Try
 
     End Sub
 
@@ -1245,78 +1276,78 @@
       ' going to capture how much time we pull out for the approvaltimelist
       Dim approvaltime As Double = 0
       ' Now that we've handled the raw time, let's add the processed time
-      timeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095"))
-      timeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090"))
-      timeList.Add(New WorkType("Scheduled LWOP", e.Scheduled_LWOP(0), 15, "090"))
-      timeList.Add(New WorkType("LWOP - Suspension", e.LWOP_Suspension(0), 16, "090"))
-      timeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100"))
-      timeList.Add(New WorkType("Sick", e.Sick(0), 4, "110"))
-      timeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110"))
-      timeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046"))
+      timeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", ""))
+      timeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", ""))
+      timeList.Add(New WorkType("Scheduled LWOP", e.Scheduled_LWOP(0), 15, "090", ""))
+      timeList.Add(New WorkType("LWOP - Suspension", e.LWOP_Suspension(0), 16, "090", ""))
+      timeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", ""))
+      timeList.Add(New WorkType("Sick", e.Sick(0), 4, "110", ""))
+      timeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110", ""))
+      timeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", ""))
 
 
       If e.SickLeavePool(0) > 0 Then
-        timeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006"))
-        approvalTimeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006"))
-        calculatedTimeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006", Payrate))
+        timeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006", ""))
+        approvalTimeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006", ""))
+        calculatedTimeList.Add(New WorkType("Sick Leave Pool", e.SickLeavePool(0), 4, "006", "", Payrate))
       End If
 
       'approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", GetPayrate("090", Payrate)))
-      approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", Payrate))
+      approvalTimeList.Add(New WorkType("LWOP", e.LWOP(0), 2, "090", "", Payrate))
       'approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
-      approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", Payrate))
-      approvalTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", Payrate))
+      approvalTimeList.Add(New WorkType("Term Hours", e.Term_Hours(0), 2, "095", "", Payrate))
+      approvalTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", "", Payrate))
       'approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
-      approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
-      approvalTimeList.Add(New WorkType("Sick", e.Sick(0), 4, "110", Payrate))
-      approvalTimeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110", Payrate))
+      approvalTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", "", Payrate))
+      approvalTimeList.Add(New WorkType("Sick", e.Sick(0), 4, "110", "", Payrate))
+      approvalTimeList.Add(New WorkType("Family Sick Leave", e.Sick_Family_Leave(0), 4, "110", "", Payrate))
 
-      calculatedTimeList.Add(New WorkType("Regular", e.Calculated_Regular(0), 0, "002", Payrate))
+      calculatedTimeList.Add(New WorkType("Regular", e.Calculated_Regular(0), 0, "002", "", Payrate))
       If e.Out_Of_Class(0) > 0 Then
-        calculatedTimeList.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", Payrate * 1.05))
+        calculatedTimeList.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", "", Payrate * 1.05))
       End If
-      calculatedTimeList.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(0), 0, "299", Payrate))
+      calculatedTimeList.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(0), 0, "299", "", Payrate))
       'calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
-      calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", Payrate))
+      calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", "", Payrate))
       'calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", GetPayrate("090", Payrate)))
-      calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", Payrate))
-      calculatedTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", Payrate))
-      calculatedTimeList.Add(New WorkType("Sick", e.Sick_All(0), 4, "110", Payrate))
-      calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", Payrate))
+      calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", "", Payrate))
+      calculatedTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", "", Payrate))
+      calculatedTimeList.Add(New WorkType("Sick", e.Sick_All(0), 4, "110", "", Payrate))
+      calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", "", Payrate))
       'calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
 
 
       If e.Holiday(0) > 0 Then
-        approvalTimeList.Add(New WorkType("Holiday", e.Holiday(0), 12, "002", Payrate))
+        approvalTimeList.Add(New WorkType("Holiday", e.Holiday(0), 12, "002", "", Payrate))
         approvaltime += e.Holiday(0)
-        timeList.Add(New WorkType("Holiday", e.Holiday(0), 12, "002"))
+        timeList.Add(New WorkType("Holiday", e.Holiday(0), 12, "002", ""))
         If e.HolidayHoursWorked(0) > 0 Then
-          timeList.Add(New WorkType("Holiday Hours Worked", e.HolidayHoursWorked(0), 13, "002"))
+          timeList.Add(New WorkType("Holiday Hours Worked", e.HolidayHoursWorked(0), 13, "002", ""))
         End If
       End If
-      timeList.Add(New WorkType("Admin", e.Admin(0), 0, "002"))
-      timeList.Add(New WorkType("Admin Bereavement", e.Admin_Bereavement(0), 0, "002"))
-      timeList.Add(New WorkType("Admin Disaster", e.DisasterAdminLeave(0), 0, "300"))
-      timeList.Add(New WorkType("Admin Jury Duty", e.Admin_JuryDuty(0), 0, "002"))
-      timeList.Add(New WorkType("Admin Military Leave", e.Admin_MilitaryLeave(0), 0, "002"))
-      timeList.Add(New WorkType("Admin Worker's Comp", e.Admin_WorkersComp(0), 0, "002"))
-      timeList.Add(New WorkType("Admin Other", e.Admin_Other(0), 0, "002"))
+      timeList.Add(New WorkType("Admin", e.Admin(0), 0, "002", ""))
+      timeList.Add(New WorkType("Admin Bereavement", e.Admin_Bereavement(0), 0, "002", ""))
+      timeList.Add(New WorkType("Admin Disaster", e.DisasterAdminLeave(0), 0, "300", ""))
+      timeList.Add(New WorkType("Admin Jury Duty", e.Admin_JuryDuty(0), 0, "002", ""))
+      timeList.Add(New WorkType("Admin Military Leave", e.Admin_MilitaryLeave(0), 0, "002", ""))
+      timeList.Add(New WorkType("Admin Worker's Comp", e.Admin_WorkersComp(0), 0, "002", ""))
+      timeList.Add(New WorkType("Admin Other", e.Admin_Other(0), 0, "002", ""))
 
       If Not e.IsExempt Then
-        timeList.Add(New WorkType("On Call Hours Worked", e.OnCall_TotalHours(0), 0, "002"))
-        timeList.Add(New WorkType("Unscheduled Overtime 2.0", e.Double_Time(0), 9, "232"))
-        timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(0), 10, "120"))
-        timeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(0), 11, "121"))
+        timeList.Add(New WorkType("On Call Hours Worked", e.OnCall_TotalHours(0), 0, "002", ""))
+        timeList.Add(New WorkType("Unscheduled Overtime 2.0", e.Double_Time(0), 9, "232", ""))
+        timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(0), 10, "120", ""))
+        timeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(0), 11, "121", ""))
         If e.BreakCredit(0) > 0 Then
-          approvalTimeList.Add(New WorkType("Break Credit", e.BreakCredit(0), 12, "002", Payrate))
+          approvalTimeList.Add(New WorkType("Break Credit", e.BreakCredit(0), 12, "002", "", Payrate))
           approvaltime += e.BreakCredit(0)
-          timeList.Add(New WorkType("Break Credit", e.BreakCredit(0), 12, "002"))
+          timeList.Add(New WorkType("Break Credit", e.BreakCredit(0), 12, "002", ""))
         End If
-        approvalTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Regular_Overtime(0), 5, "230", Payrate))
-        approvalTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(0), 1, "231", Payrate))
-        approvalTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Double_Time(0), 9, "232", Payrate))
-        approvalTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(0), 10, "120", Payrate))
-        approvalTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(0), 11, "121", Payrate))
+        approvalTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Regular_Overtime(0), 5, "230", "", Payrate))
+        approvalTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(0), 1, "231", "", Payrate))
+        approvalTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Double_Time(0), 9, "232", "", Payrate))
+        approvalTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(0), 10, "120", "", Payrate))
+        approvalTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(0), 11, "121", "", Payrate))
         For a As Integer = 0 To 2
           Dim c As List(Of WorkType) = Nothing
           Select Case a
@@ -1339,41 +1370,41 @@
               'c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
               'c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
               'c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", GetPayrate("046", Payrate)))
-              c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", Payrate))
-              c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", Payrate))
-              c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", Payrate))
-              c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
-              c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
-              c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", Payrate))
+              c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", "", Payrate))
+              c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", "", Payrate))
+              c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", "", Payrate))
+              c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", "", Payrate))
+              c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", "", Payrate))
+              c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", "", Payrate))
           End Select
-          c.Add(New WorkType("Unscheduled OT 1.0", e.Regular_Overtime(a), 5, "230", Payrate))
-          c.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(a), 1, "231", Payrate))
-          c.Add(New WorkType("Unscheduled OT 2.0", e.Double_Time(a), 9, "232", Payrate))
-          c.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(a), 11, "300", Payrate))
-          c.Add(New WorkType("Disaster Hours 1.5", e.DisasterOverTime(a), 11, "302", Payrate))
-          c.Add(New WorkType("Disaster Hours 2.0", e.DisasterDoubleTime(a), 11, "303", Payrate))
-          c.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(a), 10, "120", Payrate))
-          c.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(a), 11, "121", Payrate))
+          c.Add(New WorkType("Unscheduled OT 1.0", e.Regular_Overtime(a), 5, "230", "", Payrate))
+          c.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(a), 1, "231", "", Payrate))
+          c.Add(New WorkType("Unscheduled OT 2.0", e.Double_Time(a), 9, "232", "", Payrate))
+          c.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(a), 11, "300", "", Payrate))
+          c.Add(New WorkType("Disaster Hours 1.5", e.DisasterOverTime(a), 11, "302", "", Payrate))
+          c.Add(New WorkType("Disaster Hours 2.0", e.DisasterDoubleTime(a), 11, "303", "", Payrate))
+          c.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(a), 10, "120", "", Payrate))
+          c.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(a), 11, "121", "", Payrate))
         Next
 
       Else
-        calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(0), 11, "300", Payrate))
-        calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.DisasterStraightTime(0), 11, "301", Payrate))
+        calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(0), 11, "300", "", Payrate))
+        calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.DisasterStraightTime(0), 11, "301", "", Payrate))
         'calculatedTimeList.Add(New WorkType("Disaster Regular", e.DisasterRegular(0), 0, "299", Payrate))
-        approvalTimeList.Add(New WorkType("Admin", e.Admin_Total(0), 0, "002", Payrate))
+        approvalTimeList.Add(New WorkType("Admin", e.Admin_Total(0), 0, "002", "", Payrate))
         approvaltime += e.Admin(0)
         'approvaltime += e.DisasterAdminLeave(0)
         'approvaltime += e.Admin_Total(0)
 
       End If
       'timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0), 0), 0, "002"))
-      timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0) + e.DisasterStraightTime(0) + e.DisasterOverTime(0) + e.DisasterDoubleTime(0) - approvaltime, 0), 0, "002"))
-      timeList.Add(New WorkType("Disaster Regular", Math.Max(e.DisasterRegular(0), 0), 0, "299"))
+      timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0) + e.DisasterStraightTime(0) + e.DisasterOverTime(0) + e.DisasterDoubleTime(0) - approvaltime, 0), 0, "002", ""))
+      timeList.Add(New WorkType("Disaster Regular", Math.Max(e.DisasterRegular(0), 0), 0, "299", ""))
       'timeList.Add(New WorkType("Regular", Math.Max(e.Calculated_Regular(0) - approvaltime, 0), 0, "002"))
       timeList.RemoveAll(Function(x) x.hours = 0)
 
       approvalTimeList.RemoveAll(Function(x) x.hours = 0)
-      approvalTimeList.Add(New WorkType("Regular", Math.Max(e.Calculated_Regular(0) - approvaltime, 0), 0, "002", Payrate))
+      approvalTimeList.Add(New WorkType("Regular", Math.Max(e.Calculated_Regular(0) - approvaltime, 0), 0, "002", "", Payrate))
 
       'If timeList.Sum(Function(n) n.hours) <> approvalTimeList.Sum(Function(j) j.hours) Then
       '  Log(toolsAppId, "Hours do not match",
@@ -1501,7 +1532,7 @@
 
     Private Sub Check_Work_Type(wt As WorkType)
       If (From u In _used_Types Where u.name = wt.name Select u).Count = 0 Then
-        Dim x As New WorkType(wt.name, 0, wt.leftToRightOrder, wt.payCode)
+        Dim x As New WorkType(wt.name, 0, wt.leftToRightOrder, wt.payCode, wt.projectCode)
         _used_Types.Add(x)
       End If
     End Sub
@@ -1509,7 +1540,7 @@
     Private Sub Check_Work_Types(wtl As List(Of WorkType))
       For Each wt In wtl
         If (From u In _used_Types Where u.name = wt.name Select u).Count = 0 Then
-          Dim x As New WorkType(wt.name, 0, wt.leftToRightOrder, wt.payCode)
+          Dim x As New WorkType(wt.name, 0, wt.leftToRightOrder, wt.payCode, wt.projectCode)
           _used_Types.Add(x)
         End If
       Next

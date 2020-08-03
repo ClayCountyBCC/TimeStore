@@ -11,6 +11,10 @@ Namespace Models
     Public Property EndDate As DateTime
     Public Property force_disaster_prompt As Boolean = False
     Public Property pay_rule As Integer
+    Public Property period_id As Integer
+    Public Property period_name As String = ""
+    Public Property telestaff_staffing_detail = ""
+    Public Property finplus_project_code = ""
 
     Public Sub New()
 
@@ -25,16 +29,23 @@ Namespace Models
         DECLARE @pps DATE = DATEADD(dd, -13, @ppe);
 
         SELECT
-          Name
-          ,StartDate
-          ,EndDate
-          ,force_disaster_prompt
-          ,pay_rule
-        FROM Disaster_Events
+          DE.id
+          ,DE.Name
+          ,DE.StartDate
+          ,DE.EndDate
+          ,DE.force_disaster_prompt
+          ,DE.pay_rule
+          ,DP.id period_id
+          ,DP.Name period_name
+          ,DP.TelestaffStaffingDetail telestaff_staffing_detail
+          ,DP.FinplusProjectCode finplus_project_code
+        FROM Disaster_Events DE
+        INNER JOIN Disaster_Event_Period_Lookup L ON DE.id = L.disaster_event_id
+        INNER JOIN Disaster_Period DP ON L.disaster_period_id = DP.id
         WHERE 
-          CAST(StartDate AS DATE) <= @ppe
-          AND CAST(EndDate AS DATE) >= @pps
-        ORDER BY StartDate"
+          CAST(DE.StartDate AS DATE) <= @ppe
+          AND CAST(DE.EndDate AS DATE) >= @pps
+        ORDER BY DP.StartDate"
       Dim rules = Get_Data(Of DisasterEventRules)(query, dp, ConnectionStringType.Timestore)
 
       For Each rule In rules

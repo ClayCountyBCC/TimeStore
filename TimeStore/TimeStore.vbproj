@@ -177,6 +177,8 @@
       <DependentUpon>AddTimeView.controller.tmpl.html</DependentUpon>
     </Content>
     <Content Include="app\addtime\addtimedialogtmp.html" />
+    <Content Include="app\addtime\DisasterHours.directive.js" />
+    <Content Include="app\addtime\DisasterHours.directive.tmpl.html" />
     <Content Include="app\addtime\HoursDisplay.directive.js" />
     <Content Include="app\approval\Approval.tmpl.min.html">
       <DependentUpon>Approval.controller.tmpl.html</DependentUpon>

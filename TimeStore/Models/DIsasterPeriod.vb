@@ -8,6 +8,8 @@ Namespace Models
     Public Property Name As String = ""
     Public Property StartDate As DateTime
     Public Property EndDate As DateTime
+    Public Property TelestaffStaffingDetail As String = ""
+    Public Property FinplusProjectCode As String = ""
 
     Public Sub New()
 
@@ -25,6 +27,8 @@ Namespace Models
           Name
           ,StartDate
           ,EndDate
+          ,TelestaffStaffingDetail
+          ,FinplusProjectCode
         FROM Disaster_Period
         WHERE 
           CAST(StartDate AS DATE) <= @ppe

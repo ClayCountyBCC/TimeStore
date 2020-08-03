@@ -31,7 +31,8 @@
         "app/timecard/TimeList.directive.tmpl.html",
         "app/calendar/CalendarView.controller.tmpl.html",
         "app/calendar/LeaveCalendar.directive.tmpl.html",
-        "app/paystub/PaystubView.controller.tmpl.html"
+        "app/paystub/PaystubView.controller.tmpl.html",
+        "app/addtime/DisasterHours.directive.tmpl.html"
       ],
         "minify": {
             "enabled": true
@@ -97,7 +98,8 @@
         "app/timecard/TimeList.directive.js",
         "app/calendar/CalendarView.controller.js",
         "app/calendar/LeaveCalendar.directive.js",
-        "app/paystub/PaystubView.controller.js"
+        "app/paystub/PaystubView.controller.js",
+        "app/addtime/DisasterHours.directive.js"
       ],
         "minify": {
             "enabled": true

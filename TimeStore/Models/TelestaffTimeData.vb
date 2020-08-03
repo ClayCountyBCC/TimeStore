@@ -3,34 +3,36 @@
 Namespace Models
 
   Public Class TelestaffTimeData
-    Property EmployeeId As Integer ' The employeeID from Finplus, seems to be standardized across all databases.
-    Property WorkDate As Date ' The date this work was performed
-    Property StartTime As Date ' the time this particular chunk of time started
-    Property EndTime As Date ' the time this chunk ended.
-    Property DisasterRule As Integer = 0
-    Property WorkHours As Double ' The number of hours worked on this date
-    Property PayRate As Double ' The hourly rate paid for these hours
-    Property WorkCode As String ' The workcode that defines the kind of work this is, ie: straight pay, OT, vacation, holiday, etc.
-    Property Comment As String = ""
-    Property Job As String = ""
-    Property FLSAHoursRequirement As Double ' This field will contain the number of hours needed by the Job above to qualify for OT.
-    Property WorkType As String = ""
-    Property WorkTypeAbrv As String = ""
-    Property ConstantShift As Boolean = False
-    Property ShiftType As String = ""
-    Property ShiftDuration As Double = 0 ' The number of hours for this type of employee.  either 80 for dispatch/office or 106 (field)
-    Property ProfileType As TelestaffProfileType ' dispatch / field / office
-    Property StratName As String = ""
-    Property ProfileID As Integer ' the specific profile ID in telestaff.
+    Public Property EmployeeId As Integer ' The employeeID from Finplus, seems to be standardized across all databases.
+    Public Property WorkDate As Date ' The date this work was performed
+    Public Property StartTime As Date ' the time this particular chunk of time started
+    Public Property EndTime As Date ' the time this chunk ended.
+    Public Property DisasterRule As Integer = -1
+    Public Property WorkHours As Double ' The number of hours worked on this date
+    Public Property PayRate As Double ' The hourly rate paid for these hours
+    Public Property WorkCode As String ' The workcode that defines the kind of work this is, ie: straight pay, OT, vacation, holiday, etc.
+    Public Property Comment As String = ""
+    Public Property Job As String = ""
+    Public Property FLSAHoursRequirement As Double ' This field will contain the number of hours needed by the Job above to qualify for OT.
+    Public Property WorkType As String = ""
+    Public Property WorkTypeAbrv As String = ""
+    Public Property ConstantShift As Boolean = False
+    Public Property ShiftType As String = ""
+    Public Property ShiftDuration As Double = 0 ' The number of hours for this type of employee.  either 80 for dispatch/office or 106 (field)
+    Public Property ProfileType As TelestaffProfileType ' dispatch / field / office
+    Public Property StratName As String = ""
+    Public Property ProfileID As Integer ' the specific profile ID in telestaff.
     'Property ProfileDesc As String ' Their profile's title string.
-    Property RequiresApproval As Boolean = False ' Indicates if the hours have been approved or not.
-    Property IsPaidTime As Boolean = False
-    Property IsWorkingTime As Boolean = False
-    Property CountsTowardsOvertime As Boolean = False ' This is whether or not the hours count towards your total hours for overtime.
-    Property Specialties As String = ""
-    Property ProfileSpecialties As String = "" ' If this is different from the Specialties, it means that the staffing entry was created before their specialties changed, and will need to be fixed.
-    Property ProfileStartDate As Date
-    Property ProfileEndDate As Date
+    Public Property RequiresApproval As Boolean = False ' Indicates if the hours have been approved or not.
+    Public Property IsPaidTime As Boolean = False
+    Public Property IsWorkingTime As Boolean = False
+    Public Property CountsTowardsOvertime As Boolean = False ' This is whether or not the hours count towards your total hours for overtime.
+    Public Property Specialties As String = ""
+    Public Property ProfileSpecialties As String = "" ' If this is different from the Specialties, it means that the staffing entry was created before their specialties changed, and will need to be fixed.
+    Public Property ProfileStartDate As Date
+    Public Property ProfileEndDate As Date
+    Public Property Staffing_Detail As String = ""
+    Public Property Finplus_Project_Code As String = ""
 
     Public Function Clone() As TelestaffTimeData
       Dim x As New TelestaffTimeData
@@ -61,6 +63,8 @@ Namespace Models
       x.CountsTowardsOvertime = CountsTowardsOvertime
       x.ProfileStartDate = ProfileStartDate
       x.ProfileEndDate = ProfileEndDate
+      x.Staffing_Detail = Staffing_Detail
+      x.Finplus_Project_Code = Finplus_Project_Code
       Return x
     End Function
 
@@ -113,6 +117,7 @@ SELECT
   ,ST.staffing_calendar_da
   ,ST.staffing_start_dt
   ,ST.staffing_end_dt
+  ,ISNULL(ST.Staffing_Detail_Ch, '') staffing_detail
   ,( CAST(DATEDIFF(minute
                    ,ST.Staffing_Start_Dt
                    ,ST.Staffing_End_Dt) AS DECIMAL(10, 2)) / 60 ) Staffing_Hours
@@ -276,7 +281,7 @@ ORDER  BY
         Dim tmp As New List(Of TelestaffTimeData)(
           From dbRow In ds.Tables(0).AsEnumerable()
           Select New TelestaffTimeData With {
-            .DisasterRule = 0, 'dbRow("disaster_rule"),
+            .DisasterRule = -1, 'dbRow("disaster_rule"),
             .EmployeeId = dbRow("RscMaster_EmployeeID_Ch"),
             .RequiresApproval = (dbRow("RequiresApproval") = "Y"),
             .WorkCode = IsNull(dbRow("Wstat_Payroll_Ch"), "000"),
@@ -285,6 +290,7 @@ ORDER  BY
             .ShiftType = dbRow("shift_abrv_ch"),
             .Comment = dbRow("Comment"),
             .Job = dbRow("Job_Abrv_Ch"),
+            .Staffing_Detail = dbRow("staffing_detail"),
             .ConstantShift = (dbRow("shift_type_no_in") = 0),
             .ProfileType = dbRow("payinfo_no_in"),
             .ProfileID = dbRow("rsc_no_in"),
@@ -337,57 +343,84 @@ ORDER  BY
 
 
       For Each ttd In disastertimelist
-        ttd.WorkCode = "299"
+
         If employee_dict.ContainsKey(ttd.EmployeeId) Then
           f = employee_dict(ttd.EmployeeId)
         Else
           f = Nothing
         End If
+        If ttd.Staffing_Detail.Length > 0 Then
 
-        For Each dpr In DisasterPayRules
+          Dim tmpPayRules = (From d In DisasterPayRules
+                             Where ttd.Staffing_Detail = d.telestaff_staffing_detail
+                             Select d).ToList()
 
-          If ttd.WorkDate.Date >= dpr.StartDate.Date And ttd.WorkDate.Date <= dpr.EndDate.Date Then
+          For Each dpr In tmpPayRules
 
-            If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
+            If ttd.WorkDate.Date >= dpr.StartDate.Date And ttd.WorkDate.Date <= dpr.EndDate.Date Then
 
-              ttd.DisasterRule = dpr.pay_rule
+              If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
 
-              If ttd.StartTime < dpr.StartDate Then
-                Dim earlyStart = ttd.Clone()
-                earlyStart.EndTime = dpr.StartDate
-                earlyStart.UpdateHoursWorked()
-                earlyStart.UpdatePayCode(dpr, f)
-                earlyStart.DisasterRule = 0
-                newTimelist.Add(earlyStart)
-                ttd.StartTime = dpr.StartDate
-                ttd.UpdateHoursWorked()
+                ttd.DisasterRule = dpr.pay_rule
+                ttd.Finplus_Project_Code = dpr.finplus_project_code
+                If ttd.DisasterRule = 0 Then
+                  Select Case ttd.WorkCode
+                    Case "299"
+                      ttd.WorkCode = "002"
+                    Case "301"
+                      ttd.WorkCode = "230"
+                    Case "302"
+                      ttd.WorkCode = "231"
+                    Case "303"
+                      ttd.WorkCode = "232"
+
+                  End Select
+
+
+                Else
+                  If ttd.DisasterRule > 0 Then ttd.WorkCode = "299"
+                End If
+
+                If ttd.StartTime < dpr.StartDate Then
+                  Dim earlyStart = ttd.Clone()
+                  earlyStart.EndTime = dpr.StartDate
+                  earlyStart.UpdateHoursWorked()
+                  earlyStart.UpdatePayCode(dpr, f)
+                  earlyStart.DisasterRule = 0
+
+                  newTimelist.Add(earlyStart)
+                  ttd.StartTime = dpr.StartDate
+                  ttd.UpdateHoursWorked()
+
+                End If
+
+                If ttd.EndTime > dpr.EndDate Then
+                  Dim lateEnd = ttd.Clone()
+                  lateEnd.StartTime = dpr.EndDate
+                  lateEnd.UpdateHoursWorked()
+                  lateEnd.UpdatePayCode(dpr, f)
+                  lateEnd.DisasterRule = 0
+                  newTimelist.Add(lateEnd)
+
+                  ttd.EndTime = dpr.EndDate
+                  ttd.UpdateHoursWorked()
+
+                End If
+                ttd.UpdatePayCode(dpr, f)
 
               End If
-
-              If ttd.EndTime > dpr.EndDate Then
-                Dim lateEnd = ttd.Clone()
-                lateEnd.StartTime = dpr.EndDate
-                lateEnd.UpdateHoursWorked()
-                lateEnd.UpdatePayCode(dpr, f)
-                lateEnd.DisasterRule = 0
-                newTimelist.Add(lateEnd)
-
-                ttd.EndTime = dpr.EndDate
-                ttd.UpdateHoursWorked()
-
-              End If
-              ttd.UpdatePayCode(dpr, f)
 
             End If
-
-          End If
-        Next
-
+          Next
+        End If
 
       Next
 
       For Each ttd In newTimelist
-        For Each dpr In DisasterPayRules
+        Dim tmpPayRules = (From d In DisasterPayRules
+                           Where ttd.Staffing_Detail = d.telestaff_staffing_detail
+                           Select d).ToList()
+        For Each dpr In tmpPayRules
           If ttd.WorkDate.Date >= dpr.StartDate.Date And ttd.WorkDate.Date <= dpr.EndDate.Date Then
 
             If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
@@ -407,8 +440,8 @@ ORDER  BY
 
       tl.AddRange(newTimelist)
 
-      Dim pr2 = (From t In tl Where t.DisasterRule = 2 Select t).ToList()
-      Dim pr1 = (From t In tl Where t.DisasterRule = 1 Select t).ToList()
+      'Dim pr2 = (From t In tl Where t.DisasterRule = 2 Select t).ToList()
+      'Dim pr1 = (From t In tl Where t.DisasterRule = 1 Select t).ToList()
 
       Return tl.OrderBy(Function(t) t.EmployeeId).ThenBy(Function(j) j.StartTime).ToList()
     End Function
@@ -432,17 +465,29 @@ ORDER  BY
       End If
       If dpr.pay_rule = 1 Then
 
-        If (WorkDate.DayOfWeek = DayOfWeek.Sunday Or WorkDate.DayOfWeek = DayOfWeek.Saturday) And f.IsExempt And IsWorkingTime Then
-          WorkCode = "301"
-          ' None of the office staff are scheduled to work on Saturday or Sunday
+        If f.IsExempt Then
+          If (WorkDate.DayOfWeek = DayOfWeek.Sunday Or WorkDate.DayOfWeek = DayOfWeek.Saturday) And IsWorkingTime Then
+            WorkCode = "301"
+            ' None of the office staff are scheduled to work on Saturday or Sunday
+          End If
         End If
-        If WorkDate.DayOfWeek = DayOfWeek.Saturday And Not f.IsExempt And IsWorkingTime Then
-          WorkCode = "302" ' 302 is the disaster code for overtime
+        If Not f.IsExempt Then
+          If WorkDate.DayOfWeek = DayOfWeek.Saturday And IsWorkingTime Then
+            WorkCode = "302" ' 302 is the disaster code for overtime
+          End If
+          If WorkDate.DayOfWeek = DayOfWeek.Sunday And IsWorkingTime Then
+            WorkCode = "303" ' 303 is the disaster code for double time.
+          End If
         End If
+
+      End If
+      If dpr.pay_rule = 0 Then
         If WorkDate.DayOfWeek = DayOfWeek.Sunday And Not f.IsExempt And IsWorkingTime Then
           WorkCode = "303" ' 303 is the disaster code for double time.
         End If
       End If
+
+
     End Sub
 
     'Private Function BalanceDisasterOfficeHoursToTheDay(StartDate As Date,

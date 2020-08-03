@@ -5,12 +5,33 @@
     Private PayPeriodStart As Date = Date.MinValue
     Public Property PayCode As String = "000"
 
+    Public Function ProjectCodes() As List(Of String)
+      Dim codes As New List(Of String)
+      codes.AddRange(ProjectCodes_Week1())
+      codes.AddRange(ProjectCodes_Week2())
+      Return codes.Distinct.ToList()
+    End Function
+
+    Public Function ProjectCodes_Week1() As List(Of String)
+      Return (From w In Week1
+              Select w.Finplus_Project_Code).Distinct.ToList()
+    End Function
+
+    Public Function ProjectCodes_Week2() As List(Of String)
+      Return (From w In Week2
+              Select w.Finplus_Project_Code).Distinct.ToList()
+    End Function
+
     Public Function TotalHours() As Double
       Return TotalHours_Week1() + TotalHours_Week2()
     End Function
 
     Public Function TotalHours(Payrate As Double) As Double ' By Payrate
       Return TotalHours_Week1(Payrate) + TotalHours_Week2(Payrate)
+    End Function
+
+    Public Function TotalHours(Payrate As Double, projectCode As String) As Double ' By Payrate
+      Return TotalHours_Week1(Payrate, projectCode) + TotalHours_Week2(Payrate, projectCode)
     End Function
 
     Public Function TotalHours_Week1() As Double
@@ -22,11 +43,29 @@
     End Function
 
     Public Function TotalHours_Week1(Payrate As Double) As Double
-      Return (From w In Week1 Where w.PayRate = Payrate Select w.WorkHours).Sum
+      Return (From w In Week1
+              Where w.PayRate = Payrate
+              Select w.WorkHours).Sum
     End Function
 
     Public Function TotalHours_Week2(Payrate As Double) As Double
-      Return (From w In Week2 Where w.PayRate = Payrate Select w.WorkHours).Sum
+      Return (From w In Week2
+              Where w.PayRate = Payrate
+              Select w.WorkHours).Sum
+    End Function
+
+    Public Function TotalHours_Week1(Payrate As Double, projectCode As String) As Double
+      Return (From w In Week1
+              Where w.PayRate = Payrate And
+                w.Finplus_Project_Code = projectCode
+              Select w.WorkHours).Sum
+    End Function
+
+    Public Function TotalHours_Week2(Payrate As Double, projectCode As String) As Double
+      Return (From w In Week2
+              Where w.PayRate = Payrate And
+                w.Finplus_Project_Code = projectCode
+              Select w.WorkHours).Sum
     End Function
 
     Public Sub Add(T As TelestaffTimeData)
@@ -66,7 +105,6 @@
         If HoursLeft <= 0 Then Exit For
       Next
     End Sub
-
 
     Public Sub Move_First(NumberHours As Double, ByRef Target As GroupedHours, ByRef TL As List(Of TelestaffTimeData))
       ' Move_First is different than Move_Last in that it tries to move stuff from the beginning of the pay period to the end.
