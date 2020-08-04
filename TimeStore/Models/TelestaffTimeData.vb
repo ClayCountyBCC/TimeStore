@@ -77,7 +77,13 @@ Namespace Models
       P(1) = New SqlParameter("@End", Data.SqlDbType.Date) With {.Value = IIf(EndDate Is Nothing, StartDate.AddDays(13), EndDate)}
       P(2) = New SqlParameter("@EmployeeID", Data.SqlDbType.VarChar) With {.Value = EmployeeID}
 
-      Dim query As String = "
+      Dim TimestoreServer As String = ""
+      Dim testCS As Boolean = GetCS(ConnectionStringType.Timestore).ToUpper().Contains("CLAYBCCDV10")
+      If testCS Then
+        TimestoreServer = "CLAYBCCDV10."
+      End If
+
+      Dim query As String = $"
 USE WorkForceTelestaff;
 
 WITH BaseSpecialtyData AS (
@@ -158,6 +164,15 @@ SELECT
   ,R.region_no_in
   ,R.Rsc_From_Da
   ,R.Rsc_Thru_Da
+  ,CASE WHEN TFWC.wstat_abrv_ch IS NOT NULL 
+    THEN 1
+    ELSE
+      CASE WHEN WT.Wstat_Type_desc_ch != 'NON WORKING' 
+      THEN 1
+      ELSE 0
+      END
+    END IsWorkingTime    
+  
   --,CASE
   --   WHEN FIX.region_no_in IS NULL
   --   THEN 0
@@ -183,6 +198,7 @@ FROM
                                                        ST.staffing_calendar_da
                                                    AND ISNULL(WAGE.rscmaster_wage_expiration_da
                                                               ,ST.staffing_calendar_da) >= ST.staffing_calendar_da
+  LEFT OUTER JOIN {TimestoreServer}Timestore.dbo.Telestaff_Forced_Working_Codes TFWC ON W.wstat_abrv_ch = TFWC.wstat_abrv_ch
   --LEFT OUTER JOIN stamp_log_tbl FIX ON ST.staffing_calendar_da = FIX.stamp_calendar_da
   --                                     AND FIX.region_no_in = R.region_no_in
   --                                     AND FIX.shift_no_in = ST.shift_no_in
@@ -195,7 +211,7 @@ WHERE
   AND ST.staffing_request_state <> 20 -- 20 is the state for a denied leave request.
 ORDER  BY
   RMT.RscMaster_Name_Ch
-  ,ST.staffing_start_dt "
+  ,ST.staffing_start_dt"
       'With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
       '  .AppendLine("USE Telestaff;")
       '  .Append("DECLARE @Start DATETIME = '").Append(StartDate.ToShortDateString).Append("';")
@@ -300,7 +316,7 @@ ORDER  BY
             .WorkTypeAbrv = dbRow("WstatAbrv"),
             .StartTime = dbRow("Staffing_Start_Dt"),
             .EndTime = dbRow("Staffing_End_Dt"),
-            .IsWorkingTime = (dbRow("Wstat_Type_desc_Ch").ToString.Trim.ToUpper <> "NON WORKING"),
+            .IsWorkingTime = (dbRow("IsWorkingTime") = 1),'.IsWorkingTime = (dbRow("Wstat_Type_desc_Ch").ToString.Trim.ToUpper <> "NON WORKING"),
             .IsPaidTime = Not IsDBNull(dbRow("Wstat_WageFactor_In")),
             .CountsTowardsOvertime = (dbRow("Wstat_FLSA_Si").ToString.Trim.ToUpper = "Y"),
             .Specialties = dbRow("Specialties"),
@@ -308,6 +324,8 @@ ORDER  BY
             .ProfileStartDate = IsNull(dbRow("Rsc_From_Da"), Date.MinValue),
             .ProfileEndDate = IsNull(dbRow("Rsc_Thru_Da"), Date.MaxValue),
             .PayRate = Calculate_PayRate_With_Incentives(IsNull(dbRow("Rsc_Hourwage_db"), 0), .Specialties, .Job, .WorkTypeAbrv, .ProfileType, I)})
+
+
         '.ShiftDuration = dbRow("Shift_TimeDuration_Ch").ToString.Split(",")(1),
         Return TelestaffTimeData.UpdateOfficeTimeForDisaster(StartDate, tmp)
       Catch ex As Exception
@@ -425,6 +443,21 @@ ORDER  BY
 
             If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
               ttd.DisasterRule = dpr.pay_rule
+              ttd.Finplus_Project_Code = dpr.finplus_project_code
+              If ttd.DisasterRule = 0 Then
+                Select Case ttd.WorkCode
+                  Case "299"
+                    ttd.WorkCode = "002"
+                  Case "301"
+                    ttd.WorkCode = "230"
+                  Case "302"
+                    ttd.WorkCode = "231"
+                  Case "303"
+                    ttd.WorkCode = "232"
+                End Select
+              Else
+                If ttd.DisasterRule > 0 Then ttd.WorkCode = "299"
+              End If
               If employee_dict.ContainsKey(ttd.EmployeeId) Then
                 f = employee_dict(ttd.EmployeeId)
               Else

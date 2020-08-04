@@ -509,11 +509,11 @@
                                        t.DisasterRule = 0
                                    Select t).ToList()
 
-      For Each t In unscheduled_ot1_5_week1
+      For Each t In scheduled_ot1_5_week1
         _disaster_overtime.Add(t)
         _scheduled_overtime.Week1.Remove(t)
       Next
-      For Each t In unscheduled_ot1_5_week2
+      For Each t In scheduled_ot1_5_week2
         _disaster_overtime.Add(t)
         _scheduled_overtime.Week2.Remove(t)
       Next
