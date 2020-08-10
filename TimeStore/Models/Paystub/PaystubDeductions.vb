@@ -50,7 +50,8 @@ Namespace Models.Paystub
         FROM check_ded CD
         LEFT OUTER JOIN checkhi2 CH2 ON CD.check_no=CH2.check_no 
           AND CD.empl_no=CH2.empl_no  
-          AND CH2.code = CD.ded_cd 
+          AND CH2.code = CD.ded_cd
+          AND CH2.earn_ded = 'D'
         LEFT OUTER JOIN DeductionsAndFederalCodes DT ON CD.ded_cd=DT.ded_cd
         LEFT OUTER JOIN bnktable B ON CD.bank = B.code
         WHERE
