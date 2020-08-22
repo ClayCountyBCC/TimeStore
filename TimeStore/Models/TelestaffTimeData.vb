@@ -377,7 +377,7 @@ ORDER  BY
 
             If ttd.WorkDate.Date >= dpr.StartDate.Date And ttd.WorkDate.Date <= dpr.EndDate.Date Then
 
-              If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
+              If ttd.StartTime < dpr.EndDateTime And ttd.EndTime > dpr.StartDateTime Then
 
                 ttd.DisasterRule = dpr.pay_rule
                 ttd.Finplus_Project_Code = dpr.finplus_project_code
@@ -399,28 +399,28 @@ ORDER  BY
                   If ttd.DisasterRule > 0 Then ttd.WorkCode = "299"
                 End If
 
-                If ttd.StartTime < dpr.StartDate Then
+                If ttd.StartTime < dpr.StartDateTime Then
                   Dim earlyStart = ttd.Clone()
-                  earlyStart.EndTime = dpr.StartDate
+                  earlyStart.EndTime = dpr.StartDateTime
                   earlyStart.UpdateHoursWorked()
                   earlyStart.UpdatePayCode(dpr, f)
                   earlyStart.DisasterRule = 0
 
                   newTimelist.Add(earlyStart)
-                  ttd.StartTime = dpr.StartDate
+                  ttd.StartTime = dpr.StartDateTime
                   ttd.UpdateHoursWorked()
 
                 End If
 
-                If ttd.EndTime > dpr.EndDate Then
+                If ttd.EndTime > dpr.EndDateTime Then
                   Dim lateEnd = ttd.Clone()
-                  lateEnd.StartTime = dpr.EndDate
+                  lateEnd.StartTime = dpr.EndDateTime
                   lateEnd.UpdateHoursWorked()
                   lateEnd.UpdatePayCode(dpr, f)
                   lateEnd.DisasterRule = 0
                   newTimelist.Add(lateEnd)
 
-                  ttd.EndTime = dpr.EndDate
+                  ttd.EndTime = dpr.EndDateTime
                   ttd.UpdateHoursWorked()
 
                 End If
@@ -441,7 +441,7 @@ ORDER  BY
         For Each dpr In tmpPayRules
           If ttd.WorkDate.Date >= dpr.StartDate.Date And ttd.WorkDate.Date <= dpr.EndDate.Date Then
 
-            If ttd.StartTime < dpr.EndDate And ttd.EndTime > dpr.StartDate Then
+            If ttd.StartTime < dpr.EndDateTime And ttd.EndTime > dpr.StartDateTime Then
               ttd.DisasterRule = dpr.pay_rule
               ttd.Finplus_Project_Code = dpr.finplus_project_code
               If ttd.DisasterRule = 0 Then
@@ -488,7 +488,7 @@ ORDER  BY
       If f Is Nothing Then Exit Sub
 
       If dpr.pay_rule = 2 Then
-        If StartTime <= dpr.EndDate And EndTime >= dpr.StartDate And IsWorkingTime Then
+        If StartTime <= dpr.EndDateTime And EndTime >= dpr.StartDateTime And IsWorkingTime Then
           If f.IsExempt Then
             WorkCode = "301"
           Else

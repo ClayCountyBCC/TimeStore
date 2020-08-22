@@ -14,7 +14,7 @@ Namespace Models
     Property work_times As String = ""
     Property disaster_work_times As String = ""
     Property disaster_work_hours As Double = 0
-    Property disaster_name As String = ""
+    'Property disaster_name As String = ""
     Property disaster_work_type As String = ""
     'Property disaster_period_type As Integer = 0 ' used by the client to determine how we should ask for disaster hours.  1 = always ask, 2 = don't ask but allow disaster hours to be entered. 0 = no disaster hours should be entered.
     'Property disaster_rule As Integer = 0
@@ -34,6 +34,7 @@ Namespace Models
     Property by_ip_address As String = ""
     Property date_updated As Date = Date.MaxValue
     Property HoursToApprove As New List(Of Saved_TimeStore_Data_To_Approve)
+    Property disaster_work_hours_list As New List(Of DisasterWorkHours)
 
     Public Sub New()
 
@@ -48,7 +49,7 @@ Namespace Models
       work_times = tctd.WorkTimes
       disaster_work_times = tctd.DisasterWorkTimes
       disaster_work_hours = tctd.DisasterWorkHours
-      disaster_name = tctd.DisasterName
+      'disaster_name = tctd.DisasterName
       disaster_normal_scheduled_hours = tctd.DisasterNormalScheduledHours
       'disaster_period_type = tctd.DisasterPeriodType
       disaster_work_type = tctd.DisasterWorkType
@@ -76,8 +77,7 @@ Namespace Models
           work_date,
           work_times,
           disaster_work_times,
-          disaster_work_hours,
-          ISNULL(D.Name, '') disaster_name,          
+          disaster_work_hours,          
           ISNULL(W.disaster_normal_scheduled_hours, -1) disaster_normal_scheduled_hours,          
           ISNULL(disaster_work_type, '') disaster_work_type,
           break_credit,
@@ -95,9 +95,7 @@ Namespace Models
           by_machinename,
           by_ip_address,
           doubletime_hours 
-        FROM TimeStore.dbo.Work_Hours W
-        LEFT OUTER JOIN TimeStore.dbo.Disaster_Period D ON W.work_date BETWEEN D.StartDate AND D.EndDate"
-
+        FROM TimeStore.dbo.Work_Hours W"
       Return query
     End Function
 
@@ -117,6 +115,7 @@ Namespace Models
         Else
           Dim st = l.First
           st.HoursToApprove.Add(Saved_TimeStore_Data_To_Approve.GetByEmployeeAndWorkday(st.work_date, st.employee_id))
+          st.disaster_work_hours_list.AddRange(DisasterWorkHours.Get_By_Employee_And_WorkDay(st.work_date, st.employee_id))
           Return st
         End If
       Catch ex As Exception
@@ -137,10 +136,14 @@ Namespace Models
       Try
         Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
         Dim stlApp = Saved_TimeStore_Data_To_Approve.GetAllByDateRange(Start, EndDate)
+        Dim dwh = DisasterWorkHours.Get_All_By_Date_Range(Start, EndDate)
         For Each s In stl
           s.HoursToApprove.AddRange((From sA In stlApp
                                      Where sA.work_hours_id = s.work_hours_id
                                      Select sA).ToList)
+          s.disaster_work_hours_list.AddRange((From d In dwh
+                                               Where d.WorkHoursId = s.work_hours_id
+                                               Select d).ToList())
         Next
         Return stl
       Catch ex As Exception
@@ -163,10 +166,14 @@ Namespace Models
         'Return Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
         Dim stl = Get_Data(Of Saved_TimeStore_Data)(query, dp, ConnectionStringType.Timestore)
         Dim stlApp = Saved_TimeStore_Data_To_Approve.GetByEmployeeAndDateRange(Start, EndDate, EmployeeID)
+        Dim dwh = DisasterWorkHours.Get_By_Employee_And_Date_Range(Start, EndDate, EmployeeID)
         For Each s In stl
           s.HoursToApprove.AddRange((From sA In stlApp
                                      Where sA.work_hours_id = s.work_hours_id
                                      Select sA).ToList)
+          s.disaster_work_hours_list.AddRange((From d In dwh
+                                               Where d.WorkHoursId = s.work_hours_id
+                                               Select d).ToList())
         Next
         Return stl
       Catch ex As Exception

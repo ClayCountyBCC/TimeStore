@@ -8,28 +8,36 @@
     Public WarningList As New List(Of String)
     Public ErrorList As New List(Of String)
     Public DisasterPayRules As List(Of DisasterEventRules) = New List(Of DisasterEventRules)
-    Public DisasterWorkDates As New List(Of Date)
+    Public ReadOnly Property DisasterWorkDates As List(Of Date)
+      Get
+        If DisasterPayRules.Count = 0 Then Return New List(Of Date)
+        Return (From e In EventsByWorkDate.Get_By_PayPeriod(PayPeriodStart)
+                Select e.work_date).Distinct.ToList()
+      End Get
+    End Property
 
-    Private Sub PopulateDisasterWorkDates()
-      If DisasterPayRules.Count = 0 Then Exit Sub
+    'Private Sub PopulateDisasterWorkDates()
+    '  If DisasterPayRules.Count = 0 Then Exit Sub
 
-      For Each dpr In DisasterPayRules
-        If dpr.pay_rule = 1 Or dpr.pay_rule = 2 Then
-          Dim d As Date = dpr.StartDate.Date
-          Do While d < dpr.EndDate.Date
-            If Not DisasterWorkDates.Contains(d) And d >= PayPeriodStart Then DisasterWorkDates.Add(d.Date)
-            d = d.AddDays(1)
-          Loop
-        End If
-      Next
-
-    End Sub
+    '  ' Old version, replaced on 8/21/2020
+    '  'For Each dpr In DisasterPayRules
+    '  '  If dpr.pay_rule = 1 Or dpr.pay_rule = 2 Then
+    '  '    Dim d As Date = dpr.StartDate.Date
+    '  '    Do While d < dpr.EndDate.Date
+    '  '      If Not DisasterWorkDates.Contains(d) And d >= PayPeriodStart Then DisasterWorkDates.Add(d.Date)
+    '  '      d = d.AddDays(1)
+    '  '    Loop
+    '  '  End If
+    '  'Next
+    'End Sub
 
     Private Sub Calculate_Disaster_Hours_By_Rule()
 
       If DisasterPayRules.Count = 0 Then Exit Sub
 
       Try
+
+
         Dim workDate As String = ""
         Dim startTime As Date
         Dim endTime As Date
@@ -45,63 +53,64 @@
           t.DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
           t.DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
 
-          If t.DisasterWorkTimes.Length > 0 Then
-            workDate = t.WorkDate.ToShortDateString
+          For Each dwh In t.DisasterWorkHoursList
 
-            Dim times As String()
-            times = t.DisasterWorkTimes.Split("-")
+            If dwh.DisasterWorkTimes.Length > 0 Then
+              workDate = t.WorkDate.ToShortDateString
 
-            'If t.WorkHours > t.DisasterWorkHours Then
-            '  times = t.WorkTimes.Split("-")
-            'Else
+              Dim times As String()
+              times = dwh.DisasterWorkTimes.Split("-")
 
-            'End If
+              Dim max As Integer = times.GetUpperBound(0)
 
+              If (max + 1) Mod 2 = 1 Then max -= 1 '
 
-            Dim max As Integer = times.GetUpperBound(0)
+              For i As Integer = 0 To max Step 2
+                Try
+                  startTime = Date.Parse(workDate & " " & times(i).Trim)
+                  endTime = Date.Parse(workDate & " " & times(i + 1).Trim)
+                  If endTime.Second = 59 Then endTime = endTime.AddSeconds(1)
 
-            If max + 1 Mod 2 = 1 Then max -= 1 '
+                  For Each dpr In (From d In DisasterPayRules
+                                   Where d.period_id = dwh.DisasterPeriodId
+                                   Select d)
 
-            For i As Integer = 0 To max Step 2
-              Try
-                startTime = Date.Parse(workDate & " " & times(i).Trim)
-                endTime = Date.Parse(workDate & " " & times(i + 1).Trim)
-                If endTime.Second = 59 Then endTime = endTime.AddSeconds(1)
+                    If startTime < dpr.EndDateTime And dpr.StartDateTime < endTime Then
+                      ' our timespans overlap, so we should do some calculations
+                      tsStartTime = startTime
+                      tsEndTime = endTime
 
-                For Each dpr In DisasterPayRules
+                      If startTime < dpr.StartDateTime Then
+                        If t.WorkDate = "8/29/2019" Then
+                          'ErrorList.Add("Disaster hours entered on 8/29/2019 before the disaster was declared at 8:00 AM.")
+                        Else
+                          tsStartTime = dpr.StartDateTime
+                        End If
 
-                  If startTime < dpr.EndDate And dpr.StartDate < endTime Then
-                    ' our timespans overlap, so we should do some calculations
-                    tsStartTime = startTime
-                    tsEndTime = endTime
-
-                    If startTime < dpr.StartDate Then
-                      If t.WorkDate = "8/29/2019" Then
-                        'ErrorList.Add("Disaster hours entered on 8/29/2019 before the disaster was declared at 8:00 AM.")
-                      Else
-                        tsStartTime = dpr.StartDate
                       End If
 
+                      If endTime > dpr.EndDateTime Then tsEndTime = dpr.EndDateTime
+
+                      Dim ts = tsEndTime.Subtract(tsStartTime)
+                      t.DisasterWorkTimesByRule(dpr.pay_rule).Add(ts)
                     End If
+                  Next
+                Catch ex As Exception
+                  Log(ex)
+                End Try
 
-                    If endTime > dpr.EndDate Then tsEndTime = dpr.EndDate
+              Next
 
-                    Dim ts = tsEndTime.Subtract(tsStartTime)
-                    t.DisasterWorkTimesByRule(dpr.pay_rule).Add(ts)
-                  End If
-                Next
-              Catch ex As Exception
-                Log(ex)
-              End Try
 
-            Next
-
-            For i = 0 To 2 Step 1
-              t.DisasterWorkHoursByRule(i) = (From ts In t.DisasterWorkTimesByRule(i)
-                                              Select ts.TotalHours).Sum
-            Next
-          End If
+            End If
+          Next
+          For i = 0 To 2 Step 1
+            t.DisasterWorkHoursByRule(i) += (From ts In t.DisasterWorkTimesByRule(i)
+                                             Select ts.TotalHours).Sum
+          Next
         Next
+
+
       Catch ex As Exception
         Log(ex)
       End Try
@@ -208,7 +217,7 @@
       PayPeriodStart = pps
 
       DisasterPayRules = DisasterEventRules.Get_Cached_Disaster_Rules(pps.AddDays(13))
-      PopulateDisasterWorkDates()
+      'PopulateDisasterWorkDates() ' Removed on 8/21/2020
       Calculate_Disaster_Hours_By_Rule()
 
       If Not CTE Is Nothing Then
@@ -227,7 +236,7 @@
       TL = TCTD
       PayPeriodStart = pps
       DisasterPayRules = DisasterEventRules.Get_Cached_Disaster_Rules(pps.AddDays(13))
-      PopulateDisasterWorkDates()
+      'PopulateDisasterWorkDates() Removed on 8/21/2020
       Calculate_Disaster_Hours_By_Rule()
 
       If TCTD.Count > 0 Then
@@ -399,6 +408,7 @@
         Dim hours As Double = 0
 
         For Each t In Week_TL(week)
+          hours += t.DisasterWorkHoursByRule(0)
           If t.DisasterNormalScheduledHours > 0 Then
             If t.DisasterNormalScheduledHours > (t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)) Then
               hours += (t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2))
@@ -407,6 +417,10 @@
             End If
           End If
         Next
+        If IsExempt Then
+          hours = Math.Min(40, hours)
+          'If hours > 40 Then hours = 40
+        End If
         Return hours
         ' old - 8/31/2019
         'Return (From t In Week_TL(week)
@@ -560,19 +574,24 @@
         Dim hours As Double = 0
 
         For Each t In Week_TL(Week)
-          If t.DisasterNormalScheduledHours > 0 Then
-            Dim difference = t.WorkHours - t.DisasterNormalScheduledHours
-            If difference > 0 Then
-              If difference > t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2) Then
-                hours += t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)
-              Else
-                hours += difference
-              End If
-            End If
-            'hours += (difference - t.DisasterNormalScheduledHours)
+          If t.DisasterWorkHoursByRule(2) > 0 Then
+            hours += t.DisasterWorkHoursByRule(2) ' these hours are straighttime regardless
           Else
-            hours += t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)
+            If t.DisasterNormalScheduledHours > 0 Then
+              Dim difference = t.WorkHours - t.DisasterNormalScheduledHours - t.DisasterWorkHoursByRule(0)
+              If difference > 0 Then
+                If difference > t.DisasterWorkHoursByRule(1) Then
+                  hours += t.DisasterWorkHoursByRule(1)
+                Else
+                  hours += difference
+                End If
+              End If
+            Else
+              hours += t.DisasterWorkHoursByRule(1)
+            End If
           End If
+          'hours += (difference - t.DisasterNormalScheduledHours)
+
         Next
         Return Math.Max(hours, 0)
         'If IsExempt Then

@@ -667,7 +667,7 @@ Public Module ModuleMain
       .Add("OnCallWorkHours", New Timestore_Field(11, "OnCallWorkHours", "On Call - Work Hours", False))
       .Add("OnCallWorkTimes", New Timestore_Field(12, "OnCallWorkTimes", "On Call - Work Times", False))
       .Add("OnCallTotalHours", New Timestore_Field(13, "OnCallTotalHours", "On Call - Total Hours by Date", True))
-      .Add("LWOPSuspension", New Timestore_Field(15, "LWOPSuspension", "LWOP - Suspension", False))
+      .Add("LWOPSuspension", New Timestore_Field(15, "LWOPSuspension", "LWOP - Suspension", True))
       .Add("ScheduledLWOP", New Timestore_Field(16, "ScheduledLWOP", "Scheduled LWOP", True))
       .Add("SickFamilyLeave", New Timestore_Field(17, "SickFamilyLeave", "Family Sick Leave", True))
       .Add("TermHours", New Timestore_Field(18, "TermHours", "Term Hours", False))

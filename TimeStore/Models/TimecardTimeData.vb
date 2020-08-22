@@ -20,6 +20,7 @@ Namespace Models
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
     Property DisasterWorkType As String = ""
+    Property DisasterWorkHoursList As New List(Of DisasterWorkHours)
     Property DisasterNormalScheduledHours As Double = -1
     ' DisasterNormalScheduledHours expectations as follows:
     ' -1 = no choice was made
@@ -105,10 +106,11 @@ Namespace Models
       WorkDate = STD.work_date
       WorkHours = STD.work_hours
       WorkTimes = STD.work_times
-      DisasterName = STD.disaster_name
+      'DisasterName = STD.disaster_name
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
       DisasterWorkType = STD.disaster_work_type
+      DisasterWorkHoursList = STD.disaster_work_hours_list
       DisasterNormalScheduledHours = STD.disaster_normal_scheduled_hours
       OutOfClass = STD.out_of_class
     End Sub
@@ -261,6 +263,7 @@ Namespace Models
 
       Dim std As New Saved_TimeStore_Data(Me, tca)
       Dim dt As DataTable = PopulateData()
+      Dim dt_dwh As DataTable = Models.DisasterWorkHours.PopulateDisasterWorkHours(DisasterWorkHoursList)
 
       Dim dp As New DynamicParameters()
 
@@ -291,6 +294,7 @@ Namespace Models
       dp.Add("@by_ip_address", std.by_ip_address)
       dp.Add("@result", dbType:=DbType.Int32, direction:=ParameterDirection.Output)
       dp.Add("@HTA", dt.AsTableValuedParameter("HoursToApproveData"))
+      dp.Add("@DWH", dt_dwh.AsTableValuedParameter("DisasterWorkHours"))
 
       Try
 

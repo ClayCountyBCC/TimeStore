@@ -8,10 +8,11 @@
     {
       return {
         restrict: "E",
-        scope: {
-          tctd: "=",
-          hours: "=",
-          calc: "&" //ng-change="$parent.calculateTotalHours()"
+        scope: {          
+          event: "=",
+          fulltimelist: "<",
+          eventerror: "=",
+          calc: "&"
         },
         templateUrl: "DisasterHours.directive.tmpl.html",
         controller: "DisasterHoursDirectiveController"
@@ -19,5 +20,12 @@
     })
     .controller("DisasterHoursDirectiveController", ["$scope", DisasterHours]);
 
-  function DisasterHours($scope) { }
+  function DisasterHours($scope)
+  {
+    $scope.CheckDisasterWorkType = function ()
+    {
+      console.log('finish checkDisasterWorkType');
+    }
+
+  }
 })();

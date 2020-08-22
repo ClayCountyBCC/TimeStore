@@ -49560,13 +49560,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         }
         LoadLunchTime(tctd);
-        console.log('tctd', tctd);
+        console.log('loadSavedTCTD tctd', tctd);
         return tctd;
       }
 
       function LoadLunchTime(tctd)
       {
-        console.log("LoadLunchTime");
+        //console.log("LoadLunchTime");
         tctd.SelectedLunchTime = null;
         tctd.LastSelectedLunchTime = null;
         if (
@@ -49591,10 +49591,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function processRawTCTD(rawtctd, tctd)
       {
+        console.log('processRawTCTD', rawtctd);
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
-        tctd.DisasterName = rawtctd.DisasterName;
-        tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        //tctd.DisasterName = rawtctd.DisasterName;
+        //tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        tctd.DisasterWorkHoursList = rawtctd.DisasterWorkHoursList;
         tctd.DisasterWorkType = rawtctd.DisasterWorkType;
         tctd.DisasterNormalScheduledHours = rawtctd.DisasterNormalScheduledHours;
         tctd.OutOfClass = rawtctd.OutOfClass;
@@ -49607,8 +49609,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         processTimecardWorkTimes(
           tctd,
           rawtctd.WorkTimes,
-          rawtctd.OnCallWorkTimes,
-          rawtctd.DisasterWorkTimes
+          rawtctd.OnCallWorkTimes
         );
       }
 
@@ -49666,7 +49667,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         );
       }
 
-      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime, disasterWorkTime)
+      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime)
       {
         var sT = [];
         var t = [];
@@ -49708,42 +49709,81 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           tctd.OnCallSelectedTimesDisplay = OnCallWorkTime;
         }
 
-
-        if (disasterWorkTime.length === 0)
+        console.log("fix disaster work times in processTimecardWorkTimes")
+        
+        for (let ee = 0; ee < tctd.DisasterWorkHoursList.length; ee++)
         {
-          tctd.disasterWorkTimes = "";
-          tctd.disasterSelectedTimes = [];
-          tctd.disasterSelectedTimesDisplay = "";
-        } else
-        {
-          t = disasterWorkTime.split("-");
-          sT = [];
-          for (ii = 0; ii < t.length; ii++)
+          let dwh = tctd.DisasterWorkHoursList[ee];
+          if (dwh.DisasterWorkTimes.length === 0)
           {
-            sT.push(tl.indexOf(t[ii].trim()));
+            dwh.DisasterSelectedTimes = [];
+            dwh.DisasterSelectedTimesDisplay = "";
           }
-          tctd.disasterWorkTimes = sT.join(" ");
-          tctd.disasterSelectedTimes = sT;
-          tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
-        }
+          else
+          {
+            t = dwh.DisasterWorkTimes.split("-");
+            sT = [];
+            for (ii = 0; ii < t.length; ii++)
+            {
+              sT.push(tl.indexOf(t[ii].trim()));
+            }
+            dwh.DisasterWorkTimes = sT.join(" ");
+            dwh.DisasterSelectedTimes = sT;
+            dwh.DisasterSelectedTimesDisplay = dwh.DisasterWorkTimes;
+            // load the saved data into the EventsByWorkDate
+            for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+            {
+              let ewd = tctd.EventsByWorkDate[ff];
+              if (ewd.event_id === dwh.DisasterPeriodId)
+              {
+                let dwh_ewd = ewd.disaster_work_hours;
+                dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
+                dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
+                dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
+                dwh_ewd.WorkHoursId = dwh.WorkHoursId;
+                dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
+              }
+            }
+          }
 
-       
+        }
+        // Original Disaster Work Times handling logic
+        // replaced on 8/21/2020
+        //if (disasterWorkTime.length === 0)
+        //{
+        //  tctd.disasterWorkTimes = "";
+        //  tctd.disasterSelectedTimes = [];
+        //  tctd.disasterSelectedTimesDisplay = "";
+        //} else
+        //{
+        //  t = disasterWorkTime.split("-");
+        //  sT = [];
+        //  for (ii = 0; ii < t.length; ii++)
+        //  {
+        //    sT.push(tl.indexOf(t[ii].trim()));
+        //  }
+        //  tctd.disasterWorkTimes = sT.join(" ");
+        //  tctd.disasterSelectedTimes = sT;
+        //  tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
+        //}
+
+
       }
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
       {
-        
+
         var wd = moment(workDate, "M/D/YYYY");
         var hd = moment(hireDate);
         return wd.diff(hd, "days") > 90;
-        
+
         // this function returns true if the person's hire date is more than
         // 90 days away from the work date.
       }
 
       function resetTCTD(tc, workDate)
       {
-        console.log("reset tctd", workDate, tc);
+        console.log("reset tctd function with workdate and timecard", workDate, tc);
         // resetTCTD provides a 0'd out TCTD that conforms to the user's min/max / visibility for their classification
         var isExempt = tc.exemptStatus === "Exempt";
         populateConstants(isExempt, tc.classify);
@@ -49752,28 +49792,35 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           tc.hireDate,
           workDate
         );
-
-        var DisasterNameToUse = "";        
+        let events = [];
+        let disaster_work_hours_list = [];
+        //var DisasterNameToUse = "";        
         var wd = moment(workDate, "M/D/YYYY");
-        if (tc.Disaster_Periods.length > 0)
+
+        if (tc.Events_By_WorkDate.length > 0)
         {
-          for (var i = 0; i < tc.Disaster_Periods.length; i++)
-          {
-            var disaster_period = tc.Disaster_Periods[i];
-            if (DisasterNameToUse.length === 0)
+          let wd_short_date = wd.format("M/D/YYYY");
+          events = tc.Events_By_WorkDate.filter(
+            function (j)
             {
-              var wd_test = wd.toDate();
-              var start = new Date(disaster_period.StartDate);
-              var end = new Date(disaster_period.EndDate);              
-              if (wd_test >= start && wd_test <= end)
-              {
-                DisasterNameToUse = disaster_period.Name;
-              }
-              //if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
-              //{
-              //  DisasterNameToUse = disaster_period.Name;
-              //}
-            }
+              var test = moment(new Date(j.work_date)).format("M/D/YYYY");
+              return test === wd_short_date;
+            });
+          console.log('events found', events);
+          for (let i = 0; i < events.length; i++)
+          {
+            let event = events[i];
+            event.disaster_work_hours =
+            {
+              WorkHoursId: -1,
+              DisasterPeriodId: event.event_id,
+              DisasterSelectedTimes: [],
+              DisasterSelectedTimesDisplay: "",
+              DisasterTimesError: "",
+              DisasterWorkTimes: "",
+              DisasterWorkHours: 0,
+              DisasterWorkType: ""
+            };
           }
         }
 
@@ -49784,8 +49831,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
           DisasterWorkTimes: "",
-          DisasterName: DisasterNameToUse,
+          EventsByWorkDate: events,
+          //DisasterName: DisasterNameToUse,
           DisasterNormalScheduledHours: -1,
+          DisasterWorkHoursList: disaster_work_hours_list,
           //DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           DisasterWorkType: "",
@@ -49840,6 +49889,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           disasterSelectedTimesDisplay: "",
           disasterSelectedTimes: []
         };
+        console.log('fully reset tctd', tctd);
         return tctd;
       }
 
@@ -49855,7 +49905,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
           DisasterWorkType: tctd.DisasterWorkType,
-          DisasterName: "",
+          EventsByWorkDate: tctd.EventsByWorkDate,
+          DisasterWorkHoursList: tctd.DisasterWorkHoursList,
+          //DisasterName: "",
           DisasterNormalScheduledHours: tctd.DisasterNormalScheduledHours,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
@@ -50034,11 +50086,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function getNormallyScheduledHours()
       {
         var hours = [];
-        for (var i = 1.25; i < 12.25; i += .25)
+        for (var i = 4; i < 12.25; i += .25)
         {
           hours.push(i);
         }
-        console.log('normally scheduled hours', hours);
         return hours;
       }
 
@@ -50364,52 +50415,116 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function calcDisasterWorkHours(tctd)
       {
-        tctd.DisasterWorkHours.value = 0;
-        tctd.disasterSelectedTimesDisplay = "";
-        tctd.DisasterWorkTimes = "";        
-        if (tctd.disasterSelectedTimes === undefined)
-        {
-          return;
-        }
-        var times = tctd.disasterSelectedTimes;
-        tctd.disasterSelectedTimesDisplay = "";
+        // Replaced on 8/20/2020
+        //tctd.DisasterWorkHours.value = 0;
+        //tctd.disasterSelectedTimesDisplay = "";
+        //tctd.DisasterWorkTimes = "";        
+        //if (tctd.disasterSelectedTimes === undefined)
+        //{
+        //  return;
+        //}
+        //var times = tctd.disasterSelectedTimes;
+        //tctd.disasterSelectedTimesDisplay = "";
 
-        var timeList = getTimeList();
-        if (times.length === 0)
+        //var timeList = getTimeList();
+        //if (times.length === 0)
+        //{
+        //  return;
+        //}
+        //var timeDisplay = "";
+        //var workHours = 0;
+        //var st = times.sort(function (a, b)
+        //{
+        //  return a - b;
+        //});
+        //var length = st.length - st.length % 2;
+        //if (length > 1)
+        //{
+        //  for (var i = 0; i < length; i += 2)
+        //  {
+        //    workHours += (st[i + 1] - st[i]) / 4;
+        //    if (timeDisplay.length > 0)
+        //    {
+        //      timeDisplay += " - ";
+        //    }
+        //    timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+        //  }
+        //}
+        //if (st.length % 2 === 1)
+        //{
+        //  if (timeDisplay.length > 0)
+        //  {
+        //    timeDisplay += " - ";
+        //  }
+        //  timeDisplay += timeList[st[st.length - 1]];
+        //}
+        //tctd.DisasterWorkTimes = times.join(" ");
+        //tctd.DisasterWorkHours.value = workHours;
+        //tctd.disasterSelectedTimesDisplay = timeDisplay;
+        for (let ewd = 0; ewd < tctd.EventsByWorkDate.length; ewd++)
         {
-          return;
-        }
-        var timeDisplay = "";
-        var workHours = 0;
-        var st = times.sort(function (a, b)
-        {
-          return a - b;
-        });
-        var length = st.length - st.length % 2;
-        if (length > 1)
-        {
-          for (var i = 0; i < length; i += 2)
+          let dwh = tctd.EventsByWorkDate[ewd].disaster_work_hours;
+          dwh.DisasterWorkHours = 0;
+          dwh.DisasterSelectedTimesDisplay = "";
+          dwh.DisasterWorkTimes = "";
+          let timeList = getTimeList();
+          let times = dwh.DisasterSelectedTimes;
+
+          if (dwh.DisasterSelectedTimes !== undefined && timeList.length > 0 && times.length > 0)
           {
-            workHours += (st[i + 1] - st[i]) / 4;
-            if (timeDisplay.length > 0)
+            let display = "";
+            let workhours = 0;
+
+            // we sort the times now because our calculation depends on them being in 
+            // order from 0 to 79
+            let sorted_times = times.sort(function (a, b) { return a - b; });
+
+            let length = sorted_times.length - sorted_times.length % 2;
+            if (length > 1)
             {
-              timeDisplay += " - ";
+              for (let i = 0; i < length; i += 2)
+              {
+                workhours += (sorted_times[i + 1] - sorted_times[i]) / 4;
+                if (display.length > 0)
+                {
+                  display += " - ";
+                }
+                display += timeList[sorted_times[i]] + " - " + timeList[sorted_times[i + 1]];
+              }
             }
-            timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+            if (sorted_times.length % 2 === 1)
+            {
+              if (display.length > 0)
+              {
+                display += " - ";
+              }
+              display += timeList[sorted_times[sorted_times.length - 1]];
+            }
+            dwh.DisasterWorkTimes = display;//times.join(" ");
+            dwh.DisasterWorkHours = workhours;
+            dwh.DisasterSelectedTimesDisplay = display;
           }
         }
-        if (st.length % 2 === 1)
+
+        // now we'll copy those to the tctd.DisasterWorkHoursList array
+        tctd.DisasterWorkHoursList.splice(0,tctd.DisasterWorkHoursList.length); // empty the array
+        for (let ee = 0; ee < tctd.EventsByWorkDate.length; ee++)
         {
-          if (timeDisplay.length > 0)
+          let ewd = tctd.EventsByWorkDate[ee];
+          let dwh = ewd.disaster_work_hours;
+          if (dwh.DisasterWorkHours > 0)
           {
-            timeDisplay += " - ";
+            let new_dwh = {
+              WorkHoursId: dwh.WorkHoursId,
+              DisasterPeriodId: dwh.DisasterPeriodId,
+              DisasterWorkHours: dwh.DisasterWorkHours,
+              DisasterWorkType: dwh.DisasterWorkType,
+              DisasterWorkTimes: dwh.DisasterWorkTimes
+            };
+            tctd.DisasterWorkHoursList.push(new_dwh);
           }
-          timeDisplay += timeList[st[st.length - 1]];
         }
-        tctd.DisasterWorkTimes = times.join(" ");
-        tctd.DisasterWorkHours.value = workHours;
-        tctd.disasterSelectedTimesDisplay = timeDisplay;
-        
+
       }
 
       function handleBreakCredit(tctd)
@@ -51529,15 +51644,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     
     populateTimeLists();
     updateBanksUsed();
-    
+    //$scope.DisasterHoursRelated    
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
-    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;    
-    $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
+    var forceDisasterShow = $scope.TCTD.EventsByWorkDate.filter(function (j) { return j.disaster_work_hours.DisasterWorkHours > 0; }).length > 0;
+    console.log('force disaster show', forceDisasterShow);
+    $scope.DisasterHoursRelated = forceDisasterShow ? true : null;    
+    $scope.showDisaster = $scope.TCTD.EventsByWorkDate.length > 0;
+    $scope.ExpandDisasterHours = $scope.showDisaster && $scope.TCTD.WorkHours.value > 0 && $scope.DisasterHoursRelated;
+    
     // changed on 8/31/2019
     //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0; // ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     //$scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
-    $scope.showDisaster = $scope.TCTD.DisasterName.length > 0;
+    //$scope.showDisaster = $scope.TCTD.DisasterName.length > 0;
     //$scope.TCTD.DisasterNormalScheduledHours values are as follows:
     // -1 if the value has not yet been saved
     // 0 if they are not normally scheduled on this day
@@ -51653,10 +51772,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     $scope.DisasterHoursChoice = function ()
     {
+      console.log("Don't forget to clear the disaster hours entered if No is chosen.");
       $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
-      checkForErrors();
-      if ($scope.DisasterHoursRelated === false && $scope.errorList.length === 0)
+      if (!$scope.DisasterHoursRelated)
       {
+        // let's clear any saved disaster hours information
+        $scope.TCTD.DisasterWorkHoursList.splice(0, $scope.TCTD.DisasterWorkHoursList.length); // empty the array
+        $scope.TCTD.DisasterNormalScheduledHours = null;
+        for (let ee = 0; ee < $scope.TCTD.EventsByWorkDate.length; ee++)
+        {
+          let dwh = $scope.TCTD.EventsByWorkDate[ee].disaster_work_hours;          
+          dwh.DisasterSelectedTimes.splice(0, dwh.DisasterSelectedTimes.length)
+          dwh.DisasterselectedTimesDisplay = "";
+          dwh.DisasterWorkHours = 0;
+          dwh.DisasterWorkTimes = "";
+          dwh.DisasterWorkType = "";
+        }
+      }
+      checkForErrors();
+      if (!$scope.DisasterHoursRelated && $scope.errorList.length === 0)
+      {
+
         $scope.calculateTotalHours();
       }
     };
@@ -51710,64 +51846,145 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         return;
       }
 
-      if ($scope.NormallyScheduled && $scope.TCTD.DisasterNormalScheduledHours.toString() === "-1")
+      if ($scope.NormallyScheduled && ($scope.TCTD.DisasterNormalScheduledHours === null || $scope.TCTD.DisasterNormalScheduledHours.toString() === "-1"))
       {
         $scope.normallyScheduledHoursError = "You must select how many hours you normally work on this date.";
         $scope.errorList.push("You must select how many hours you normally work on this date.");
         return;
       }
 
-      if ($scope.TCTD.DisasterWorkHours.value === 0)
+      let ewd = $scope.TCTD.EventsByWorkDate;
+      let total_disaster_work_hours = 0;
+
+      for (let ee = 0; ee < ewd.length; ee++)
       {
-        $scope.normallyScheduledHoursError = "You must add your hours worked for the disaster to the Disaster Hours Worked selection.";
-        $scope.errorList.push("You must add the hours worked for the disaster to the Disaster Hours Worked selection.");
-        return;
+        let special_event = ewd[ee];
+        let dwh = special_event.disaster_work_hours;
+
+        // reset error message
+        dwh.DisasterTimesError = "";
+
+        total_disaster_work_hours += dwh.DisasterWorkHours;
+
+        if (dwh.DisasterWorkHours === 0 && total_disaster_work_hours === 0 && ee === ewd.length - 1)
+        {
+          $scope.normallyScheduledHoursError = "You must add your hours worked for any special events to the section below.";
+          $scope.errorList.push("You must add your hours worked for any special events to the specific event section.");
+          return;
+        }
+
+        // let's make sure these disaster hours don't overlap the regular hours worked
+        if (!HoursWorkedMustOverlap($scope.TCTD.selectedTimes, dwh.DisasterSelectedTimes))
+        {
+          dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " must overlap your regular hours worked.";
+          $scope.errorList.push(dwh.DisasterTimesError);
+          return;
+        }
+
+        // now we need to make sure that the disaster hours don't overlap other disaster hours
+        if (ewd.length > 1)
+        {
+          for (let ff = 0; ff < ewd.length; ff++)
+          {
+            if (ff !== ee)
+            {
+              let special_event_ff = ewd[ff];
+              let dwh_ff = special_event_ff.disaster_work_hours;
+              if (!HoursWorkedMustNotOverlap(dwh.DisasterSelectedTimes, dwh_ff.DisasterSelectedTimes))
+              {
+                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                $scope.errorList.push(dwh.DisasterTimesError);
+                return;
+              }
+              if (!HoursWorkedMustNotOverlap(dwh_ff.DisasterSelectedTimes, dwh.DisasterSelectedTimes))
+              {
+                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                $scope.errorList.push(dwh.DisasterTimesError);
+                return;
+              }
+            }
+          }
+        }
+
+        // Check that a disaster work type was selected
+        if (dwh.DisasterWorkHours > 0)
+        {
+          if (dwh.DisasterWorkType.length === 0)
+          {
+            dwh.DisasterTimesError = "You must select the type of work you did for " + special_event.event_name + ".";
+            $scope.errorList.push(dwh.DisasterTimesError);
+            return;
+          }
+          if (dwh.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
+          {
+            dwh.DisasterTimesError = "Please enter a comment that indicates the type of work you did for " + special_event.event_name + ".";
+            $scope.errorList.push(dwh.DisasterTimesError);
+            return;
+          }
+        }
+        else
+        {
+          dwh.DisasterWorkType = "";
+        }
       }
 
+    }
 
-      var dst = $scope.TCTD.disasterSelectedTimes;
-      var wst = $scope.TCTD.selectedTimes;
-      var dLength = dst.length - dst.length % 2;
-      var wLength = wst.length - wst.length % 2;
-      for (var i = 0; i < dLength; i += 2)
+
+    function HoursWorkedMustOverlap(a, b)
+    {
+      // this function will return true if all array elements overlap, and false if any don't
+      let bLength = b.length - b.length % 2; // this ensures we're only working with a mod 2 array length
+      let aLength = a.length - a.length % 2;
+      for (let i = 0; i < bLength; i += 2)
       {
-        var dStart = dst[i];
-        var dEnd = dst[i + 1];
-        var found = false;
-        for (var j = 0; j < wLength; j += 2)
+        let bStart = b[i];
+        let bEnd = b[i + 1];
+        let found = false;
+        for (let j = 0; j < aLength; j += 2)
         {
-          var wStart = wst[j];
-          var wEnd = wst[j + 1];
-          var dStartGood = dStart >= wStart && dStart <= wEnd;
-          var dEndGood = dEnd >= wStart && dEnd <= wEnd;
-          found = dStartGood && dEndGood;
-          if (dStartGood || dEndGood)
+          let aStart = a[j];
+          let aEnd = a[j + 1];
+          let bStartGood = bStart >= aStart && bStart <= aEnd;
+          let bEndGood = bEnd >= aStart && bEnd <= aEnd;
+          found = bStartGood && bEndGood;
+          if (bStartGood || bEndGood)
           {
             break;
           }
         }
         if (!found)
         {
-          $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
-          $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
-          return;
+          return false;
         }
       }
-      if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
-      {
-        if ($scope.TCTD.DisasterWorkType === "")
-        {
-          $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
-          $scope.errorList.push($scope.disasterTimeError);
-          return;
-        }
-        if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
-        {
-          $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
-          $scope.errorList.push($scope.disasterTimeError);
-        }
-      }
+      return true;
     }
+
+    function HoursWorkedMustNotOverlap(a, b)
+    {
+      // this function will return true if any array elements do NOT overlap, and false if they do
+      let bLength = b.length - b.length % 2; // this ensures we're only working with a mod 2 array length
+      let aLength = a.length - a.length % 2;
+      for (let i = 0; i < bLength; i += 2)
+      {
+        let bStart = b[i];
+        let bEnd = b[i + 1];
+        for (let j = 0; j < aLength; j += 2)
+        {
+          let aStart = a[j];
+          let aEnd = a[j + 1];
+          let bStartGood = bStart >= aStart && bStart < aEnd;
+          let bEndGood = bEnd > aStart && bEnd <= aEnd;
+          if (bStartGood || bEndGood)
+          {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
 
     function checkForErrors()
     {
@@ -52128,19 +52345,26 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.toggleOnCall = !$scope.toggleOnCall;
     };
 
-    $scope.checkDisasterWorkType = function ()
-    {
-      // this function is run after a disaster work type is selected.
-      // the comment is only required if they chose "Not Listed" as the option.
-      checkForErrors();
-      if ($scope.errorList.length === 0)
-      {
-        $scope.saveTCTD();
-      }
-    };
+    //$scope.checkDisasterWorkType = function ()
+    //{
+    //  // this function is run after a disaster work type is selected.
+    //  // the comment is only required if they chose "Not Listed" as the option.
+    //  checkForErrors();
+    //  if ($scope.errorList.length === 0)
+    //  {
+    //    $scope.saveTCTD();
+    //  }
+    //};
 
     $scope.calculateTotalHours = function ()
     {
+      if ($scope.showDisaster &&
+        !$scope.ExpandDisasterHours &&
+        $scope.TCTD.WorkHours.value > 0 &&
+        $scope.DisasterHoursRelated)
+      {
+        $scope.ExpandDisasterHours = true;
+      }
       $scope.forceFullTimeList = outsideShortTimes();
       updateLunchTimeList();
       addtimeFunctions.calculateTotalHours(
@@ -54787,10 +55011,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       return {
         restrict: "E",
-        scope: {
-          tctd: "=",
-          hours: "=",
-          calc: "&" //ng-change="$parent.calculateTotalHours()"
+        scope: {          
+          event: "=",
+          fulltimelist: "<",
+          eventerror: "=",
+          calc: "&"
         },
         templateUrl: "DisasterHours.directive.tmpl.html",
         controller: "DisasterHoursDirectiveController"
@@ -54798,5 +55023,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     })
     .controller("DisasterHoursDirectiveController", ["$scope", DisasterHours]);
 
-  function DisasterHours($scope) { }
+  function DisasterHours($scope)
+  {
+    $scope.CheckDisasterWorkType = function ()
+    {
+      console.log('finish checkDisasterWorkType');
+    }
+
+  }
 })();

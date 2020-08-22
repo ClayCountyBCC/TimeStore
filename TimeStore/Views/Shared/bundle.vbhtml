@@ -273,7 +273,6 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-          place
         </div>
 
         <div ng-if="showDisaster && TCTD.WorkHours.value > 0 && isCurrentPPD"
@@ -290,7 +289,7 @@
           </p>
           <md-input-container class="md-input-has-value"
                               flex="40">
-            <label>Are any of the hours worked related to {{ TCTD.DisasterName }}?</label>
+            <label>Are any of the hours worked for special events?</label>
             <md-radio-group ng-change="DisasterHoursChoice()"
                             flex="100"
                             layout="row"
@@ -302,6 +301,9 @@
               </md-radio-button>
               <md-radio-button ng-value="false" aria-label="No">
                 No
+                <md-tooltip md-direction="top">
+                  If you choose No here, any information you've entered into the special events section will be removed.
+                </md-tooltip>
               </md-radio-button>
             </md-radio-group>
           </md-input-container>
@@ -324,7 +326,7 @@
            layout-align="start center">
         <span flex="5"></span>
         <h5>
-          Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName }}
+          Show / Hide -- Special Event hours worked
         </h5>
       </div>
 
@@ -332,127 +334,149 @@
            style="margin-top: .5em;"
            layout="row"
            layout-align="center center"
-           layout-wrap
-           layout-padding
+           layout-wrap           
            flex="100">
 
-        <md-input-container class="md-input-has-value"
-                            flex="40">
-          <label>Are you normally scheduled to work on this date?</label>
-          <md-radio-group ng-change="NormallyScheduledChoice()"
-                          flex="100"
-                          layout="row"
-                          layout-align="space-around center"
-                          ng-model="NormallyScheduled"
-                          class="smaller">
-            <md-radio-button ng-value="true" aria-label="Yes">
-              Yes
-            </md-radio-button>
-            <md-radio-button ng-value="false" aria-label="No">
-              No
-            </md-radio-button>
-          </md-radio-group>
-        </md-input-container>
-
-        <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
-                            class="md-input-has-value"
-                            flex="60">
-          <label>Select the number of hours you normally work on this date</label>
-          <md-select ng-change="NormallyScheduledHoursSelected()"                     
-                     ng-model="TCTD.DisasterNormalScheduledHours">
-            <md-option ng-value="-1">Please Select</md-option>
-            <!--<md-option ng-value="1">1 hour</md-option>-->
-            <md-option ng-repeat="h in normallyScheduledHours track by $index"
-                       ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
-          </md-select>
-        </md-input-container>
-        <div ng-show="!ShowDisasterNormallyScheduledHours"
-             flex="60">
-
-        </div>
-        <p ng-if="normallyScheduledHoursError.length > 0"
-           flex="100"
-           layout="row"
-           class="warn">
-          {{ normallyScheduledHoursError }}
-        </p>
-
-        <md-input-container flex="40">
-          <label>Disaster Hours Worked</label>
-          <md-select md-on-close="calculateTotalHours()"
-                     flex="100"
-                     multiple
-                     ng-model="TCTD.disasterSelectedTimes"
-                     placeholder="Disaster Hours Worked"
-                     class="bigpaddingbottom">
-            <md-option ng-repeat="t in fullTimeList track by t.index"
-                       ng-value="t.index">
-              <span class="md-text">
-                {{t.display}}
-              </span>
-            </md-option>
-          </md-select>
-        </md-input-container>
-        <div layout="column"
-             layout-align="center center"
-             layout-gt-md="row"
-             layout-align-gt-md="space-around center"
-             layout-wrap
-             flex="55">
-          <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
-                     class="md-primary md-raised">
-            Copy Work Hours
-          </md-button>
-          <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
-        </div>
-        <div layout-padding
+        <div flex="100"
              layout="row"
+             layout-align="center center"
              layout-wrap
-             flex="100">
-          <p ng-if="disasterTimeError.length > 0"
+             layout-padding>
+
+
+          <md-input-container class="md-input-has-value"
+                              flex="40">
+            <label>Are you normally scheduled to work on this date?</label>
+            <md-radio-group ng-change="NormallyScheduledChoice()"
+                            flex="100"
+                            layout="row"
+                            layout-align="space-around center"
+                            ng-model="NormallyScheduled"
+                            class="smaller">
+              <md-radio-button ng-value="true" aria-label="Yes">
+                Yes
+              </md-radio-button>
+              <md-radio-button ng-value="false" aria-label="No">
+                No
+              </md-radio-button>
+            </md-radio-group>
+          </md-input-container>
+
+          <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
+                              class="md-input-has-value"
+                              flex="60">
+            <label>Select the number of hours you normally work on this date</label>
+            <md-select ng-change="NormallyScheduledHoursSelected()"
+                       ng-model="TCTD.DisasterNormalScheduledHours">
+              <md-option ng-value="-1">Please Select</md-option>              
+              <md-option ng-repeat="h in normallyScheduledHours track by $index"
+                         ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
+            </md-select>
+          </md-input-container>
+          <div ng-show="!ShowDisasterNormallyScheduledHours"
+               flex="60">
+
+          </div>
+          <p ng-if="normallyScheduledHoursError.length > 0"
              flex="100"
              layout="row"
              class="warn">
-            {{ disasterTimeError }}
+            {{ normallyScheduledHoursError }}
           </p>
-          <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
-          <md-input-container flex="40">
-            <label>Disaster Work Type</label>
-            <md-select md-on-close="checkDisasterWorkType()"
-                       flex="100"
-                       ng-model="TCTD.DisasterWorkType"
-                       placeholder="Disaster Work Type"
-                       class="bigpaddingbottom">
-              <md-option value="Debris Pickup">
-                Debris Pickup
-              </md-option>
-              <md-option value="Debris Monitoring">
-                Debris Monitoring
-              </md-option>
-              <md-option value="Call Center">
-                Call Center
-              </md-option>
-              <md-option value="Working in EOC">
-                Working in EOC
-              </md-option>
-              <md-option value="Building Repair">
-                Building Repair
-              </md-option>
-              <md-option value="Road Repair">
-                Road Repair
-              </md-option>
-              <md-option value="Other Repair">
-                Other Repair
-              </md-option>
-              <md-option value="Prep for Storm">
-                Prep for Storm
-              </md-option>
-              <md-option value="Not Listed">
-                Not Listed
-              </md-option>
-            </md-select>
-          </md-input-container>
         </div>
+        <!--event: "=",
+        fulltimelist: "<",
+        eventerror: "=",
+        validate: "&",
+        calculate: "&"-->
+        <div flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+
+
+          <disaster-hours flex="100"
+                          ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                          event="ee"
+                          fulltimelist="fullTimeList"                          
+                          calc="calculateTotalHours()"></disaster-hours>
+        </div>
+        <!--<md-input-container flex="40">
+    <label>Disaster Hours Worked</label>
+    <md-select md-on-close="calculateTotalHours()"
+               flex="100"
+               multiple
+               ng-model="TCTD.disasterSelectedTimes"
+               placeholder="Disaster Hours Worked"
+               class="bigpaddingbottom">
+      <md-option ng-repeat="t in fullTimeList track by t.index"
+                 ng-value="t.index">
+        <span class="md-text">
+          {{t.display}}
+        </span>
+      </md-option>
+    </md-select>
+  </md-input-container>
+  <div layout="column"
+       layout-align="center center"
+       layout-gt-md="row"
+       layout-align-gt-md="space-around center"
+       layout-wrap
+       flex="55">
+    <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+               class="md-primary md-raised">
+      Copy Work Hours
+    </md-button>
+    <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
+  </div>
+  <div layout-padding
+       layout="row"
+       layout-wrap
+       flex="100">
+    <p ng-if="disasterTimeError.length > 0"
+       flex="100"
+       layout="row"
+       class="warn">
+      {{ disasterTimeError }}
+    </p>
+    <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
+    <md-input-container flex="40">
+      <label>Disaster Work Type</label>
+      <md-select md-on-close="checkDisasterWorkType()"
+                 flex="100"
+                 ng-model="TCTD.DisasterWorkType"
+                 placeholder="Disaster Work Type"
+                 class="bigpaddingbottom">
+        <md-option value="Debris Pickup">
+          Debris Pickup
+        </md-option>
+        <md-option value="Debris Monitoring">
+          Debris Monitoring
+        </md-option>
+        <md-option value="Call Center">
+          Call Center
+        </md-option>
+        <md-option value="Working in EOC">
+          Working in EOC
+        </md-option>
+        <md-option value="Building Repair">
+          Building Repair
+        </md-option>
+        <md-option value="Road Repair">
+          Road Repair
+        </md-option>
+        <md-option value="Other Repair">
+          Other Repair
+        </md-option>
+        <md-option value="Prep for Storm">
+          Prep for Storm
+        </md-option>
+        <md-option value="Not Listed">
+          Not Listed
+        </md-option>
+      </md-select>
+    </md-input-container>
+  </div>-->
       </div>
     </div>
 
@@ -3967,77 +3991,34 @@
 
 <script type="text/ng-template" id="DisasterHours.directive.tmpl.html">
 
-  <div ng-show="isCurrentPPD && showDisaster">
-    <div ng-click="Toggle_DisasterHours()"
-         style="margin-top: .25em; margin-bottom: .25em; cursor: pointer;"
-         flex="100"
+
+  <div layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">
+    <div style="margin-top: .75em; margin-bottom: .75em;"
          class="short-toolbar my-primary"
+         flex="100"
          layout="row"
-         layout-align="start center">
+         layout-align="center center">
       <span flex="5"></span>
       <h5>
-        Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName }}
+        Work Hours For {{event.event_name}}
       </h5>
     </div>
-
-    <div ng-show="ExpandDisasterHours"
-         style="margin-top: .5em;"
-         layout="row"
-         layout-align="center center"
-         layout-wrap
+    <div layout="row"
+         flex="35"
          layout-padding
-         flex="100">
-
-      <md-input-container class="md-input-has-value"
-                          flex="40">
-        <label>Are you normally scheduled to work on this date?</label>
-        <md-radio-group ng-change="NormallyScheduledChoice()"
-                        flex="100"
-                        layout="row"
-                        layout-align="space-around center"
-                        ng-model="NormallyScheduled"
-                        class="smaller">
-          <md-radio-button ng-value="true" aria-label="Yes">
-            Yes
-          </md-radio-button>
-          <md-radio-button ng-value="false" aria-label="No">
-            No
-          </md-radio-button>
-        </md-radio-group>
-      </md-input-container>
-
-      <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
-                          class="md-input-has-value"
-                          flex="60">
-        <label>Select the number of hours you normally work on this date</label>
-        <md-select ng-change="NormallyScheduledHoursSelected()"
-                   ng-model="TCTD.DisasterNormalScheduledHours">
-          <md-option ng-value="-1">Please Select</md-option>
-          <!--<md-option ng-value="1">1 hour</md-option>-->
-          <md-option ng-repeat="h in normallyScheduledHours track by $index"
-                     ng-value="h">{{ h.toFixed(2)  }}hours</md-option>
-        </md-select>
-      </md-input-container>
-      <div ng-show="!ShowDisasterNormallyScheduledHours"
-           flex="60">
-
-      </div>
-      <p ng-if="normallyScheduledHoursError.length > 0"
-         flex="100"
-         layout="row"
-         class="warn">
-        {{ normallyScheduledHoursError }}
-      </p>
-
-      <md-input-container flex="40">
-        <label>Disaster Hours Worked</label>
-        <md-select md-on-close="calculateTotalHours()"
-                   flex="100"
+         layout-align="center center">
+      <md-input-container flex="100">
+        <label>Hours Worked on {{event.event_name}}</label>
+        <md-select md-on-close="calc()"
+                   flex="80"
                    multiple
-                   ng-model="TCTD.disasterSelectedTimes"
-                   placeholder="Disaster Hours Worked"
+                   ng-model="event.disaster_work_hours.DisasterSelectedTimes"
+                   placeholder="Hours Worked on {{event.event_name}}"
                    class="bigpaddingbottom">
-          <md-option ng-repeat="t in fullTimeList track by t.index"
+          <md-option ng-repeat="t in fulltimelist track by t.index"
                      ng-value="t.index">
             <span class="md-text">
               {{t.display}}
@@ -4045,36 +4026,39 @@
           </md-option>
         </md-select>
       </md-input-container>
-      <div layout="column"
+    </div>
+
+    <div layout="row"
+         layout-align="center center"
+         layout-gt-md="row"
+         layout-align-gt-md="space-around center"
+         layout-wrap
+         flex="65">
+      <!--<md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+                 class="md-primary md-raised">
+        Copy Work Hours
+      </md-button>-->
+      <md-input-container class="shortpaddingbottom shortInput">
+        <label class="longerLabel"
+               style="width: auto;">Hours Worked</label>
+        <input ng-model="event.disaster_work_hours.DisasterWorkHours"
+               type="number"
+               ng-disabled="true" />
+      </md-input-container>
+      <div layout="row"
            layout-align="center center"
-           layout-gt-md="row"
-           layout-align-gt-md="space-around center"
-           layout-wrap
-           flex="55">
-        <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
-                   class="md-primary md-raised">
-          Copy Work Hours
-        </md-button>
-        <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
-      </div>
-      <div layout-padding
-           layout="row"
-           layout-wrap
-           flex="100">
-        <p ng-if="disasterTimeError.length > 0"
-           flex="100"
-           layout="row"
-           class="warn">
-          {{ disasterTimeError }}
-        </p>
-        <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
-        <md-input-container flex="40">
+           layout-padding
+           flex="40">
+        <md-input-container flex="100">
           <label>Disaster Work Type</label>
-          <md-select md-on-close="checkDisasterWorkType()"
+          <md-select md-on-close="calc()"
                      flex="100"
-                     ng-model="TCTD.DisasterWorkType"
-                     placeholder="Disaster Work Type"
+                     ng-model="event.disaster_work_hours.DisasterWorkType"
+                     placeholder="Work Type for {{event.event_name}}"
                      class="bigpaddingbottom">
+            <md-option value="">
+              Select Work Type
+            </md-option>
             <md-option value="Debris Pickup">
               Debris Pickup
             </md-option>
@@ -4106,7 +4090,19 @@
         </md-input-container>
       </div>
     </div>
+    <div ng-show="event.disaster_work_hours.DisasterTimesError.length > 0"
+         layout-padding
+         layout="row"
+         layout-wrap
+         flex="100">
+      <p style="margin-top: .5em;"
+         flex="100"
+         layout="row"
+         class="warn">
+        {{ event.disaster_work_hours.DisasterTimesError }}
+      </p>     
+      
+    </div>
   </div>
-
 
 </script>
