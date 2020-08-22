@@ -15,6 +15,7 @@ Namespace Models
     Public Property telestaff_staffing_detail As String
     Public Property finplus_project_code As String
     Public Property period_id As Integer
+    Public Property period_name As String
 
     Public Sub New()
 
@@ -39,6 +40,7 @@ Namespace Models
           ,P.TelestaffStaffingDetail telestaff_staffing_detail
           ,P.FinplusProjectCode finplus_project_code
           ,P.id period_id
+          ,P.Name period_name
         FROM Disaster_Events E
         INNER JOIN Disaster_Event_Period_Lookup L ON E.id = L.disaster_event_id
         INNER JOIN Disaster_Period P ON L.disaster_period_id = P.id

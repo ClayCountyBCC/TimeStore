@@ -45,15 +45,22 @@
         Dim tsEndTime As Date
 
         For Each t In TL
-          t.DisasterWorkHoursByRule(0) = 0
-          t.DisasterWorkHoursByRule(1) = 0
-          t.DisasterWorkHoursByRule(2) = 0
-
-          t.DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
-          t.DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
-          t.DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
-
           For Each dwh In t.DisasterWorkHoursList
+            dwh.DisasterWorkHoursByRule(0) = 0
+            dwh.DisasterWorkHoursByRule(1) = 0
+            dwh.DisasterWorkHoursByRule(2) = 0
+            dwh.DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
+            dwh.DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
+            dwh.DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
+            't.DisasterWorkHoursByRule(0) = 0
+            't.DisasterWorkHoursByRule(1) = 0
+            't.DisasterWorkHoursByRule(2) = 0
+
+            't.DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
+            't.DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
+            't.DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
+
+
 
             If dwh.DisasterWorkTimes.Length > 0 Then
               workDate = t.WorkDate.ToShortDateString
@@ -92,7 +99,7 @@
                       If endTime > dpr.EndDateTime Then tsEndTime = dpr.EndDateTime
 
                       Dim ts = tsEndTime.Subtract(tsStartTime)
-                      t.DisasterWorkTimesByRule(dpr.pay_rule).Add(ts)
+                      dwh.DisasterWorkTimesByRule(dpr.pay_rule).Add(ts)
                     End If
                   Next
                 Catch ex As Exception
@@ -103,11 +110,16 @@
 
 
             End If
+            For i = 0 To 2 Step 1
+              dwh.DisasterWorkHoursByRule(i) += (From ts In dwh.DisasterWorkTimesByRule(i)
+                                                 Select ts.TotalHours).Sum
+            Next
           Next
-          For i = 0 To 2 Step 1
-            t.DisasterWorkHoursByRule(i) += (From ts In t.DisasterWorkTimesByRule(i)
-                                             Select ts.TotalHours).Sum
-          Next
+          ' replaced on 8/22
+          'For i = 0 To 2 Step 1
+          '  t.DisasterWorkHoursByRule(i) += (From ts In t.DisasterWorkTimesByRule(i)
+          '                                   Select ts.TotalHours).Sum
+          'Next
         Next
 
 
@@ -320,9 +332,9 @@
         Return Math.Max((From t In Week_TL(Week)
                          Select t.WorkHours).Sum +
             BreakCredit(Week) + Holiday(Week) + OnCall_HoursWorked(Week) -
-            HolidayHoursWorkedDifference(Week) - DisasterDoubleTime(Week) -
-            DisasterStraightTime(Week) -
-            DisasterOverTime(Week) - Math.Max(DisasterRegular(Week), 0), 0)
+            HolidayHoursWorkedDifference(Week) - DisasterDoubleTime(Week, 0) -
+            DisasterStraightTime(Week, 0) -
+            DisasterOverTime(Week, 0) - Math.Max(DisasterRegular(Week, 0), 0), 0)
         ' old version to test on call hour change
         'Return (From t In Week_TL(Week) Select t.WorkHours).Sum +
         '    BreakCredit(Week) + Holiday(Week) + OnCall_TotalHours(Week) -
@@ -345,8 +357,8 @@
       Get
         Select Case Week
           Case 1, 2
-            Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) -
-              DisasterOverTime(Week) - DisasterStraightTime(Week)
+            Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week, 0) -
+              DisasterOverTime(Week, 0) - DisasterStraightTime(Week, 0)
             ' Introducing change to handle people who are exempt and work less than 40 hours per week.
             'If val > 40 Then val = 40
             'If EmployeeData.EmployeeType = "E" And val > 0 And val < 40 Then val = 40
@@ -373,7 +385,7 @@
 
             val = val - Sick_All(Week) - Vacation(Week) - Comp_Time_Used(Week) -
               LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) -
-              Calculated_DisasterRegular(Week) - DisasterAdminLeave(Week) - Out_Of_Class(Week)
+              Calculated_DisasterRegular(Week, 0) - DisasterAdminLeave(Week) - Out_Of_Class(Week)
             If val < 0 Then val = 0
             Return val
           Case Else
@@ -399,47 +411,50 @@
       End Get
     End Property
 
-    Public ReadOnly Property DisasterRegular(week As Integer) As Double
+    Public ReadOnly Property DisasterRegular(week As Integer, period_id As Integer) As Double
       Get
         If DisasterPayRules.Count() = 0 Then Return 0
 
-        If week = 0 Then Return DisasterRegular(1) + DisasterRegular(2)
+        If week = 0 Then Return DisasterRegular(1, period_id) + DisasterRegular(2, period_id)
 
         Dim hours As Double = 0
 
         For Each t In Week_TL(week)
-          hours += t.DisasterWorkHoursByRule(0)
-          If t.DisasterNormalScheduledHours > 0 Then
-            If t.DisasterNormalScheduledHours > (t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2)) Then
-              hours += (t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2))
-            Else
-              hours += t.DisasterNormalScheduledHours
-            End If
+          Dim dwh_list As List(Of DisasterWorkHours)
+          If period_id = 0 Then
+            dwh_list = t.DisasterWorkHoursList
+          Else
+            dwh_list = (From d In t.DisasterWorkHoursList
+                        Where d.DisasterPeriodId = period_id
+                        Select d).ToList()
           End If
+
+          For Each dwh In dwh_list
+
+            hours += dwh.DisasterWorkHoursByRule(0)
+            If t.DisasterNormalScheduledHours > 0 Then
+              If t.DisasterNormalScheduledHours > (dwh.DisasterWorkHoursByRule(1) + dwh.DisasterWorkHoursByRule(2)) Then
+                hours += (dwh.DisasterWorkHoursByRule(1) + dwh.DisasterWorkHoursByRule(2))
+              Else
+                hours += t.DisasterNormalScheduledHours
+              End If
+            End If
+          Next
+
         Next
         If IsExempt Then
           hours = Math.Min(40, hours)
           'If hours > 40 Then hours = 40
         End If
         Return hours
-        ' old - 8/31/2019
-        'Return (From t In Week_TL(week)
-        '        Where t.DisasterRule = 2
-        '        Select t.DisasterWorkHours).Sum -
-        '        DisasterOverTime(week) -
-        '        DisasterAdminLeave(week)
-        'Return (From t In Week_TL(week)
-        '        Select t.DisasterWorkHours).Sum -
-        '        DisasterOverTime(week) -
-        '        DisasterAdminLeave(week)
       End Get
     End Property
 
-    Public ReadOnly Property Calculated_DisasterRegular(Week As Integer) As Double
+    Public ReadOnly Property Calculated_DisasterRegular(Week As Integer, period_id As Integer) As Double
       Get
         Select Case Week
           Case 1, 2
-            Return DisasterRegular(Week)
+            Return DisasterRegular(Week, period_id)
             'Dim val As Double = Total_Hours(Week) - DisasterDoubleTime(Week) - DisasterOverTime(Week) - DisasterStraightTime(Week)
             'Dim val As Double = DisasterRegular(Week)
             'If Term_Hours(0) = 0 Then
@@ -460,31 +475,42 @@
             '  LWOP_All(Week) - SickLeavePool(Week) - Term_Hours(Week) - DisasterAdminLeave(Week)
             'Return Math.Max(val, 0)
           Case Else
-            Return Calculated_DisasterRegular(1) + Calculated_DisasterRegular(2)
+            Return Calculated_DisasterRegular(1, period_id) + Calculated_DisasterRegular(2, period_id)
         End Select
       End Get
     End Property
 
-    Public ReadOnly Property DisasterDoubleTime(Week As Integer) As Double
+    Public ReadOnly Property DisasterDoubleTime(Week As Integer, period_id As Integer) As Double
       Get
 
         If DisasterPayRules.Count() = 0 Or IsExempt Then Return 0
 
-        If Week = 0 Then Return DisasterDoubleTime(1) + DisasterDoubleTime(2)
+        If Week = 0 Then Return DisasterDoubleTime(1, period_id) + DisasterDoubleTime(2, period_id)
 
         Dim hours As Double = 0
 
         For Each t In Week_TL(Week)
-          If t.DisasterWorkHours > 0 Then
-            If t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.DisasterNormalScheduledHours <= 0 Then
-              hours += t.DisasterWorkHoursByRule(1) + t.DisasterWorkHoursByRule(2) + t.BreakCreditHours
-            Else
-              If t.DisasterWorkHoursByRule(2) > 0 Then
-                hours += t.DisasterWorkHoursByRule(2) + t.BreakCreditHours
-              End If
-            End If
-
+          Dim dwh_list As List(Of DisasterWorkHours)
+          If period_id = 0 Then
+            dwh_list = t.DisasterWorkHoursList
+          Else
+            dwh_list = (From d In t.DisasterWorkHoursList
+                        Where d.DisasterPeriodId = period_id
+                        Select d).ToList()
           End If
+
+          For Each dwh In dwh_list
+            If dwh.DisasterWorkHours > 0 Then
+              If t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.DisasterNormalScheduledHours <= 0 Then
+                hours += dwh.DisasterWorkHoursByRule(1) + dwh.DisasterWorkHoursByRule(2) + t.BreakCreditHours
+              Else
+                If dwh.DisasterWorkHoursByRule(2) > 0 Then
+                  hours += dwh.DisasterWorkHoursByRule(2) + t.BreakCreditHours
+                End If
+              End If
+
+            End If
+          Next
         Next
         Return Math.Max(hours, 0)
         'If IsExempt Then
@@ -500,61 +526,51 @@
       End Get
     End Property
 
-    Public ReadOnly Property DisasterOverTime(Week As Integer) As Double
+    Public ReadOnly Property DisasterOverTime(Week As Integer, period_id As Integer) As Double
       Get
         If DisasterPayRules.Count() = 0 Or IsExempt Then Return 0
 
-        If Week = 0 Then Return DisasterOverTime(1) + DisasterOverTime(2)
+        If Week = 0 Then Return DisasterOverTime(1, period_id) + DisasterOverTime(2, period_id)
 
         Dim hours As Double = 0
 
         For Each t In Week_TL(Week)
-          If t.DisasterWorkHours > 0 Then
-            If t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.DisasterNormalScheduledHours <= 0 Then
-              ' these would be double time
-            Else
-              If t.DisasterWorkHoursByRule(2) > 0 Then 'if there are any full activation hours on this day, we don't check to see if they marked the day as normally scheduled.
-                hours += t.DisasterWorkHoursByRule(1)
-              Else
+          Dim dwh_list As List(Of DisasterWorkHours)
+          If period_id = 0 Then
+            dwh_list = t.DisasterWorkHoursList
+          Else
+            dwh_list = (From d In t.DisasterWorkHoursList
+                        Where d.DisasterPeriodId = period_id
+                        Select d).ToList()
+          End If
+          For Each dwh In dwh_list
+
+            If dwh.DisasterWorkHours > 0 Then
+              If (t.WorkDate.DayOfWeek = DayOfWeek.Sunday And t.DisasterNormalScheduledHours > 0) Or
+                t.WorkDate.DayOfWeek <> DayOfWeek.Sunday Then
+
                 If t.DisasterNormalScheduledHours > 0 Then
 
-                  Dim difference = t.WorkHours + t.BreakCreditHours - t.DisasterNormalScheduledHours
+                  Dim difference = t.WorkHours + t.BreakCreditHours - t.DisasterNormalScheduledHours - dwh.DisasterWorkHoursByRule(2)
                   If difference > 0 Then
-                    If difference > t.DisasterWorkHoursByRule(1) + t.BreakCreditHours Then
-                      hours += t.DisasterWorkHoursByRule(1) + t.BreakCreditHours
+                    If difference > dwh.DisasterWorkHoursByRule(1) + t.BreakCreditHours Then
+                      hours += dwh.DisasterWorkHoursByRule(1) + t.BreakCreditHours
                     Else
                       hours += difference
                     End If
                   End If
 
-
-                  'hours += (t.DisasterWorkHoursByRule(1) + t.BreakCreditHours) - t.DisasterNormalScheduledHours
                 Else
-                  hours += t.DisasterWorkHoursByRule(1) + t.BreakCreditHours
+                  hours += dwh.DisasterWorkHoursByRule(1) + t.BreakCreditHours
                 End If
+
               End If
 
             End If
-          End If
-
+          Next
 
         Next
         Return Math.Max(hours, 0)
-
-        'If IsExempt Then
-        '  Return 0
-        'Else
-        '  'old 8/31/2019
-        '  'Return (From t In Week_TL(Week)
-        '  '        Where t.DisasterRule = 2 And
-        '  '            t.WorkHours + t.BreakCreditHours > 8 And
-        '  '          t.DoubleTimeHours = 0
-        '  '        Select t.WorkHours + t.BreakCreditHours - 8).Sum
-        '  Return (From t In Week_TL(Week)
-        '          Where t.WorkHours + t.BreakCreditHours > 8 And
-        '            t.DoubleTimeHours = 0
-        '          Select t.WorkHours + t.BreakCreditHours - 8).Sum
-        'End If
       End Get
     End Property
 
@@ -565,33 +581,44 @@
       End Get
     End Property
 
-    Public ReadOnly Property DisasterStraightTime(Week As Integer) As Double
+    Public ReadOnly Property DisasterStraightTime(Week As Integer, period_id As Integer) As Double
       Get
         If DisasterPayRules.Count() = 0 Or Not IsExempt Then Return 0
 
-        If Week = 0 Then Return DisasterStraightTime(1) + DisasterStraightTime(2)
+        If Week = 0 Then Return DisasterStraightTime(1, period_id) + DisasterStraightTime(2, period_id)
 
         Dim hours As Double = 0
 
         For Each t In Week_TL(Week)
-          If t.DisasterWorkHoursByRule(2) > 0 Then
-            hours += t.DisasterWorkHoursByRule(2) ' these hours are straighttime regardless
+          Dim dwh_list As List(Of DisasterWorkHours)
+          If period_id = 0 Then
+            dwh_list = t.DisasterWorkHoursList
           Else
-            If t.DisasterNormalScheduledHours > 0 Then
-              Dim difference = t.WorkHours - t.DisasterNormalScheduledHours - t.DisasterWorkHoursByRule(0)
-              If difference > 0 Then
-                If difference > t.DisasterWorkHoursByRule(1) Then
-                  hours += t.DisasterWorkHoursByRule(1)
-                Else
-                  hours += difference
-                End If
-              End If
-            Else
-              hours += t.DisasterWorkHoursByRule(1)
-            End If
+            dwh_list = (From d In t.DisasterWorkHoursList
+                        Where d.DisasterPeriodId = period_id
+                        Select d).ToList()
           End If
-          'hours += (difference - t.DisasterNormalScheduledHours)
+          For Each dwh In dwh_list
 
+
+            If dwh.DisasterWorkHoursByRule(2) > 0 Then
+              hours += dwh.DisasterWorkHoursByRule(2) ' these hours are straighttime regardless
+            Else
+              If t.DisasterNormalScheduledHours > 0 Then
+                Dim difference = t.WorkHours - t.DisasterNormalScheduledHours - dwh.DisasterWorkHoursByRule(0)
+                If difference > 0 Then
+                  If difference > dwh.DisasterWorkHoursByRule(1) Then
+                    hours += dwh.DisasterWorkHoursByRule(1)
+                  Else
+                    hours += difference
+                  End If
+                End If
+              Else
+                hours += dwh.DisasterWorkHoursByRule(1)
+              End If
+            End If
+            'hours += (difference - t.DisasterNormalScheduledHours)
+          Next
         Next
         Return Math.Max(hours, 0)
         'If IsExempt Then
@@ -810,9 +837,9 @@
           'newDiff = Regular(Week) - Double_Time(Week) - Comp_Time_Earned(Week) - 40 - Non_Working_Paid_Time(Week)
           Select Case Week
             Case 1, 2
-              Diff = Regular(Week) + DisasterRegular(Week) -
+              Diff = Regular(Week) + DisasterRegular(Week, 0) -
                 Double_Time(Week) - Comp_Time_Earned(Week) -
-                DisasterDoubleTime(Week) - 40
+                DisasterDoubleTime(Week, 0) - 40
               Return Math.Max(Diff, 0)
             Case Else
               Return Overtime(1) + Overtime(2)
@@ -832,8 +859,8 @@
               diff = Total_Hours(Week) - 40 - Overtime(Week) -
                 Comp_Time_Earned(Week) - Double_Time(Week) -
                 (HolidayHoursWorked(Week) - HolidayHoursWorkedDifference(Week)) -
-                DisasterStraightTime(Week) - DisasterDoubleTime(Week) -
-                DisasterOverTime(Week)
+                DisasterStraightTime(Week, 0) - DisasterDoubleTime(Week, 0) -
+                DisasterOverTime(Week, 0)
 
 
               'If diff > 0 Then Return diff Else Return 0
@@ -924,27 +951,31 @@
             End If
           End If
 
-          If t.DisasterWorkHours > 0 And t.DisasterWorkType.Trim.Length = 0 Then
-            ErrorList.Add("You must select what type of work was performed on the disaster on " & t.WorkDate.ToShortDateString & ".")
-          End If
+          For Each dwh In t.DisasterWorkHoursList
 
-          If t.DisasterWorkHours > t.WorkHours Then
-            ErrorList.Add("The work hours entered on " & t.WorkDate.ToShortDateString & " are less than the disaster work hours entered.  If the disaster work hours are correct, then the work hours should be updated to reflect this.")
-          End If
+            If dwh.DisasterWorkHours > 0 And dwh.DisasterWorkType.Trim.Length = 0 Then
+              ErrorList.Add("You must select what type of work was performed for the special event hours on " & t.WorkDate.ToShortDateString & ".")
+            End If
+
+            If t.DisasterWorkHours > t.WorkHours Then
+              ErrorList.Add("The work hours entered on " & t.WorkDate.ToShortDateString & " are less than the special event work hours entered.  If the special event work hours are correct, then the work hours should be updated to reflect this.")
+            End If
+
+          Next
+
+          'If t.DisasterWorkHours > 0 And t.DisasterWorkHoursByRule.ContainsKey(2) Then
+
+          '  If t.DisasterWorkHoursByRule(2) > 0 And t.DisasterNormalScheduledHours > 0 Then
+          '    ErrorList.Add("No one was scheduled to work on " & t.WorkDate.ToShortDateString & ".  The normally scheduled hours should be removed.")
+          '  End If
+
+          '  If t.DisasterWorkTimes.Length = 0 Then
+          '    ErrorList.Add("The disaster work hours on " & t.WorkDate.ToShortDateString & " will need to be re-entered.")
+          '  End If
+
+          'End If
           If t.ScheduledLWOPHours > 0 And EmployeeData.isFulltime Then
             ErrorList.Add("Scheduled LWOP hours used on " & t.WorkDate.ToShortDateString & ".  These are to be used by part time employees only.")
-          End If
-
-          If t.DisasterWorkHours > 0 And t.DisasterWorkHoursByRule.ContainsKey(2) Then
-
-            If t.DisasterWorkHoursByRule(2) > 0 And t.DisasterNormalScheduledHours > 0 Then
-              ErrorList.Add("No one was scheduled to work on " & t.WorkDate.ToShortDateString & ".  The normally scheduled hours should be removed.")
-            End If
-
-            If t.DisasterWorkTimes.Length = 0 Then
-              ErrorList.Add("The disaster work hours on " & t.WorkDate.ToShortDateString & " will need to be re-entered.")
-            End If
-
           End If
 
           If t.AdminHours >= 8 Then

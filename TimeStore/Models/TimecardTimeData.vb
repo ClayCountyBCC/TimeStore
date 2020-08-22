@@ -26,8 +26,8 @@ Namespace Models
     ' -1 = no choice was made
     ' 0 = I was not supposed to work that day
     ' > 0 I was supposed to work.
-    Property DisasterWorkTimesByRule As Dictionary(Of Integer, List(Of TimeSpan)) = New Dictionary(Of Integer, List(Of TimeSpan))
-    Property DisasterWorkHoursByRule As Dictionary(Of Integer, Double) = New Dictionary(Of Integer, Double)
+    'Property DisasterWorkTimesByRule As Dictionary(Of Integer, List(Of TimeSpan)) = New Dictionary(Of Integer, List(Of TimeSpan))
+    'Property DisasterWorkHoursByRule As Dictionary(Of Integer, Double) = New Dictionary(Of Integer, Double)
     'Property DisasterRule As Integer = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
@@ -77,12 +77,12 @@ Namespace Models
     End Function
 
     Public Sub New()
-      DisasterWorkHoursByRule(0) = 0
-      DisasterWorkHoursByRule(1) = 0
-      DisasterWorkHoursByRule(2) = 0
-      DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
-      DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
-      DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
+      'DisasterWorkHoursByRule(0) = 0
+      'DisasterWorkHoursByRule(1) = 0
+      'DisasterWorkHoursByRule(2) = 0
+      'DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
+      'DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
+      'DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
     End Sub
 
     Public Sub New(STD As Saved_TimeStore_Data)

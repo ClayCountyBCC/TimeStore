@@ -1288,6 +1288,8 @@
     Private Sub Add_Timelist(e As TC_EPP)
       ' going to capture how much time we pull out for the approvaltimelist
       Try
+        Dim PeriodList = (From dpr In e.DisasterPayRules
+                          Select dpr.period_id, dpr.period_name, dpr.finplus_project_code).Distinct.ToList()
 
 
         Dim approvaltime As Double = 0
@@ -1322,7 +1324,10 @@
         If e.Out_Of_Class(0) > 0 Then
           calculatedTimeList.Add(New WorkType("Regular - Out of Class", e.Out_Of_Class(0), 0, "002", "", Payrate * 1.05))
         End If
-        calculatedTimeList.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(0), 0, "299", "", Payrate))
+        For Each dpr In PeriodList
+          calculatedTimeList.Add(New WorkType("Disaster Regular " + dpr.period_name, e.Calculated_DisasterRegular(0, dpr.period_id), 0, "299", dpr.finplus_project_code, Payrate))
+        Next
+
         'calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", GetPayrate("095", Payrate)))
         calculatedTimeList.Add(New WorkType("Term hours", e.Term_Hours(0), 2, "095", "", Payrate))
         'calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", GetPayrate("090", Payrate)))
@@ -1386,7 +1391,10 @@
                 'c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", Payrate))
                 'c.Add(New WorkType("Sick", e.Sick_All(a), 4, "110", Payrate))
                 'c.Add(New WorkType("Vehicle", e.TakeHomeVehicle(a), 15, "046", GetPayrate("046", Payrate)))
-                c.Add(New WorkType("Disaster Regular", e.Calculated_DisasterRegular(a), 0, "299", "", Payrate))
+                For Each dpr In PeriodList
+                  c.Add(New WorkType("Disaster Regular " + dpr.period_name, e.Calculated_DisasterRegular(a, dpr.period_id), 0, "299", dpr.finplus_project_code, Payrate))
+                Next
+
                 c.Add(New WorkType("Term Hours", e.Term_Hours(a), 2, "095", "", Payrate))
                 c.Add(New WorkType("LWOP", e.LWOP_All(a), 2, "090", "", Payrate))
                 c.Add(New WorkType("Vacation", e.Vacation(a), 3, "100", "", Payrate))
@@ -1397,15 +1405,19 @@
             c.Add(New WorkType("Unscheduled OT 1.5", e.Overtime(a), 1, "231", "", Payrate))
             c.Add(New WorkType("Unscheduled OT 2.0", e.Double_Time(a), 9, "232", "", Payrate))
             c.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(a), 11, "300", "", Payrate))
-            c.Add(New WorkType("Disaster Hours 1.5", e.DisasterOverTime(a), 11, "302", "", Payrate))
-            c.Add(New WorkType("Disaster Hours 2.0", e.DisasterDoubleTime(a), 11, "303", "", Payrate))
+            For Each dpr In PeriodList
+              c.Add(New WorkType("Disaster Hours 1.5 " + dpr.period_name, e.DisasterOverTime(a, dpr.period_id), 11, "302", dpr.finplus_project_code, Payrate))
+              c.Add(New WorkType("Disaster Hours 2.0 " + dpr.period_name, e.DisasterDoubleTime(a, dpr.period_id), 11, "303", dpr.finplus_project_code, Payrate))
+            Next
             c.Add(New WorkType("Comp Time Banked", e.Comp_Time_Earned(a), 10, "120", "", Payrate))
             c.Add(New WorkType("Comp Time Used", e.Comp_Time_Used(a), 11, "121", "", Payrate))
           Next
 
         Else
           calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.DisasterAdminLeave(0), 11, "300", "", Payrate))
-          calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.DisasterStraightTime(0), 11, "301", "", Payrate))
+          For Each dpr In PeriodList
+            calculatedTimeList.Add(New WorkType("Disaster Hours 1.0 " + dpr.period_name, e.DisasterStraightTime(0, dpr.period_id), 11, "301", dpr.finplus_project_code, Payrate))
+          Next
           'calculatedTimeList.Add(New WorkType("Disaster Regular", e.DisasterRegular(0), 0, "299", Payrate))
           approvalTimeList.Add(New WorkType("Admin", e.Admin_Total(0), 0, "002", "", Payrate))
           approvaltime += e.Admin(0)
@@ -1414,8 +1426,9 @@
 
         End If
         'timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0), 0), 0, "002"))
-        timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0) + e.DisasterStraightTime(0) + e.DisasterOverTime(0) + e.DisasterDoubleTime(0) - approvaltime, 0), 0, "002", ""))
-        timeList.Add(New WorkType("Disaster Regular", Math.Max(e.DisasterRegular(0), 0), 0, "299", ""))
+        timeList.Add(New WorkType("Regular", Math.Max(e.Regular(0) + e.DisasterStraightTime(0, 0) + e.DisasterOverTime(0, 0) + e.DisasterDoubleTime(0, 0) - approvaltime, 0), 0, "002", ""))
+        timeList.Add(New WorkType("Disaster Regular", Math.Max(e.DisasterRegular(0, 0), 0), 0, "299", ""))
+
         'timeList.Add(New WorkType("Regular", Math.Max(e.Calculated_Regular(0) - approvaltime, 0), 0, "002"))
         timeList.RemoveAll(Function(x) x.hours = 0)
 

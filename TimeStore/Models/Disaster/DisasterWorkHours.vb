@@ -8,8 +8,16 @@
     Property DisasterWorkHours As Decimal
     Property DisasterWorkType As String
     Property DateAdded As Date
+    Property DisasterWorkTimesByRule As New Dictionary(Of Integer, List(Of TimeSpan))
+    Property DisasterWorkHoursByRule As New Dictionary(Of Integer, Double)
 
     Public Sub New()
+      DisasterWorkHoursByRule(0) = 0
+      DisasterWorkHoursByRule(1) = 0
+      DisasterWorkHoursByRule(2) = 0
+      DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
+      DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
+      DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
     End Sub
 
 
