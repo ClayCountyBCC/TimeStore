@@ -634,7 +634,18 @@
           <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <hours-display ng-show="TCTD.AdminDisaster.value > 0" tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <md-input-container ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                              class="shortpaddingbottom shortInput">
+            <label class="longerLabel"
+                   style="width: auto;">{{ee.event_name}} Admin Hours</label>
+            <input ng-model="ee.disaster_work_hours.DisasterAdminHours"
+                   type="number"
+                   min="0"
+                   max="24"
+                   step=".25" 
+                   ng-change="calculateTotalHours()" />
+          </md-input-container>
           <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
 
@@ -2696,73 +2707,82 @@
 <script type="text/ng-template" id="TimeCardHeader.tmpl.html">
 
     <div class="md-whiteframe-z1" ng-cloak>
-        <md-grid-list ng-cloak
-                      md-cols="3"
-                      md-cols-md="2"
-                      md-cols-sm="1"
-                      md-gutter="8px"
-                      md-row-height="28px">
+      <md-grid-list ng-cloak
+                    md-cols="3"
+                    md-cols-md="2"
+                    md-cols-sm="1"
+                    md-gutter="8px"
+                    md-row-height="28px">
 
-            <md-grid-tile md-rowspan="2"
-                          md-colspan="1"
-                          md-rowspan-md="4"
-                          md-rowspan-sm="1"
-                          md-colspan-md="1"
-                          md-colspan-sm="1">
+        <md-grid-tile md-rowspan="2"
+                      md-colspan="1"
+                      md-rowspan-md="4"
+                      md-rowspan-sm="1"
+                      md-colspan-md="1"
+                      md-colspan-sm="1">
 
-                <div layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <h4>
-                        {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
-                    </h4>
-                </div>
-            </md-grid-tile>
+          <div layout="row"
+               layout-align="center center"
+               layout-wrap>
+            <h4>
+              {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
+            </h4>
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.title }} ( {{ ::timecard.classify }} )
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.title }} ( {{ ::timecard.classify }} )
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    <span>
-                        Payrate {{ ::timecard.shortPayrate}} {{ ::timecard.exemptStatus }}
-                        <md-tooltip md-direction="right">
-                            {{ ::timecard.Payrate }}
-                        </md-tooltip>
-                    </span>
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            <md-button class="md-primary"
+                       style="text-decoration: underline;"
+                       ng-click="showPayrate = !showPayrate;">
+              {{ showPayrate ? 'Hide' : 'Show' }} Payrate
+            </md-button>
+            <span style="margin-right: .5em;"
+                  ng-show="showPayrate">
+              Payrate {{ ::timecard.shortPayrate }}
+              <md-tooltip md-direction="right">
+                ${{  ::timecard.Payrate }}
+              </md-tooltip>
+            </span>
+            <span>
+              {{ ::timecard.exemptStatus }}
+            </span>
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
+          </div>
+        </md-grid-tile>
 
-        </md-grid-list>
+      </md-grid-list>
 
         <md-grid-list ng-if="shortheader === false"
                       md-cols="4"
@@ -2972,7 +2992,7 @@
                  flex="100"
                  layout="row"
                  layout-align="center center"
-                 ng-repeat="wl in dl"
+                 ng-repeat="wl in dl track by $index"
                  layout-wrap>
             <div flex="100"
                  layout="row"

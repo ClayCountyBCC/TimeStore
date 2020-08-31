@@ -475,6 +475,7 @@
     <Compile Include="Models\Saved_Timestore_Data.vb" />
     <Compile Include="Models\Saved_Timestore_Data_To_Approve.vb" />
     <Compile Include="Models\TC_EPP.vb" />
+    <Compile Include="Models\TC_New_EPP.vb" />
     <Compile Include="Models\TelestaffTimeData.vb" />
     <Compile Include="Models\EmployeeOutput.vb" />
     <Compile Include="Models\Telestaff_Profile_Info.vb" />
@@ -483,9 +484,11 @@
     <Compile Include="Models\TimecardTimeException.vb" />
     <Compile Include="Models\Timecard_Access.vb" />
     <Compile Include="Models\Timeclock_Data.vb" />
+    <Compile Include="Models\TimeDefinition.vb" />
     <Compile Include="Models\TimeExceptions.vb" />
     <Compile Include="Models\MockEmployeePayPeriodData.vb" />
     <Compile Include="App_Code\ModuleMain.vb" />
+    <Compile Include="Models\TimeSegment.vb" />
     <Compile Include="Models\Timestore_Field.vb" />
     <Compile Include="Models\Timestore_Field_With_Hours.vb" />
     <Compile Include="Models\Hours_Approve_Display.vb" />

@@ -4,12 +4,18 @@
   Public Class DisasterWorkHours
     Property WorkHoursId As Long
     Property DisasterPeriodId As Integer
-    Property DisasterWorkTimes As String
-    Property DisasterWorkHours As Decimal
-    Property DisasterWorkType As String
+    Property DisasterWorkTimes As String = ""
+    Property DisasterWorkHours As Decimal = 0
+    Property DisasterWorkType As String = ""
+    Property DisasterAdminHours As Decimal = 0
     Property DateAdded As Date
     Property DisasterWorkTimesByRule As New Dictionary(Of Integer, List(Of TimeSpan))
     Property DisasterWorkHoursByRule As New Dictionary(Of Integer, Double)
+    Property DisasterHoursTotal As Double = 0 ' This value is different than DisasterWorkHours because it is the total number of hours we've identified as disasterhours, not what the employee has indicated are disasterhours.
+    Property DisasterHoursRegular As Double = 0
+    Property DisasterHoursStraight As Double = 0
+    Property DisasterHoursOvertime As Double = 0
+    Property DisasterHoursDoubletime As Double = 0
 
     Public Sub New()
       DisasterWorkHoursByRule(0) = 0
@@ -29,6 +35,7 @@
           ,DW.disaster_work_times DisasterWorkTimes
           ,DW.disaster_work_hours DisasterWorkHours
           ,DW.disaster_work_type DisasterWorkType
+          ,DW.disaster_admin_hours DisasterAdminHours
           ,DW.date_added DateAdded
         FROM TimeStore.dbo.Disaster_Work_Hours DW
         INNER JOIN Timestore.dbo.Work_Hours W ON DW.work_hours_id = W.work_hours_id
@@ -91,7 +98,9 @@
       Dim dt = BuildDataTable()
       Try
         For Each dwh In DisasterWorkHoursList
-          dt.Rows.Add(dwh.DisasterPeriodId, dwh.DisasterWorkTimes, dwh.DisasterWorkType, dwh.DisasterWorkHours)
+          If dwh.DisasterWorkTimes Is Nothing Then dwh.DisasterWorkTimes = ""
+          If dwh.DisasterWorkType Is Nothing Then dwh.DisasterWorkType = ""
+          dt.Rows.Add(dwh.DisasterPeriodId, dwh.DisasterWorkTimes, dwh.DisasterWorkType, dwh.DisasterWorkHours, dwh.DisasterAdminHours)
         Next
       Catch ex As Exception
         Dim e As New ErrorLog(ex, "")
@@ -106,6 +115,7 @@
       dt.Columns.Add("disaster_work_times", Type.GetType("System.String"))
       dt.Columns.Add("disaster_work_type", Type.GetType("System.String"))
       dt.Columns.Add("disaster_work_hours", Type.GetType("System.Decimal"))
+      dt.Columns.Add("disaster_admin_hours", Type.GetType("System.Decimal"))
       Return dt
     End Function
 

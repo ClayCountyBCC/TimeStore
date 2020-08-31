@@ -456,7 +456,18 @@
           <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <hours-display ng-show="TCTD.AdminDisaster.value > 0" tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <md-input-container ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                              class="shortpaddingbottom shortInput">
+            <label class="longerLabel"
+                   style="width: auto;">{{ee.event_name}} Admin Hours</label>
+            <input ng-model="ee.disaster_work_hours.DisasterAdminHours"
+                   type="number"
+                   min="0"
+                   max="24"
+                   step=".25" 
+                   ng-change="calculateTotalHours()" />
+          </md-input-container>
           <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
 

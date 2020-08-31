@@ -191,6 +191,9 @@
 
       function checkAdmin(rawtctd)
       {
+        
+        let newAdminDisaster = rawtctd.DisasterWorkHoursList.reduce(function (j, current) { return { DisasterAdminHours: j.DisasterAdminHours + current.DisasterAdminHours }; }, 0);
+        let adminDisasterValue = newAdminDisaster.DisasterAdminHours;
         return (
           rawtctd.AdminBereavement +
           rawtctd.AdminDisaster +
@@ -198,7 +201,8 @@
           rawtctd.AdminJuryDuty +
           rawtctd.AdminMilitaryLeave +
           rawtctd.AdminOther +
-          rawtctd.AdminWorkersComp
+          rawtctd.AdminWorkersComp + 
+          adminDisasterValue
         );
       }
 
@@ -265,19 +269,20 @@
             dwh.DisasterWorkTimes = sT.join(" ");
             dwh.DisasterSelectedTimes = sT;
             dwh.DisasterSelectedTimesDisplay = dwh.DisasterWorkTimes;
-            // load the saved data into the EventsByWorkDate
-            for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+          }
+          // load the saved data into the EventsByWorkDate
+          for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+          {
+            let ewd = tctd.EventsByWorkDate[ff];
+            if (ewd.event_id === dwh.DisasterPeriodId)
             {
-              let ewd = tctd.EventsByWorkDate[ff];
-              if (ewd.event_id === dwh.DisasterPeriodId)
-              {
-                let dwh_ewd = ewd.disaster_work_hours;
-                dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
-                dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
-                dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
-                dwh_ewd.WorkHoursId = dwh.WorkHoursId;
-                dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
-              }
+              let dwh_ewd = ewd.disaster_work_hours;
+              dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
+              dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
+              dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
+              dwh_ewd.WorkHoursId = dwh.WorkHoursId;
+              dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
+              dwh_ewd.DisasterAdminHours = dwh.DisasterAdminHours;
             }
           }
 
@@ -341,7 +346,6 @@
               var test = moment(new Date(j.work_date)).format("M/D/YYYY");
               return test === wd_short_date;
             });
-          console.log('events found', events);
           for (let i = 0; i < events.length; i++)
           {
             let event = events[i];
@@ -354,6 +358,7 @@
               DisasterTimesError: "",
               DisasterWorkTimes: "",
               DisasterWorkHours: 0,
+              DisasterAdminHours: 0,
               DisasterWorkType: ""
             };
           }
@@ -489,6 +494,10 @@
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminDisaster.value);
+        for (let i = 0; i < tctd.EventsByWorkDate.length; i++)
+        {
+          th += getValue(tctd.EventsByWorkDate[i].disaster_work_hours.DisasterAdminHours);
+        }
         th += getValue(tctd.AdminJuryDuty.value);
         th += getValue(tctd.AdminMilitaryLeave.value);
         th += getValue(tctd.AdminWorkersComp.value);
@@ -1047,14 +1056,15 @@
         {
           let ewd = tctd.EventsByWorkDate[ee];
           let dwh = ewd.disaster_work_hours;
-          if (dwh.DisasterWorkHours > 0)
+          if (dwh.DisasterWorkHours > 0 || dwh.DisasterAdminHours > 0)
           {
             let new_dwh = {
               WorkHoursId: dwh.WorkHoursId,
               DisasterPeriodId: dwh.DisasterPeriodId,
               DisasterWorkHours: dwh.DisasterWorkHours,
               DisasterWorkType: dwh.DisasterWorkType,
-              DisasterWorkTimes: dwh.DisasterWorkTimes
+              DisasterWorkTimes: dwh.DisasterWorkTimes ? dwh.DisasterWorkTimes : "",
+              DisasterAdminHours: dwh.DisasterAdminHours
             };
             tctd.DisasterWorkHoursList.push(new_dwh);
           }

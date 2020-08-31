@@ -49656,6 +49656,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function checkAdmin(rawtctd)
       {
+        
+        let newAdminDisaster = rawtctd.DisasterWorkHoursList.reduce(function (j, current) { return { DisasterAdminHours: j.DisasterAdminHours + current.DisasterAdminHours }; }, 0);
+        let adminDisasterValue = newAdminDisaster.DisasterAdminHours;
         return (
           rawtctd.AdminBereavement +
           rawtctd.AdminDisaster +
@@ -49663,7 +49666,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           rawtctd.AdminJuryDuty +
           rawtctd.AdminMilitaryLeave +
           rawtctd.AdminOther +
-          rawtctd.AdminWorkersComp
+          rawtctd.AdminWorkersComp + 
+          adminDisasterValue
         );
       }
 
@@ -49730,19 +49734,20 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             dwh.DisasterWorkTimes = sT.join(" ");
             dwh.DisasterSelectedTimes = sT;
             dwh.DisasterSelectedTimesDisplay = dwh.DisasterWorkTimes;
-            // load the saved data into the EventsByWorkDate
-            for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+          }
+          // load the saved data into the EventsByWorkDate
+          for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+          {
+            let ewd = tctd.EventsByWorkDate[ff];
+            if (ewd.event_id === dwh.DisasterPeriodId)
             {
-              let ewd = tctd.EventsByWorkDate[ff];
-              if (ewd.event_id === dwh.DisasterPeriodId)
-              {
-                let dwh_ewd = ewd.disaster_work_hours;
-                dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
-                dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
-                dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
-                dwh_ewd.WorkHoursId = dwh.WorkHoursId;
-                dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
-              }
+              let dwh_ewd = ewd.disaster_work_hours;
+              dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
+              dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
+              dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
+              dwh_ewd.WorkHoursId = dwh.WorkHoursId;
+              dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
+              dwh_ewd.DisasterAdminHours = dwh.DisasterAdminHours;
             }
           }
 
@@ -49806,7 +49811,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               var test = moment(new Date(j.work_date)).format("M/D/YYYY");
               return test === wd_short_date;
             });
-          console.log('events found', events);
           for (let i = 0; i < events.length; i++)
           {
             let event = events[i];
@@ -49819,6 +49823,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               DisasterTimesError: "",
               DisasterWorkTimes: "",
               DisasterWorkHours: 0,
+              DisasterAdminHours: 0,
               DisasterWorkType: ""
             };
           }
@@ -49954,6 +49959,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminDisaster.value);
+        for (let i = 0; i < tctd.EventsByWorkDate.length; i++)
+        {
+          th += getValue(tctd.EventsByWorkDate[i].disaster_work_hours.DisasterAdminHours);
+        }
         th += getValue(tctd.AdminJuryDuty.value);
         th += getValue(tctd.AdminMilitaryLeave.value);
         th += getValue(tctd.AdminWorkersComp.value);
@@ -50512,14 +50521,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           let ewd = tctd.EventsByWorkDate[ee];
           let dwh = ewd.disaster_work_hours;
-          if (dwh.DisasterWorkHours > 0)
+          if (dwh.DisasterWorkHours > 0 || dwh.DisasterAdminHours > 0)
           {
             let new_dwh = {
               WorkHoursId: dwh.WorkHoursId,
               DisasterPeriodId: dwh.DisasterPeriodId,
               DisasterWorkHours: dwh.DisasterWorkHours,
               DisasterWorkType: dwh.DisasterWorkType,
-              DisasterWorkTimes: dwh.DisasterWorkTimes
+              DisasterWorkTimes: dwh.DisasterWorkTimes ? dwh.DisasterWorkTimes : "",
+              DisasterAdminHours: dwh.DisasterAdminHours
             };
             tctd.DisasterWorkHoursList.push(new_dwh);
           }
@@ -54479,21 +54489,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 })();
 
 /* global moment, _ */
-(function () {
-    "use strict";
-    angular.module('timestoreApp')
-        .directive('timecardHeader', function () {
-            return {
-                restrict: 'E',
-                templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
-                scope: {
-                    timecard: '=',
-                    shortheader: '='
-                },
-                controller: function ($scope) {
-                }
-            };
-        });
+(function ()
+{
+  "use strict";
+  angular.module('timestoreApp')
+    .directive('timecardHeader', function ()
+    {
+      return {
+        restrict: 'E',
+        templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
+        scope: {
+          timecard: '=',
+          shortheader: '='
+        },
+        controller: function ($scope)
+        {
+          $scope.showPayrate = false;
+        }
+      };
+    });
 }());
 /* global moment, _ */
 (function () {

@@ -62,9 +62,11 @@ Namespace Models
     Property OutOfClass As Boolean = False
     ReadOnly Property Total_Non_Working_Hours As Double
       Get
-        Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed + AdminHours +
+        Dim NewAdminDisaster = (From dwh In DisasterWorkHoursList
+                                Select dwh.DisasterAdminHours).Sum
+        Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed +
           AdminBereavement + AdminDisaster + AdminWorkersComp + AdminJuryDuty + AdminMilitaryLeave +
-          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours
+          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours + NewAdminDisaster
       End Get
     End Property
 
@@ -383,6 +385,17 @@ Namespace Models
         dt.Rows.Add(19, "", AdminDisaster)
       End If
       Return dt
+    End Function
+
+    Public Shared Function GetDisasterWorkHoursListByWeekAndPeriod(Week As Integer, PeriodId As Integer, TCTD As TimecardTimeData) As List(Of DisasterWorkHours)
+      If PeriodId = 0 Then
+        Return TCTD.DisasterWorkHoursList
+      Else
+        Return (From d In TCTD.DisasterWorkHoursList
+                Where d.DisasterPeriodId = PeriodId
+                Select d).ToList()
+      End If
+
     End Function
 
   End Class
