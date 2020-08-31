@@ -94,7 +94,7 @@
     // 0 if they are not normally scheduled on this day
     // > 0 if they are normally scheduled
     $scope.NormallyScheduled = null;
-
+    
     if ($scope.TCTD.DisasterNormalScheduledHours === 0)
     {
       $scope.NormallyScheduled = false;
@@ -711,6 +711,10 @@
         $scope.timecard,
         $scope.workDate
       );
+      $scope.NormallyScheduled = null;
+      $scope.ExpandDisasterHours = false;
+      $scope.warningList = [];
+      $scope.errorList = [];
     };
 
     function handleExemptShiftDuration()
