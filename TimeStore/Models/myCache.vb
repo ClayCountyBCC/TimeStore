@@ -50,9 +50,16 @@ Namespace Models
         Case "disaster_rules"
           Dim ppe As Date = Date.Parse(s(1))
           Return DisasterEventRules.Get_Disaster_Rules(ppe)
-        Case "disaster_period"
-          Dim ppe As Date = Date.Parse(s(1))
-          Return DisasterPeriod.Get_Disaster_Period(ppe)
+        Case "eventsbyworkdate"
+          Dim pps As Date = Date.Parse(s(1))
+          Return EventsByWorkDate.Get_By_PayPeriod(pps)
+
+        Case "events_by_workdate_excluding_payrule_zero"
+          Dim pps As Date = Date.Parse(s(1))
+          Return EventsByWorkDate.Get_By_PayPeriod_Excluding_Pay_Rule_Zero(s(1))
+        'Case "disaster_period"
+        '  Dim ppe As Date = Date.Parse(s(1))
+        '  Return DisasterPeriod.Get_Disaster_Period(ppe)
         Case "birthdays"
           Return Namedday.GetAllBirthdays()
         Case "allaccessdict"

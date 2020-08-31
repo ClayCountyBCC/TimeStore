@@ -35,6 +35,8 @@
         "app/payroll/PayrollOverallProcess.tmpl.html",
         "app/payroll/PayrollEditProcess.tmpl.html",
         "app/payroll/PayrollReviewProcess.tmpl.html"
+        "app/paystub/PaystubView.controller.tmpl.html",
+        "app/addtime/DisasterHours.directive.tmpl.html"
       ],
         "minify": {
             "enabled": true
@@ -104,6 +106,8 @@
         "app/payroll/PayrollOverallProcess.Controller.js",
         "app/payroll/PayrollEditProcess.Controller.js",
         "app/payroll/PayrollReviewProcess.Controller.js"
+        "app/paystub/PaystubView.controller.js",
+        "app/addtime/DisasterHours.directive.js"
       ],
         "minify": {
             "enabled": true

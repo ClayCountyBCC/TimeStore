@@ -273,7 +273,6 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-
         </div>
 
         <div ng-if="showDisaster && TCTD.WorkHours.value > 0 && isCurrentPPD"
@@ -290,7 +289,7 @@
           </p>
           <md-input-container class="md-input-has-value"
                               flex="40">
-            <label>Are any of the hours worked related to {{ TCTD.DisasterName }}?</label>
+            <label>Are any of the hours worked for special events?</label>
             <md-radio-group ng-change="DisasterHoursChoice()"
                             flex="100"
                             layout="row"
@@ -302,6 +301,9 @@
               </md-radio-button>
               <md-radio-button ng-value="false" aria-label="No">
                 No
+                <md-tooltip md-direction="top">
+                  If you choose No here, any information you've entered into the special events section will be removed.
+                </md-tooltip>
               </md-radio-button>
             </md-radio-group>
           </md-input-container>
@@ -324,7 +326,7 @@
            layout-align="start center">
         <span flex="5"></span>
         <h5>
-          Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName }}
+          Show / Hide -- Special Event hours worked
         </h5>
       </div>
 
@@ -332,127 +334,149 @@
            style="margin-top: .5em;"
            layout="row"
            layout-align="center center"
-           layout-wrap
-           layout-padding
+           layout-wrap           
            flex="100">
 
-        <md-input-container class="md-input-has-value"
-                            flex="40">
-          <label>Are you normally scheduled to work on this date?</label>
-          <md-radio-group ng-change="NormallyScheduledChoice()"
-                          flex="100"
-                          layout="row"
-                          layout-align="space-around center"
-                          ng-model="NormallyScheduled"
-                          class="smaller">
-            <md-radio-button ng-value="true" aria-label="Yes">
-              Yes
-            </md-radio-button>
-            <md-radio-button ng-value="false" aria-label="No">
-              No
-            </md-radio-button>
-          </md-radio-group>
-        </md-input-container>
-
-        <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
-                            class="md-input-has-value"
-                            flex="60">
-          <label>Select the number of hours you normally work on this date</label>
-          <md-select ng-change="NormallyScheduledHoursSelected()"                     
-                     ng-model="TCTD.DisasterNormalScheduledHours">
-            <md-option ng-value="-1">Please Select</md-option>
-            <!--<md-option ng-value="1">1 hour</md-option>-->
-            <md-option ng-repeat="h in normallyScheduledHours track by $index"
-                       ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
-          </md-select>
-        </md-input-container>
-        <div ng-show="!ShowDisasterNormallyScheduledHours"
-             flex="60">
-
-        </div>
-        <p ng-if="normallyScheduledHoursError.length > 0"
-           flex="100"
-           layout="row"
-           class="warn">
-          {{ normallyScheduledHoursError }}
-        </p>
-
-        <md-input-container flex="40">
-          <label>Disaster Hours Worked</label>
-          <md-select md-on-close="calculateTotalHours()"
-                     flex="100"
-                     multiple
-                     ng-model="TCTD.disasterSelectedTimes"
-                     placeholder="Disaster Hours Worked"
-                     class="bigpaddingbottom">
-            <md-option ng-repeat="t in fullTimeList track by t.index"
-                       ng-value="t.index">
-              <span class="md-text">
-                {{t.display}}
-              </span>
-            </md-option>
-          </md-select>
-        </md-input-container>
-        <div layout="column"
-             layout-align="center center"
-             layout-gt-md="row"
-             layout-align-gt-md="space-around center"
-             layout-wrap
-             flex="55">
-          <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
-                     class="md-primary md-raised">
-            Copy Work Hours
-          </md-button>
-          <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
-        </div>
-        <div layout-padding
+        <div flex="100"
              layout="row"
+             layout-align="center center"
              layout-wrap
-             flex="100">
-          <p ng-if="disasterTimeError.length > 0"
+             layout-padding>
+
+
+          <md-input-container class="md-input-has-value"
+                              flex="40">
+            <label>Are you normally scheduled to work on this date?</label>
+            <md-radio-group ng-change="NormallyScheduledChoice()"
+                            flex="100"
+                            layout="row"
+                            layout-align="space-around center"
+                            ng-model="NormallyScheduled"
+                            class="smaller">
+              <md-radio-button ng-value="true" aria-label="Yes">
+                Yes
+              </md-radio-button>
+              <md-radio-button ng-value="false" aria-label="No">
+                No
+              </md-radio-button>
+            </md-radio-group>
+          </md-input-container>
+
+          <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
+                              class="md-input-has-value"
+                              flex="60">
+            <label>Select the number of hours you normally work on this date</label>
+            <md-select ng-change="NormallyScheduledHoursSelected()"
+                       ng-model="TCTD.DisasterNormalScheduledHours">
+              <md-option ng-value="-1">Please Select</md-option>              
+              <md-option ng-repeat="h in normallyScheduledHours track by $index"
+                         ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
+            </md-select>
+          </md-input-container>
+          <div ng-show="!ShowDisasterNormallyScheduledHours"
+               flex="60">
+
+          </div>
+          <p ng-if="normallyScheduledHoursError.length > 0"
              flex="100"
              layout="row"
              class="warn">
-            {{ disasterTimeError }}
+            {{ normallyScheduledHoursError }}
           </p>
-          <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
-          <md-input-container flex="40">
-            <label>Disaster Work Type</label>
-            <md-select md-on-close="checkDisasterWorkType()"
-                       flex="100"
-                       ng-model="TCTD.DisasterWorkType"
-                       placeholder="Disaster Work Type"
-                       class="bigpaddingbottom">
-              <md-option value="Debris Pickup">
-                Debris Pickup
-              </md-option>
-              <md-option value="Debris Monitoring">
-                Debris Monitoring
-              </md-option>
-              <md-option value="Call Center">
-                Call Center
-              </md-option>
-              <md-option value="Working in EOC">
-                Working in EOC
-              </md-option>
-              <md-option value="Building Repair">
-                Building Repair
-              </md-option>
-              <md-option value="Road Repair">
-                Road Repair
-              </md-option>
-              <md-option value="Other Repair">
-                Other Repair
-              </md-option>
-              <md-option value="Prep for Storm">
-                Prep for Storm
-              </md-option>
-              <md-option value="Not Listed">
-                Not Listed
-              </md-option>
-            </md-select>
-          </md-input-container>
         </div>
+        <!--event: "=",
+        fulltimelist: "<",
+        eventerror: "=",
+        validate: "&",
+        calculate: "&"-->
+        <div flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+
+
+          <disaster-hours flex="100"
+                          ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                          event="ee"
+                          fulltimelist="fullTimeList"                          
+                          calc="calculateTotalHours()"></disaster-hours>
+        </div>
+        <!--<md-input-container flex="40">
+    <label>Disaster Hours Worked</label>
+    <md-select md-on-close="calculateTotalHours()"
+               flex="100"
+               multiple
+               ng-model="TCTD.disasterSelectedTimes"
+               placeholder="Disaster Hours Worked"
+               class="bigpaddingbottom">
+      <md-option ng-repeat="t in fullTimeList track by t.index"
+                 ng-value="t.index">
+        <span class="md-text">
+          {{t.display}}
+        </span>
+      </md-option>
+    </md-select>
+  </md-input-container>
+  <div layout="column"
+       layout-align="center center"
+       layout-gt-md="row"
+       layout-align-gt-md="space-around center"
+       layout-wrap
+       flex="55">
+    <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+               class="md-primary md-raised">
+      Copy Work Hours
+    </md-button>
+    <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
+  </div>
+  <div layout-padding
+       layout="row"
+       layout-wrap
+       flex="100">
+    <p ng-if="disasterTimeError.length > 0"
+       flex="100"
+       layout="row"
+       class="warn">
+      {{ disasterTimeError }}
+    </p>
+    <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
+    <md-input-container flex="40">
+      <label>Disaster Work Type</label>
+      <md-select md-on-close="checkDisasterWorkType()"
+                 flex="100"
+                 ng-model="TCTD.DisasterWorkType"
+                 placeholder="Disaster Work Type"
+                 class="bigpaddingbottom">
+        <md-option value="Debris Pickup">
+          Debris Pickup
+        </md-option>
+        <md-option value="Debris Monitoring">
+          Debris Monitoring
+        </md-option>
+        <md-option value="Call Center">
+          Call Center
+        </md-option>
+        <md-option value="Working in EOC">
+          Working in EOC
+        </md-option>
+        <md-option value="Building Repair">
+          Building Repair
+        </md-option>
+        <md-option value="Road Repair">
+          Road Repair
+        </md-option>
+        <md-option value="Other Repair">
+          Other Repair
+        </md-option>
+        <md-option value="Prep for Storm">
+          Prep for Storm
+        </md-option>
+        <md-option value="Not Listed">
+          Not Listed
+        </md-option>
+      </md-select>
+    </md-input-container>
+  </div>-->
       </div>
     </div>
 
@@ -610,7 +634,18 @@
           <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <hours-display ng-show="TCTD.AdminDisaster.value > 0" tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <md-input-container ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                              class="shortpaddingbottom shortInput">
+            <label class="longerLabel"
+                   style="width: auto;">{{ee.event_name}} Admin Hours</label>
+            <input ng-model="ee.disaster_work_hours.DisasterAdminHours"
+                   type="number"
+                   min="0"
+                   max="24"
+                   step=".25" 
+                   ng-change="calculateTotalHours()" />
+          </md-input-container>
           <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
 
@@ -1147,7 +1182,6 @@
   </div>
 </script>
 <script type="text/ng-template" id="DateSelect.tmpl.html">
-
   <div layout="row"
        layout-align="start center"
        layout-wrap
@@ -2571,9 +2605,6 @@
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
-           layout-align="center center"
-           layout="row"
-           layout-wrap
            flex="100">
         <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
@@ -2641,25 +2672,6 @@
              ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
           You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
-        <div flex="90"
-             layout-align="center center"
-             layout="row">
-          <ul>
-            <li>
-              If you are interested in changing your tax withholding for this pay period, please access the form here (<a href="images/2020%20W4.pdf">2020 W4.pdf</a>).
-            </li>
-            <li>
-              You will be required to complete a second form to revert to the original tax withholding status.
-            </li>
-            <li>
-              This form must be completed and returned to HR before {{TaxWitholdingCutoff}} for it to be effective this pay period.
-            </li>
-            <li>
-              Questions can be directed to Human Resources at <a href="mailto:bcchr@claycountygov.com">bcchr@claycountygov.com</a>.
-            </li>
-          </ul>            
-        </div>
-
         <div layout="row"
              layout-align="center center"
              flex="100">
@@ -2695,82 +2707,82 @@
 <script type="text/ng-template" id="TimeCardHeader.tmpl.html">
 
     <div class="md-whiteframe-z1" ng-cloak>
-        <md-grid-list ng-cloak
-                      md-cols="3"
-                      md-cols-md="2"
-                      md-cols-sm="1"
-                      md-gutter="8px"
-                      md-row-height="28px">
+      <md-grid-list ng-cloak
+                    md-cols="3"
+                    md-cols-md="2"
+                    md-cols-sm="1"
+                    md-gutter="8px"
+                    md-row-height="28px">
 
-            <md-grid-tile md-rowspan="2"
-                          md-colspan="1"
-                          md-rowspan-md="4"
-                          md-rowspan-sm="1"
-                          md-colspan-md="1"
-                          md-colspan-sm="1">
+        <md-grid-tile md-rowspan="2"
+                      md-colspan="1"
+                      md-rowspan-md="4"
+                      md-rowspan-sm="1"
+                      md-colspan-md="1"
+                      md-colspan-sm="1">
 
-                <div layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <h4>
-                        {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
-                    </h4>
-                </div>
-            </md-grid-tile>
+          <div layout="row"
+               layout-align="center center"
+               layout-wrap>
+            <h4>
+              {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
+            </h4>
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.title }} ( {{ ::timecard.classify }} )
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.title }} ( {{ ::timecard.classify }} )
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                  <md-button class="md-primary"
-                          style="text-decoration: underline;"
-                          ng-click="showPayrate = !showPayrate;">
-                    {{ showPayrate ? 'Hide' : 'Show' }} Payrate
-                  </md-button>
-                  <span style="margin-right: .5em;"
-                        ng-show="showPayrate">
-                    Payrate {{ ::timecard.shortPayrate }} 
-                    <md-tooltip md-direction="right">
-                      ${{  ::timecard.Payrate }}
-                    </md-tooltip>
-                  </span>
-                  <span>
-                    {{ ::timecard.exemptStatus }}
-                  </span>
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            <md-button class="md-primary"
+                       style="text-decoration: underline;"
+                       ng-click="showPayrate = !showPayrate;">
+              {{ showPayrate ? 'Hide' : 'Show' }} Payrate
+            </md-button>
+            <span style="margin-right: .5em;"
+                  ng-show="showPayrate">
+              Payrate {{ ::timecard.shortPayrate }}
+              <md-tooltip md-direction="right">
+                ${{  ::timecard.Payrate }}
+              </md-tooltip>
+            </span>
+            <span>
+              {{ ::timecard.exemptStatus }}
+            </span>
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
+          </div>
+        </md-grid-tile>
 
-        </md-grid-list>
+      </md-grid-list>
 
         <md-grid-list ng-if="shortheader === false"
                       md-cols="4"
@@ -2980,7 +2992,7 @@
                  flex="100"
                  layout="row"
                  layout-align="center center"
-                 ng-repeat="wl in dl"
+                 ng-repeat="wl in dl track by $index"
                  layout-wrap>
             <div flex="100"
                  layout="row"
@@ -3544,6 +3556,19 @@
       <div layout="row"
            layout-align="end center"
            flex="100">
+        <md-button aria-label="Print Paystub"
+                   onclick="window.print();"                   
+                   class="md-button md-accent md-raised">
+          Print
+          <md-icon>
+            <svg class="fabWhite"
+                 xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none" /><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>
+          </md-icon>
+
+          <md-tooltip md-direction="bottom">
+            Print the paystub being viewed
+          </md-tooltip>
+        </md-button>
         <md-button ng-click="returnToTimeStore()"
                    class="md-raised md-primary">
           Return to TimeStore
@@ -3997,211 +4022,120 @@
   </div>
 </script>
 
-<script type="text/ng-template" id="PayrollOverall.tmpl.html">
+<script type="text/ng-template" id="DisasterHours.directive.tmpl.html">
 
-  <div flex="100"
-       layout="row"
-       layout-align="center start"
+
+  <div layout="row"
+       layout-align="center center"
        layout-wrap
-       layout-margin>
-
-    <div flex="90"
-         class="md-whiteframe-z1">
-      <date-selector title="Pay Period Ending:"
-                     label="Select Pay Period"
-                     datetype="ppd"
-                     flex="100">
-      </date-selector>
-    </div>
-
-    <div style="margin-top: 3em;"
+       flex="100">
+    <div style="margin-top: .75em; margin-bottom: .75em;"
+         class="short-toolbar my-primary"
+         flex="100"
          layout="row"
-         layout-align="start center"
-         class="md-whiteframe-z1"
-         layout-wrap
-         flex="90">
-      <div layout="row"
-           layout-align="center center"
-           class="short-toolbar my-accent"
-           flex-gt-md="50"
-           flex="100">
-        <h5 style="text-align: center;">
-          Set up Payroll Process
-        </h5>
-      </div>
-      <div flex="50"
-           layout="row"
-           layout-align="center center">
-        <md-button class="md-primary md-raised">Start</md-button>
-      </div>
-      <div flex="100">
-        <p>{{setUpDetails}}</p>
-        <ol style="padding-right: 1em;">
-          <li>
-            Pull current Payrates from Finplus
-          </li>
-          <li>
-            Pull current leave banks from Finplus
-          </li>
-          <li>
-            If changes are made in Finplus after this process has been started, they will not be reflected in this process.
-          </li>
-        </ol>
-      </div>
+         layout-align="center center">
+      <span flex="5"></span>
+      <h5>
+        Work Hours For {{event.event_name}}
+      </h5>
+    </div>
+    <div layout="row"
+         flex="35"
+         layout-padding
+         layout-align="center center">
+      <md-input-container flex="100">
+        <label>Hours Worked on {{event.event_name}}</label>
+        <md-select md-on-close="calc()"
+                   flex="80"
+                   multiple
+                   ng-model="event.disaster_work_hours.DisasterSelectedTimes"
+                   placeholder="Hours Worked on {{event.event_name}}"
+                   class="bigpaddingbottom">
+          <md-option ng-repeat="t in fulltimelist track by t.index"
+                     ng-value="t.index">
+            <span class="md-text">
+              {{t.display}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
     </div>
 
     <div layout="row"
-         layout-align="start center"
+         layout-align="center center"
+         layout-gt-md="row"
+         layout-align-gt-md="space-around center"
          layout-wrap
-         class="md-whiteframe-z1"
-         flex="90">
+         flex="65">
+      <!--<md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+                 class="md-primary md-raised">
+        Copy Work Hours
+      </md-button>-->
+      <md-input-container class="shortpaddingbottom shortInput">
+        <label class="longerLabel"
+               style="width: auto;">Hours Worked</label>
+        <input ng-model="event.disaster_work_hours.DisasterWorkHours"
+               type="number"
+               ng-disabled="true" />
+      </md-input-container>
       <div layout="row"
            layout-align="center center"
-           class="short-toolbar my-accent"
-           flex-gt-md="50"
-           flex="100">
-        <h5 style="text-align: center;">
-          View / Edit Timestore / Finplus Data
-        </h5>
-      </div>
-      <div flex="50"
-           layout="row"
-           layout-align="center center">
-        <md-button ng-disabled="!setUpCompleted"
-                   class="md-primary md-raised">View Edits</md-button>
-      </div>
-      <div flex="100">
-        <p>{{editDetails}}</p>
-        <ol style="padding-right: 1em;">
-          <li>
-            Change Payrates, hours, and paycodes as necessary
-          </li>
-          <li>
-            Depending on the need, it may be possible to unlock someone's Timestore for the pay period in process so that they can make any changes or additions as needed.  This will most likely apply to to people who did not complete their hours.
-          </li>
-          <li>
-            Provide justification for changes
-          </li>
-          <li>
-            Indiciate when the changes are complete
-          </li>
-        </ol>
-      </div>
-    </div>
-
-    <div layout="row"
-         layout-align="start center"
-         layout-wrap
-         class="md-whiteframe-z1"
-         flex="90">
-      <div layout="row"
-           layout-align="center center"
-           class="short-toolbar my-accent"
-           flex-gt-md="50"
-           flex="100">
-        <h5 style="text-align: center;">
-          Approve Timestore Payroll changes
-        </h5>
-      </div>
-      <div flex="50"
-           layout="row"
-           layout-align="center center">
-        <md-button ng-disabled="!setUpCompleted || !editCompleted"
-                   class="md-primary md-raised">View Changes</md-button>
-
-      </div>
-      <div flex="100">
-        <p>{{changeDetails}}</p>
-        <ol style="padding-right: 1em;">
-          <li>
-            This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
-          </li>
-          <li>
-            This is done by the Finance director or their designee
-          </li>
-          <li>
-            This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
-          </li>
-        </ol>
-      </div>
-    </div>
-
-    <div layout="row"
-         layout-align="start center"
-         layout-wrap
-         class="md-whiteframe-z1"
-         flex="90">
-      <div layout="row"
-           layout-align="center center"
-           class="short-toolbar my-accent"
-           flex-gt-md="50"
-           flex="100">
-        <h5 style="text-align: center;">
-          Post Timestore Data / Changes to Finplus
-        </h5>
-      </div>
-      <div flex="50"
-           layout="row"
-           layout-align="center center">
-        <md-input-container flex="35">
-          <label>Target Database</label>
-          <md-select ng-model="postDatabase"
-                     multiple="false"
-                     md-on-close="selectDatabase()"
-                     aria-label="Select the target Database">
-            <md-option value="finplus51">
-              Production (finplus51)
+           layout-padding
+           flex="40">
+        <md-input-container flex="100">
+          <label>Disaster Work Type</label>
+          <md-select md-on-close="calc()"
+                     flex="100"
+                     ng-model="event.disaster_work_hours.DisasterWorkType"
+                     placeholder="Work Type for {{event.event_name}}"
+                     class="bigpaddingbottom">
+            <md-option value="">
+              Select Work Type
             </md-option>
-            <md-option value="trnfinplus51">
-              Training (trnfinplus51)
+            <md-option value="Debris Pickup">
+              Debris Pickup
             </md-option>
-          </md-select>
-        </md-input-container>
-        <md-input-container flex="35">
-          <label>Select Pay Run</label>
-          <md-select ng-model="postPayrun"
-                     multiple="false"
-                     md-on-close="selectPayRun()"
-                     aria-label="Select the target payrun">
-            <md-option ng-value="">
-              No payrun
+            <md-option value="Debris Monitoring">
+              Debris Monitoring
             </md-option>
-            <md-option ng-repeat="p in foundPayRuns track by $index"
-                       ng-value="p.pay_run_number">
-              {{p.pay_run_number}}
+            <md-option value="Call Center">
+              Call Center
+            </md-option>
+            <md-option value="Working in EOC">
+              Working in EOC
+            </md-option>
+            <md-option value="Building Repair">
+              Building Repair
+            </md-option>
+            <md-option value="Road Repair">
+              Road Repair
+            </md-option>
+            <md-option value="Other Repair">
+              Other Repair
+            </md-option>
+            <md-option value="Prep for Storm">
+              Prep for Storm
+            </md-option>
+            <md-option value="Not Listed">
+              Not Listed
             </md-option>
           </md-select>
         </md-input-container>
       </div>
-      <div flex="100">
-        <p>{{postDetails}}</p>
-        <ol style="padding-right: 1em;">
-          <li>
-            This action can only be performed after the completion of the Approve Timestore Payroll changes step.
-          </li>
-          <li>
-            Show a list of the manual corrections that need to be made (like manually updating Leave banks, etc)
-          </li>
-          <li>
-            Prior to the migration of this process to the clerk's office, this will be done by our Payroll department.
-          </li>
-          <li>
-            After the migration, this will be done by the Clerk's designee.
-          </li>
-        </ol>
-      </div>
     </div>
-
+    <div ng-show="event.disaster_work_hours.DisasterTimesError.length > 0"
+         layout-padding
+         layout="row"
+         layout-wrap
+         flex="100">
+      <p style="margin-top: .5em;"
+         flex="100"
+         layout="row"
+         class="warn">
+        {{ event.disaster_work_hours.DisasterTimesError }}
+      </p>     
+      
+    </div>
   </div>
 
-
-</script>
-<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
-
- 
-</script>
-
-<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
-
- 
 </script>

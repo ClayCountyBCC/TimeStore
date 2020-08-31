@@ -6,6 +6,7 @@
     Public Property Hours As Double = 0
     Public Property PayCode As String = ""
     Public Property PayRate As Double = 0
+    Public Property ProjectCode As String = ""
     Public Property DepartmentNumber As String = ""
     Public Property Classify As String = ""
     Public Property DataType As String = "telestaff"
