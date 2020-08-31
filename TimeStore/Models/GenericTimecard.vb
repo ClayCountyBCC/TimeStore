@@ -1638,6 +1638,8 @@
                               Where pr_regular.payrate = pr And
                                          (pr_regular.week = prWeek Or prWeek = 0)
                               Select pr_regular.total_hours).Sum
+              ' Handle Comp Time Earned
+              total_ot -= e.Comp_Time_Earned(prWeek)
               Dim total_doubleot = (From pr_regular In e.tsDoubletime
                                     Where pr_regular.payrate = pr And
                                          (pr_regular.week = prWeek Or prWeek = 0)
@@ -1749,7 +1751,7 @@
       GroupName = Employee_Data.GetGroupName(employeeID)
 
       payPeriodStart = Employee.PayPeriodStart
-      isExempt = Employee.IsExempt
+      isExempt = Employee.EmployeeData.IsExempt
       WarningList = Employee.WarningList
       ErrorList = Employee.ErrorList
       RawTCTD.AddRange(Employee.TL)

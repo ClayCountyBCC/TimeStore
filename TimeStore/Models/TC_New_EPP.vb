@@ -23,6 +23,8 @@
     Public Overtime As New Dictionary(Of Integer, Double)
     Public tsDoubletime As New List(Of TimeSegment)
     Public Doubletime As New Dictionary(Of Integer, Double)
+    Public CompTimeEarnedAndApplied As New Dictionary(Of Integer, Double)
+    Public tsCompTimeEarnedAndApplied As New List(Of TimeSegment)
 
     Public tsDisasterRegular As New List(Of TimeSegment)
     Public DisasterRegular As New Dictionary(Of Integer, Double)

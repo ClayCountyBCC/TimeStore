@@ -895,9 +895,9 @@ WHERE access_type >= " & accessType
           End If
           Dim tmpNotes As List(Of Note) = (From n In notes Where n.EmployeeID = e.EmployeeId Select n).ToList
           If tmpStd.Count > 0 Then
-            gtc.Add(New GenericTimecard(New TC_EPP(tmpTC, e, PayPeriodStart, tmpCTE), tmpStd, tmpNotes, allowDataSave))
+            gtc.Add(New GenericTimecard(New TC_New_EPP(tmpTC, e, PayPeriodStart, tmpCTE), tmpStd, tmpNotes, allowDataSave))
           Else
-            gtc.Add(New GenericTimecard(New TC_EPP(tmpTC, e, PayPeriodStart), allowDataSave))
+            gtc.Add(New GenericTimecard(New TC_New_EPP(tmpTC, e, PayPeriodStart), allowDataSave))
           End If
         Catch ex As Exception
           Log(ex)
