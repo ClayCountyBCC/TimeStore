@@ -48526,6 +48526,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           controller: 'FinanceToolsController',
           templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
         })
+        .when('/PayrollOverall/ppd/:payPeriod', {
+          controller: 'PayrollOverallController',
+          templateUrl: 'PayrollOverall.tmpl.html' 
+        })
+        .when('/PayrollEdit/ppd/:payPeriod', {
+          controller: 'PayrollEditController',
+          templateUrl: 'PayrollEdit.tmpl.html'
+        })
+        .when('/PayrollReview/ppd/:payPeriod', {
+          controller: 'PayrollReviewController',
+          templateUrl: 'PayrollReview.tmpl.html'
+        })
         .when('/LeaveCalendar/', {
           controller: 'CalendarViewController',
           templateUrl: 'CalendarView.controller.tmpl.html',
@@ -48836,6 +48848,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         return moment(getPayPeriodStart(d), "YYYYMMDD")
           .add(13, "days")
           .format("YYYYMMDD");
+      }
+
+      function checkNewPayPeriod()
+      {
+        // this function will return true if it is the first Wednesday, Thursday, or Friday of 
+        // a new pay period.
+        var pps = moment(getPayPeriodStart(), "YYYYMMDD");
+        var wednesday = pps.format("YYYYMMDD");
+        var thursday = moment(getPayPeriodStart(), "YYYYMMDD").add(1, "days").format("YYYYMMDD");
+        var friday = moment(getPayPeriodStart(), "YYYYMMDD").add(2, "days").format("YYYYMMDD");        
+        var today = moment().startOf("day").format("YYYYMMDD");
+        return today === wednesday || today === thursday || today === friday;
       }
 
       var getGenericTimeData = function (startDate, endDate, fieldsToDisplay)
@@ -49218,7 +49242,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         saveCompTimeEarned: saveCompTimeEarned,
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
-        getBirthdays: getBirthdays
+        getBirthdays: getBirthdays,
+        checkNewPayPeriod: checkNewPayPeriod
       };
     }
   ]);
@@ -49293,6 +49318,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           goIncentives: goIncentives,
           goAccessChange: goAccessChange,
           goFinanceTools: goFinanceTools,
+          goPayrollOverallProcess: goPayrollOverallProcess,
+          goPayrollEditProcess: goPayrollEditProcess,
+          goPayrollReviewProcess: goPayrollReviewProcess,
           goTimecardApprovals: goTimecardApprovals,
           goLeaveApprovals: goLeaveApprovals,
           goAddTime: goAddTime,
@@ -49379,6 +49407,42 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           go('/FinanceTools/');
           //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollOverallProcess(ppd)
+        {
+          if (!ppd)
+          {
+            // let's add some logic here.
+            // If the current date is the current pay period start
+            // or the current pay period start + 1 or 2 days (ie: that Wednesday, Thursday, or Friday)
+            // then let's load the previous pay period.
+            if (timestoredata.checkNewPayPeriod())
+            {
+              var previousPPE = moment(timestoredata.getPayPeriodEnd(), "YYYYMMDD").add(-14, "days").format("YYYYMMDD");
+              go('/PayrollOverall/ppd/' + previousPPE);
+            }
+            else
+            {
+              go('/PayrollOverall/ppd/' + timestoredata.getPayPeriodEnd());
+            }
+            
+          }
+          else
+          {
+            go('/PayrollOverall/ppd/' + ppd);
+          }
+          //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollEditProcess(ppd)
+        {
+          go('/PayrollEdit/ppd/' + ppd);
+        }
+
+        function goPayrollReviewProcess(ppd)
+        {
+          go('/PayrollReview/ppd/' + ppd);
         }
 
         function goAccessChange()
@@ -51196,6 +51260,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       $mdSidenav('adminRight').toggle();
       timestoreNav.goFinanceTools();
+    };
+
+    $scope.viewPayrollProcess = function ()
+    {
+      $mdSidenav('adminRight').toggle();
+      timestoreNav.goPayrollOverallProcess();
     };
 
     $scope.viewFinalApprovals = function ()
@@ -54376,6 +54446,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     timestoreNav
   )
   {
+    var ppd = $routeParams.payPeriod;
+    $scope.TaxWitholdingCutoff = moment(ppd, "YYYYMMDD").format("M/D/YYYY") + " 5:00 PM";
     var ctrl = this;
     ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();
@@ -54915,6 +54987,183 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     String.prototype.toProperCase = function () {
       return this.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
     };
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PaystubViewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', 'paystub_list', '$routeParams', PaystubViewController]);
+
+
+  function PaystubViewController($scope, viewOptions, timestoredata, timestoreNav, paystub_list, $routeParams)
+  {
+    $scope.checkNumber = "";
+    $scope.filter_year = "";
+    $scope.currentPaystub = null;
+    function FilterPaystubList()
+    {
+      //console.log('paystub year', $scope.filter_year);
+      if ($scope.filter_year.length === 0) return $scope.paystubList;
+      
+      var list = $scope.paystubList.filter(function (j) { return j.pay_stub_year.toString() === $scope.filter_year });
+      return list;
+    }
+    //console.log('paystub list', paystub_list);
+    $scope.employeeId = $routeParams.employeeId;
+
+    $scope.paystubList = paystub_list;
+    $scope.filtered_paystub_list = FilterPaystubList();
+    
+    $scope.paystub_years = [];
+    $scope.paystubList.map(function (j)
+    {
+      if ($scope.paystub_years.indexOf(j.pay_stub_year.toString()) === -1)
+      {
+        $scope.paystub_years.push(j.pay_stub_year.toString());
+      }
+    });
+
+    $scope.returnToTimeStore = function ()
+    {
+      timestoreNav.goDefaultEmployee($routeParams.employeeId);
+    };
+
+    if ($routeParams.checkNumber !== undefined && $routeParams.checkNumber !== null)
+    {
+      $scope.checkNumber = $routeParams.checkNumber;
+    }
+    else
+    {
+      $scope.checkNumber = $scope.paystubList[0].check_number;
+    }
+
+    if ($scope.checkNumber.length > 0)
+    {
+      LoadCheck();
+    }
+    else
+    {
+      // Work out no checks here
+    }
+              
+    $scope.FormatDate = function (date)
+    {
+      if (date instanceof Date)
+      {
+        return date.toLocaleDateString('en-us');
+      }
+      var d = new Date(date);
+      return d.toLocaleDateString('en-US');
+    }
+
+    $scope.selectYear = function ()
+    {
+      $scope.filtered_paystub_list = FilterPaystubList();
+    }
+
+    $scope.selectCheck = function ()
+    {
+      LoadCheck();
+    }
+
+    function LoadCheck()
+    {
+      timestoredata.getPayStubByEmployee($scope.employeeId, $scope.checkNumber)
+        .then(function (paystub)
+        {
+          paystub.formatted_pay_period_ending = new Date(paystub.pay_period_ending).toLocaleDateString('en-us');
+          paystub.formatted_pay_date = new Date(paystub.pay_date).toLocaleDateString('en-us');
+          paystub.total_earnings_hours = paystub.earnings.reduce(function (a, b) { return a + b.hours; }, 0).toFixed(2).toString();
+          paystub.total_earnings_amount = paystub.earnings.reduce(function (a, b) { return a + b.amount; }, 0).toFixed(2).toString();
+          paystub.total_deductions_amount = paystub.deductions.reduce(function (a, b) { return a + b.amount }, 0).toFixed(2).toString();
+          paystub.total_deductions_year_to_date = paystub.deductions.reduce(function (a, b) { return a + b.year_to_date_deductions }, 0).toFixed(2).toString();
+          paystub.total_contributions = paystub.deductions.reduce(function (a, b) { return a + b.contributions }, 0).toFixed(2).toString();
+          //console.log('paystub', paystub);
+          $scope.currentPaystub = paystub;
+
+        });
+    }
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollOverallController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollOverallController]);
+
+
+  function PayrollOverallController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+    console.log('payroll overall process');
+    $scope.showSetUpDetails = false;
+    $scope.setUpDetails = "";
+    $scope.setUpCompleted = false;    
+
+    $scope.showEditDetails = false;
+    $scope.editDetails = "";
+    $scope.editCompleted = false;
+
+    $scope.showChangeDetails = false;
+    $scope.changeDetails = "";
+    $scope.changeCompleted = false;
+
+    $scope.showPostDetails = false;
+    $scope.postDetails = "";
+    $scope.postCompleted = false;
+
+    $scope.postDatabase = "finplus51";
+
+    $scope.foundPayRuns = [];
+
+
+    $scope.selectDatabase = function ()
+    {
+      console.log('selectDatabase', $scope.postDatabase);
+    }
+
+    $scope.selectPayRun = function ()
+    {
+      console.log('selectPayRun');
+    }
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollEditController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollEditController]);
+
+
+  function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollReviewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollReviewController]);
+
+
+  function PayrollReviewController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+
   }
 
 })();

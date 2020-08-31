@@ -1182,6 +1182,7 @@
   </div>
 </script>
 <script type="text/ng-template" id="DateSelect.tmpl.html">
+
   <div layout="row"
        layout-align="start center"
        layout-wrap
@@ -2605,6 +2606,9 @@
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
+           layout-align="center center"
+           layout="row"
+           layout-wrap
            flex="100">
         <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
@@ -2672,6 +2676,25 @@
              ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
           You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
+        <div flex="90"
+             layout-align="center center"
+             layout="row">
+          <ul>
+            <li>
+              If you are interested in changing your tax withholding for this pay period, please access the form here (<a href="images/2020%20W4.pdf">2020 W4.pdf</a>).
+            </li>
+            <li>
+              You will be required to complete a second form to revert to the original tax withholding status.
+            </li>
+            <li>
+              This form must be completed and returned to HR before {{TaxWitholdingCutoff}} for it to be effective this pay period.
+            </li>
+            <li>
+              Questions can be directed to Human Resources at <a href="mailto:bcchr@claycountygov.com">bcchr@claycountygov.com</a>.
+            </li>
+          </ul>            
+        </div>
+
         <div layout="row"
              layout-align="center center"
              flex="100">
@@ -3504,6 +3527,733 @@
 
 
 </script>
+<script type="text/ng-template" id="PaystubView.controller.tmpl.html">
+
+ <link rel="stylesheet" href="css/paystubPrint.css" />
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         layout="row"
+         id="paystubSelector"
+         ng-show="paystubList.length > 0"
+         layout-align="center center">
+
+      <md-input-container flex="25">
+        <label>Select a Check</label>
+        <md-select ng-model="checkNumber"
+                   multiple="false"
+                   md-on-close="selectCheck()"
+                   aria-label="Select A Check">
+          <md-option ng-repeat="p in filtered_paystub_list track by $index"
+                     ng-value="p.check_number">
+            <span style="text-align: center;">
+              {{ FormatDate(p.check_date) }} - {{ p.check_number }} {{ p.is_voided ? '(VOIDED)' : ''}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <md-input-container flex="25">
+        <label>Filter Pay Stubs by Year</label>
+        <md-select ng-model="filter_year"
+                   multiple="false"
+                   md-on-close="selectYear()"
+                   aria-label="Select A Year">
+          <md-option value="">
+            Show All
+          </md-option>
+          <md-option ng-repeat="p in paystub_years track by $index"
+                     ng-value="p">
+            <span style="text-align: center;">
+              {{ p }}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <div layout="row"
+           layout-align="end center"
+           flex="100">
+        <md-button aria-label="Print Paystub"
+                   onclick="window.print();"                   
+                   class="md-button md-accent md-raised">
+          Print
+          <md-icon>
+            <svg class="fabWhite"
+                 xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none" /><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>
+          </md-icon>
+
+          <md-tooltip md-direction="bottom">
+            Print the paystub being viewed
+          </md-tooltip>
+        </md-button>
+        <md-button ng-click="returnToTimeStore()"
+                   class="md-raised md-primary">
+          Return to TimeStore
+        </md-button>
+      </div>
+    </div>
+
+    <div id="paystubDetailedView"
+         flex="90"
+         layout="row"
+         ng-show="currentPaystub !== null"
+         layout-align="center center"
+         layout-wrap>
+
+
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Employee Name
+            </th>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Department
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.employee_name}}
+            </td>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.department}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Paystub Information
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>YTD Gross</th>
+            <th>Current Earnings</th>
+            <th>Pay Period Ending</th>
+            <th>Pay Date</th>
+            <th>Stub No</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+            <td>{{currentPaystub.total_earnings_amount}}</td>
+            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+            <td>{{currentPaystub.formatted_pay_date}}</td>
+            <td>{{currentPaystub.check_number}}</td>
+          </tr>
+          <tr ng-show="currentPaystub.is_voided">
+            <td colspan="5" style="text-align: center; font-weight: bold; color: red; font-size: x-large;">
+              CHECK IS VOIDED
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Earnings
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Earnings</th>
+            <th>Hours</th>
+            <th>Payrate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="e in currentPaystub.earnings">
+            <td>{{e.pay_code_name}}</td>
+            <td>{{e.hours.toFixed(2).toString()}}</td>
+            <td>{{e.payrate}}</td>
+            <td>{{e.amount}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_hours }}
+            </td>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_amount }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Leave
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Leave</th>
+            <th>Balance</th>
+            <th>Taken YTD</th>
+            <th>Earned YTD</th>
+            <th>Accrual Rate</th>
+            <th>Bank Maximum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="l in currentPaystub.leave">
+            <td>{{l.leave_code_name}}</td>
+            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+            <td>{{l.leave_earned.toFixed(2).toString()}}</td>
+            <td>{{l.calculated_accrual_rate.toFixed(2)}} hours/ppd</td>
+            <td>{{l.bank_maximum > 9000 ? '' : l.bank_maximum.toString()}}</td>
+          </tr>
+        </tbody>
+
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Deductions
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Deductions</th>
+            <th>Amount</th>
+            <th>YTD Deduct</th>
+            <th>Contribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="d in currentPaystub.deductions">
+            <td>{{d.ded_code_full_name}}</td>
+            <td>{{d.amount.toFixed(2).toString()}}</td>
+            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+            <td>{{d.contributions.toFixed(2).toString()}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{currentPaystub.total_deductions_amount}}
+            </td>
+            <td>
+              {{currentPaystub.total_deductions_year_to_date}}
+            </td>
+            <td>
+              {{currentPaystub.total_contributions}}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+
+
+    </div>
+
+    <div flex="90"
+         layout="row"
+         ng-show="currentPaystub === null"
+         layout-align="center center"
+         layout-wrap>
+      No check data was found, or an error was encountered.  Please try again, and contact MIS if the problem continues.
+    </div>
+
+    <div id="paystubPrintView"
+         flex="100">
+      <table style="width: 100%;">
+        <tbody>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%;">
+                      <p style="padding-left: 2em; text-align: left;">
+                        <strong>BOARD OF COUNTY COMMISSIONERS</strong><br />
+                        STATE OF FLORIDA - CLAY COUNTY<br />
+                        P.O. BOX 988<br />
+                        GREEN COVE SPRINGS, FLORIDA 32043-0988<br />
+                        PAYROLL CHECK
+                      </p>
+                    </td>
+                    <td style="width: 20%; padding: 0 0 0 0; margin: 0;">
+                      <div style="height: 100%; max-height: 128px; max-width: 128px;">
+                        <img style="object-fit: contain; object-position: 50% 50%;  width: 100%; height: 100%;"
+                             src="images/ClayCountySeal-258b.png" />
+                      </div>
+                    </td>
+                    <td style="width: 40%;">
+                      <table id="paystubHeader_right"
+                             style="width: 100%;">
+                        <thead>
+                          <tr>
+                            <td style="width: 20%;"></td>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB DATE</th>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB NO.</th>
+                            <td style="width: 20%;"></td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td></td>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                            <td>{{currentPaystub.check_number}}</td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-left: 4em; text-align: left;"
+                        colspan="3">
+                      <p>
+                        {{currentPaystub.department}}<br />
+                        {{currentPaystub.employee_name}}<br />
+                        {{currentPaystub.address_line_1}}<br />
+                        {{currentPaystub.address_line_2 }}<br ng-show="currentPaystub.address_line_2.length > 0" />
+                        {{currentPaystub.address_line_3}}<br />
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr ng-show="currentPaystub.is_voided">
+                    <td colspan="2" style="text-align: center; font-weight: bold; font-size: x-large;">
+                      CHECK IS VOIDED
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: left;">
+                      CLAY COUNTY BOARD OF COMMISSIONERS
+                    </td>
+                    <td style="text-align: right;">
+                      {{currentPaystub.employee_name}}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: center; font-size: smaller;"
+                        colspan="2">
+                      STATEMENT OF EARNINGS AND DEDUCTIONS
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%; border: 2px solid black;">
+                <tbody>
+                  <tr>
+                    <td style="width: 30%; vertical-align: top; padding-right: 0;">
+                      <table style="width: 100%; border-spacing: 0;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Earnings
+                            </th>
+                            <th style="width: 20%;">
+                              Hours
+                            </th>
+                            <th style="width: 40%;">
+                              Amount
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="e in currentPaystub.earnings">
+                            <td>{{e.pay_code_short_name}}</td>
+                            <td>{{e.hours.toFixed(2).toString()}}</td>
+                            <td>{{e.amount}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td></td>
+                            <td>
+                              {{ currentPaystub.total_earnings_hours }}
+                            </td>
+                            <td>
+                              {{ currentPaystub.total_earnings_amount }}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      <table style="width: 100%; margin-top: 1em;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Leave
+                            </th>
+                            <th style="width: 20%;">
+                              Balance
+                            </th>
+                            <th style="width: 40%;">
+                              Taken YTD
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="l in currentPaystub.leave">
+                            <td>{{l.leave_code_short_name}}</td>
+                            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+                            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                    <td style="width: 50%; vertical-align: top; border-left: 1px solid black; padding-right: 0;">
+
+                      <table style="width: 100%; border-spacing: 0;">
+                        <thead>
+                          <tr>
+                            <th>Deductions</th>
+                            <th>Amount</th>
+                            <th>YTD Deduct</th>
+                            <th>Contribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="d in currentPaystub.deductions">
+                            <td>{{d.ded_code_short_name}}</td>
+                            <td>{{d.amount.toFixed(2).toString()}}</td>
+                            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+                            <td>{{d.contributions.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>
+                              Total
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_amount}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_year_to_date}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_contributions}}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+
+
+                    </td>
+                    <td style="width: 20%; vertical-align: top; border-left: 1px solid black;">
+                      <table style="width: 100%;">
+                        <tbody>
+                          <tr>
+                            <th>YTD Gross</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <th>Current Earnings</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.total_earnings_amount}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Period Ending</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Date</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                          </tr>
+                          <tr>
+                            <th>Stub No</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.check_number}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</script>
+
+<script type="text/ng-template" id="PayrollOverall.tmpl.html">
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         class="md-whiteframe-z1">
+      <date-selector title="Pay Period Ending:"
+                     label="Select Pay Period"
+                     datetype="ppd"
+                     flex="100">
+      </date-selector>
+    </div>
+
+    <div style="margin-top: 3em;"
+         layout="row"
+         layout-align="start center"
+         class="md-whiteframe-z1"
+         layout-wrap
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Set up Payroll Process
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button class="md-primary md-raised">Start</md-button>
+      </div>
+      <div flex="100">
+        <p>{{setUpDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            Pull current Payrates from Finplus
+          </li>
+          <li>
+            Pull current leave banks from Finplus
+          </li>
+          <li>
+            If changes are made in Finplus after this process has been started, they will not be reflected in this process.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          View / Edit Timestore / Finplus Data
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="!setUpCompleted"
+                   class="md-primary md-raised">View Edits</md-button>
+      </div>
+      <div flex="100">
+        <p>{{editDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            Change Payrates, hours, and paycodes as necessary
+          </li>
+          <li>
+            Depending on the need, it may be possible to unlock someone's Timestore for the pay period in process so that they can make any changes or additions as needed.  This will most likely apply to to people who did not complete their hours.
+          </li>
+          <li>
+            Provide justification for changes
+          </li>
+          <li>
+            Indiciate when the changes are complete
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Approve Timestore Payroll changes
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="!setUpCompleted || !editCompleted"
+                   class="md-primary md-raised">View Changes</md-button>
+
+      </div>
+      <div flex="100">
+        <p>{{changeDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
+          </li>
+          <li>
+            This is done by the Finance director or their designee
+          </li>
+          <li>
+            This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Post Timestore Data / Changes to Finplus
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-input-container flex="35">
+          <label>Target Database</label>
+          <md-select ng-model="postDatabase"
+                     multiple="false"
+                     md-on-close="selectDatabase()"
+                     aria-label="Select the target Database">
+            <md-option value="finplus51">
+              Production (finplus51)
+            </md-option>
+            <md-option value="trnfinplus51">
+              Training (trnfinplus51)
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="35">
+          <label>Select Pay Run</label>
+          <md-select ng-model="postPayrun"
+                     multiple="false"
+                     md-on-close="selectPayRun()"
+                     aria-label="Select the target payrun">
+            <md-option ng-value="">
+              No payrun
+            </md-option>
+            <md-option ng-repeat="p in foundPayRuns track by $index"
+                       ng-value="p.pay_run_number">
+              {{p.pay_run_number}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+      <div flex="100">
+        <p>{{postDetails}}</p>
+        <ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the Approve Timestore Payroll changes step.
+          </li>
+          <li>
+            Show a list of the manual corrections that need to be made (like manually updating Leave banks, etc)
+          </li>
+          <li>
+            Prior to the migration of this process to the clerk's office, this will be done by our Payroll department.
+          </li>
+          <li>
+            After the migration, this will be done by the Clerk's designee.
+          </li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+
+
+</script>
+<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+
+ 
+</script>
+
+<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+
+ 
+</script>
+
 <script type="text/ng-template" id="PaystubView.controller.tmpl.html">
 
  <link rel="stylesheet" href="css/paystubPrint.css" />
