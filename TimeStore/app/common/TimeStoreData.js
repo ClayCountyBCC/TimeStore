@@ -443,6 +443,8 @@
           });
       };
 
+
+
       var getUnapproved = function (ppdIndex)
       {
         var p = { ppdIndex: ppdIndex };
@@ -595,6 +597,42 @@
           });
       };
 
+      var getPayrollStatus = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetStatus?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var startPayroll = function (pay_period_ending, include_benefits)
+      {
+        return $http
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var resetPayroll = function (pay_period_ending, include_benefits)
+      {
+        return $http
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
         getPayStubByEmployee: getPayStubByEmployee,
@@ -637,7 +675,10 @@
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
         getBirthdays: getBirthdays,
-        checkNewPayPeriod: checkNewPayPeriod
+        checkNewPayPeriod: checkNewPayPeriod,
+        getPayrollStatus: getPayrollStatus,
+        startPayroll: startPayroll,
+        resetPayroll: resetPayroll
       };
     }
   ]);

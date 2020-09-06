@@ -438,6 +438,7 @@
     <Compile Include="App_Start\WebApiConfig.vb" />
     <Compile Include="Controllers\AdminController.vb" />
     <Compile Include="Controllers\MainController.vb" />
+    <Compile Include="Controllers\PayrollController.vb" />
     <Compile Include="Controllers\PubWorksController.vb" />
     <Compile Include="Controllers\ReportsController.vb" />
     <Compile Include="Controllers\TCController.vb" />
@@ -471,6 +472,8 @@
     <Compile Include="Models\Namedday.vb" />
     <Compile Include="Models\Note.vb" />
     <Compile Include="Models\PayPeriodList.vb" />
+    <Compile Include="Models\Payroll\PayrollModule.vb" />
+    <Compile Include="Models\Payroll\PayrollStatus.vb" />
     <Compile Include="Models\Paystub\Paystub.vb" />
     <Compile Include="Models\Paystub\PaystubDeductions.vb" />
     <Compile Include="Models\Paystub\PaystubEarnings.vb" />

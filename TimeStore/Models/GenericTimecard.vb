@@ -46,6 +46,12 @@
       Property hours As Double = 0
       Property leftToRightOrder As Integer = 0
       Property payRate As Double = 0
+      ReadOnly Property calculatedPayRate As Double
+        Get
+          If payRate = 0 OrElse payCode = "" Then Return 0
+          Return GetPayrate(payCode, payRate)
+        End Get
+      End Property
       ReadOnly Property shortPayRate As Double
         Get
           Return Math.Round(payRate, 2)
@@ -718,7 +724,7 @@
         Dim test As Integer = (From w In tmpCL
                                Where w.hours = c.Hours And
                                w.payCode = c.PayCode And
-                               Math.Round(w.payRate, 5) = c.PayRate
+                               Math.Round(w.calculatedPayRate, 5) = c.PayRate
                                Select w).Count
         If test <> 1 Then
           Return False
@@ -729,7 +735,7 @@
       For Each c In tmpCL
         Dim test As Integer = (From w In Current_Timecard_Data
                                Where w.Hours = c.hours And w.PayCode = c.payCode And
-                               w.PayRate = Math.Round(c.payRate, 5) Select w).Count
+                               w.PayRate = Math.Round(c.calculatedPayRate, 5) Select w).Count
         If test <> 1 Then
           Return False
         End If
@@ -818,7 +824,7 @@
         End If
 
         std.PayCode = c.payCode
-        std.PayRate = c.payRate
+        std.PayRate = GetPayrate(c.payCode, c.payRate)
         ' Test 
         'std.PayRate = GetPayrate(c.payCode, c.payRate)
 

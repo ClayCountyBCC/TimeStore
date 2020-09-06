@@ -43,6 +43,17 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
+  Public Function IsProduction() As Boolean
+    Select Case Environment.MachineName.ToUpper
+      Case "CLAYBCCIIS01"
+        Return True
+      Case "CLAYBCCDV10", "MISSL01"
+        Return False
+      Case Else
+        Return False
+    End Select
+  End Function
+
   Public Function GetCS(cst As ConnectionStringType) As String
     ' This function will return a specific connectionstring based on the machine it's currently running on
     ' MSIL03, CLAYBCCDV10 = Development / Testing
@@ -1399,7 +1410,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     Try
       ds = dbts.Get_Dataset(TimestoreQuery.ToString, P)
       For Each d In ds.Tables(0).Rows
-        d("payrate") = GetPayrate(d("paycode"), d("payrate"))
+        'd("payrate") = GetPayrate(d("paycode"), d("payrate"))
         d("classify") = GetClassification(d("employee_id"), f, d("classify"))
       Next
       Return ds
@@ -1546,7 +1557,7 @@ ORDER BY home_orgn, empl_no
     dp.Add("@PayCode", PayCode)
     dp.Add("@ProjectCode", ProjectCode)
     dp.Add("@Hours", Hours)
-    dp.Add("@Amount", 0)
+    dp.Add("@Amount", Math.Round(Payrate, 5) * Hours)
     dp.Add("@Orgn", Department)
     dp.Add("@Classify", Classify)
     dp.Add("@PayRate", Math.Round(Payrate, 5))

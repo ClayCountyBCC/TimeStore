@@ -16,24 +16,31 @@
       </md-autocomplete>
 
       <div flex="100" class="md-whiteframe-z1" layout-wrap layout="row" layout-align="start center">
-        <md-select aria-label="Select Access Level"
-                   flex="90" id="AccessTypes"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Raw_Access_Type">
-          <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
-          <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
-            {{ al }}
-          </md-option>
-        </md-select>
-        <md-select aria-label="Select Data Type"
-                   flex="90" id="dataTypeList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Data_Type">
-          <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
-          <md-option ng-value="dt" ng-repeat="dt in dataTypes">
-            {{ dt }}
-          </md-option>
-        </md-select>
+        <md-input-container flex="100">
+          <label>Access Level</label>
+          <md-select aria-label="Select Access Level"
+                     flex="90"
+                     id="AccessTypes"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Raw_Access_Type">
+            <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
+            <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
+              {{ al }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Data Type</label>
+          <md-select aria-label="Select Data Type"
+                     flex="90" id="dataTypeList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Data_Type">
+            <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
+            <md-option ng-value="dt" ng-repeat="dt in dataTypes">
+              {{ dt }}
+            </md-option>
+          </md-select>
+        </md-input-container>
 
         <md-checkbox flex="100"
                      id="BackendReportAccess"
@@ -56,27 +63,44 @@
           Can this user change Timestore Access?
         </md-checkbox>
         <md-divider flex="100"></md-divider>
-        <md-select aria-label="Select Reports To"
-                   flex="90"
-                   id="reportsToList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.ReportsTo">
-          <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
-          <md-option ng-value="0">No Specific User</md-option>
-          <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
-            {{ emp.EmployeeDisplay }}
-          </md-option>
-        </md-select>
-        <md-divider flex="100"></md-divider>
-        <div flex="100" layout="row" layout-padding layout-align="end center">
-          <span flex></span>
-          <md-button ng-disabled="employee === null"
-                     class="md-primary md-raised md-whiteframe-z1"
-                     ng-click="saveTimecardAccess()">
-            SAVE User Access
-          </md-button>
-        </div>
-      </div>
+        <md-input-container flex="100">
+          <label>Reports To</label>
+          <md-select aria-label="Select Reports To"
+                     flex="90"
+                     id="reportsToList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.ReportsTo">
+            <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
+            <md-option ng-value="0">No Specific User</md-option>
+            <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
+              {{ emp.EmployeeDisplay }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Payroll Access</label>
+          <md-select flex="90"
+                     aria-label="Select Payroll Access"
+                     id="payrollAccessList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.PayrollAccess">
+            <md-option ng-value="$index" ng-repeat="pra in payrollAccess track by $index">
+              {{ pra }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+
+          <md-divider flex="100"></md-divider>
+          <div flex="100" layout="row" layout-padding layout-align="end center">
+            <span flex></span>
+            <md-button ng-disabled="employee === null"
+                       class="md-primary md-raised md-whiteframe-z1"
+                       ng-click="saveTimecardAccess()">
+              SAVE User Access
+            </md-button>
+          </div>
+</div>
 
     </div>
 
@@ -123,8 +147,9 @@
 
             <md-checkbox ng-disabled="timecardAccess.viewAll || employee === null || timecardAccess.Raw_Access_Type < 2 || dept.disabled"
                          ng-model="dept.selected"
+                         aria-label="{{dept.DepartmentDisplay}}"
                          name="chk-{{dept.DepartmentNumber}}">
-              
+
             </md-checkbox>
             <div>
               {{dept.DepartmentDisplay}}
@@ -4080,11 +4105,52 @@
       <div flex="50"
            layout="row"
            layout-align="center center">
-        <md-button class="md-primary md-raised">Start</md-button>
+        <md-input-container flex="40"
+                            class="md-input-has-value"
+                            layout="row" 
+                            layout-align="space-around center" 
+                            layout-wrap>
+          <label>
+            Include Pay Benefits (pay_group S)
+          </label>
+          <md-radio-group ng-model="includeBenefits"
+                          layout="row"
+                          layout-align="center center"
+                          layout-wrap>
+            <md-radio-button ng-value="true">
+              Yes (Default)
+            </md-radio-button>
+            <md-radio-button ng-value="false">
+              No
+              <md-tooltip>
+                This should probably be answered no if this is the third paycheck that will be paid this month.
+              </md-tooltip>
+            </md-radio-button>
+          </md-radio-group>
+        </md-input-container>
+        <md-button class="md-primary md-raised"
+                   ng-click="StartPayroll()"
+                   ng-show="currentStatus.can_start">
+          Start
+        </md-button>
+        <md-button class="md-primary md-raised"
+                   ng-click="ResetPayroll()"
+                   ng-show="currentStatus.can_reset">
+          Reset Data
+          <md-tooltip>
+            This button should only be used when you know the data in Finplus has been changed since this process was originally started.
+          </md-tooltip>
+        </md-button>
       </div>
       <div flex="100">
-        <p>{{setUpDetails}}</p>
-        <ol style="padding-right: 1em;">
+        <p style="padding-left: 1em;"
+           ng-if="currentStatus.started_by.length > 0">
+          Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
+          <li ng-if="currentStatus.started_by.length > 0">
+            Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
+          </li>
           <li>
             Pull current Payrates from Finplus
           </li>
@@ -4094,7 +4160,7 @@
           <li>
             If changes are made in Finplus after this process has been started, they will not be reflected in this process.
           </li>
-        </ol>
+        </ol>-->
       </div>
     </div>
 
@@ -4115,12 +4181,16 @@
       <div flex="50"
            layout="row"
            layout-align="center center">
-        <md-button ng-disabled="!setUpCompleted"
+        <md-button ng-click="ViewEdits()"
+                   ng-disabled="!currentStatus.can_edit"
                    class="md-primary md-raised">View Edits</md-button>
       </div>
       <div flex="100">
-        <p>{{editDetails}}</p>
-        <ol style="padding-right: 1em;">
+        <p ng-if="currentStatus.edits_completed_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Completed by {{ currentStatus.edits_completed_by }} on {{ currentStatus.edits_completed_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
           <li>
             Change Payrates, hours, and paycodes as necessary
           </li>
@@ -4133,7 +4203,7 @@
           <li>
             Indiciate when the changes are complete
           </li>
-        </ol>
+        </ol>-->
       </div>
     </div>
 
@@ -4154,13 +4224,17 @@
       <div flex="50"
            layout="row"
            layout-align="center center">
-        <md-button ng-disabled="!setUpCompleted || !editCompleted"
+        <md-button ng-disabled="!currentStatus.can_approve_edits"
+                   ng-click="ViewChanges()"
                    class="md-primary md-raised">View Changes</md-button>
 
       </div>
       <div flex="100">
-        <p>{{changeDetails}}</p>
-        <ol style="padding-right: 1em;">
+        <p ng-if="currentStatus.edits_approved_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Approved by {{ currentStatus.edits_approved_by }} on {{ currentStatus.edits_approved_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
           <li>
             This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
           </li>
@@ -4170,7 +4244,7 @@
           <li>
             This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
           </li>
-        </ol>
+        </ol>-->
       </div>
     </div>
 
@@ -4189,14 +4263,19 @@
         </h5>
       </div>
       <div flex="50"
-           layout="row"
+           layout="column"
+           layout-wrap
            layout-align="center center">
-        <md-input-container flex="35">
+        <md-input-container flex="55">
           <label>Target Database</label>
-          <md-select ng-model="postDatabase"
+          <md-select ng-disabled="!currentStatus.can_update_finplus"
+                     ng-model="postDatabase"
                      multiple="false"
                      md-on-close="selectDatabase()"
                      aria-label="Select the target Database">
+            <md-option value="">
+              Please Select
+            </md-option>
             <md-option value="finplus51">
               Production (finplus51)
             </md-option>
@@ -4205,9 +4284,10 @@
             </md-option>
           </md-select>
         </md-input-container>
-        <md-input-container flex="35">
+        <md-input-container flex="55">
           <label>Select Pay Run</label>
-          <md-select ng-model="postPayrun"
+          <md-select ng-disabled="!currentStatus.can_update_finplus"
+                     ng-model="postPayrun"
                      multiple="false"
                      md-on-close="selectPayRun()"
                      aria-label="Select the target payrun">
@@ -4220,10 +4300,17 @@
             </md-option>
           </md-select>
         </md-input-container>
+        <md-button ng-disabled="!currentStatus.can_update_finplus"
+                   class="md-primary md-raised">
+          Post to Finplus
+        </md-button>
       </div>
       <div flex="100">
-        <p>{{postDetails}}</p>
-        <ol style="padding-right: 1em;">
+        <p ng-if="currentStatus.finplus_updated_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Approved by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
           <li>
             This action can only be performed after the completion of the Approve Timestore Payroll changes step.
           </li>
@@ -4236,7 +4323,7 @@
           <li>
             After the migration, this will be done by the Clerk's designee.
           </li>
-        </ol>
+        </ol>-->
       </div>
     </div>
 
@@ -4244,14 +4331,23 @@
 
 
 </script>
-<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+<script type="text/ng-template" id="PayrollEdit.tmpl.html">
 
+  <div>
+    Sort by Department, employee name
+    Group rows by Employee name
+    Filter by employee number, name, department, has errors, has specific error, 
+      has unmarked error (you can mark an error to show that it does not require fixing.)
+
+  </div>
  
 </script>
 
-<script type="text/ng-template" id="PayrollOverallProcess.tmpl.html">
+<script type="text/ng-template" id="PayrollReview.tmpl.html">
 
- 
+ <div>
+   Review!
+ </div>
 </script>
 
 <script type="text/ng-template" id="PaystubView.controller.tmpl.html">

@@ -46,6 +46,7 @@ Namespace Models
     Public Property MachineName As String = ""
     Public Property UserName As String = ""
     Public Property IPAddress As String = ""
+    Public Property PayrollAccess As Integer = 0
     Private _UpdatedBy As String = ""
 
     'Public ReadOnly Property Days_Until_PPE() As Integer
@@ -119,6 +120,7 @@ Namespace Models
       UpdatePasswordData()
       ReportsTo = rawTCA.ReportsTo
       RequiresApproval = rawTCA.RequiresApproval
+      PayrollAccess = rawTCA.PayrollAccess
     End Sub
 
     Public Function Save() As Boolean
@@ -140,19 +142,21 @@ Namespace Models
                     New SqlParameter("@ReportsTo", Data.SqlDbType.Int) With {.Value = ReportsTo},
                     New SqlParameter("@ApprovalList", Data.SqlDbType.VarChar, 1000) With {.Value = String.Join(" ", DepartmentsToApprove)},
                     New SqlParameter("@ReportsAccess", Data.SqlDbType.Bit) With {.Value = Backend_Reports_Access},
-                    New SqlParameter("@UpdatedBy", Data.SqlDbType.VarChar, 50) With {.Value = _UpdatedBy}
+                    New SqlParameter("@UpdatedBy", Data.SqlDbType.VarChar, 50) With {.Value = _UpdatedBy},
+                    New SqlParameter("@PayrollAccess", Data.SqlDbType.Int) With {.Value = PayrollAccess}
                 }
       If i > 0 Then
         ' we update
         sbQ.Append("UPDATE Access SET data_type=@DataType, access_type=@AccessType, can_change_access=@CanChangeAccess, ")
         sbQ.Append("requires_approval=@RequiresApproval, reports_to=@ReportsTo, dept_approval_list=@ApprovalList, ")
-        sbQ.Append("backend_reports_access=@ReportsAccess, date_last_updated=GETDATE(), updated_by=@UpdatedBy WHERE employee_id=@EmployeeId;")
+        sbQ.Append("backend_reports_access=@ReportsAccess, date_last_updated=GETDATE(), updated_by=@UpdatedBy, ")
+        sbQ.Append("payroll_access=@PayrollAccess WHERE employee_id=@EmployeeId;")
       Else
         ' we insert
         sbQ.Append("INSERT INTO Access (employee_id, data_type, access_type, can_change_access, requires_approval, reports_to, ")
-        sbQ.Append("dept_approval_list, backend_reports_access, updated_by) ")
+        sbQ.Append("dept_approval_list, backend_reports_access, updated_by, payroll_access) ")
         sbQ.Append("VALUES (@EmployeeId, @DataType, @AccessType, @CanChangeAccess, @RequiresApproval, @ReportsTo,")
-        sbQ.Append(" @ApprovalList, @ReportsAccess, @UpdatedBy);")
+        sbQ.Append(" @ApprovalList, @ReportsAccess, @UpdatedBy, @PayrollAccess);")
       End If
       Try
         i = dbc.ExecuteNonQuery(sbQ.ToString, P)
@@ -185,7 +189,8 @@ Namespace Models
           requires_approval RequiresApproval,
           ISNULL(reports_to, 0) ReportsTo,
           dept_approval_list RawDepartmentsToApprove,
-          backend_reports_access
+          backend_reports_access,
+          payroll_access PayrollAccess
         FROM Access"
       Dim al As List(Of Timecard_Access) = Get_Data(Of Timecard_Access)(query, ConnectionStringType.Timestore)
       Dim rt = Get_All_Cached_ReportsTo()
@@ -209,19 +214,19 @@ Namespace Models
 
     Public Shared Function Get_All_Cached_ReportsTo() As Dictionary(Of Integer, List(Of Integer))
       Dim cip As New Runtime.Caching.CacheItemPolicy
-      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(1)
       Return myCache.GetItem("reportsto", cip)
     End Function
 
     Public Shared Function Get_All_Cached_Access_Dict() As Dictionary(Of Integer, Timecard_Access)
       Dim cip As New Runtime.Caching.CacheItemPolicy
-      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(1)
       Return myCache.GetItem("allaccessdict", cip)
     End Function
 
     Public Shared Function Get_All_Cached_Access_List() As List(Of Timecard_Access)
       Dim cip As New Runtime.Caching.CacheItemPolicy
-      cip.AbsoluteExpiration = DateTime.Now.AddHours(2)
+      cip.AbsoluteExpiration = DateTime.Now.AddHours(1)
       Return myCache.GetItem("allaccesslist", cip)
     End Function
 

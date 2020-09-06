@@ -49049,6 +49049,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
+
+
       var getUnapproved = function (ppdIndex)
       {
         var p = { ppdIndex: ppdIndex };
@@ -49201,6 +49203,42 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
+      var getPayrollStatus = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetStatus?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var startPayroll = function (pay_period_ending, include_benefits)
+      {
+        return $http
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var resetPayroll = function (pay_period_ending, include_benefits)
+      {
+        return $http
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
         getPayStubByEmployee: getPayStubByEmployee,
@@ -49243,7 +49281,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
         getBirthdays: getBirthdays,
-        checkNewPayPeriod: checkNewPayPeriod
+        checkNewPayPeriod: checkNewPayPeriod,
+        getPayrollStatus: getPayrollStatus,
+        startPayroll: startPayroll,
+        resetPayroll: resetPayroll
       };
     }
   ]);
@@ -51324,6 +51365,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.accessLevels = ["None", "User Only", "Dept Level 1", "Dept Level 2",
       "Dept Level 3", "Dept Level 4", "Dept Level 5", "All"];
 
+    $scope.payrollAccess = ["None", "Can Edit", "Can Approve"];
 
 
     $scope.toastPosition = {
@@ -51457,7 +51499,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         BackendReportsAccess: $scope.timecardAccess.Backend_Reports_Access,
         DepartmentsToApprove: getSelectedDepartmentList(),
         DataType: $scope.timecardAccess.Data_Type,
-        CanChangeAccess: $scope.timecardAccess.CanChangeAccess
+        CanChangeAccess: $scope.timecardAccess.CanChangeAccess,
+        PayrollAccess: $scope.timecardAccess.PayrollAccess
       };
       console.log('raw Timecard Access', rawTCA);
       timestoredata.saveAccess(rawTCA).then(function (data) {
@@ -55091,6 +55134,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   }
 
 })();
+/* global moment, _ */
+
 (function ()
 {
   "use strict";
@@ -55102,27 +55147,65 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
   function PayrollOverallController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
   {
+    
     console.log('payroll overall process');
-    $scope.showSetUpDetails = false;
-    $scope.setUpDetails = "";
-    $scope.setUpCompleted = false;    
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
+    $scope.includeBenefits = true;
+    //$scope.showSetUpDetails = false;
+    //$scope.setUpDetails = "";
+    //$scope.setUpCompleted = false;    
 
-    $scope.showEditDetails = false;
-    $scope.editDetails = "";
-    $scope.editCompleted = false;
+    //$scope.showEditDetails = false;
+    //$scope.editDetails = "";
+    //$scope.editCompleted = false;
 
-    $scope.showChangeDetails = false;
-    $scope.changeDetails = "";
-    $scope.changeCompleted = false;
+    //$scope.showChangeDetails = false;
+    //$scope.changeDetails = "";
+    //$scope.changeCompleted = false;
 
-    $scope.showPostDetails = false;
-    $scope.postDetails = "";
-    $scope.postCompleted = false;
+    //$scope.showPostDetails = false;
+    //$scope.postDetails = "";
+    //$scope.postCompleted = false;
 
-    $scope.postDatabase = "finplus51";
+    $scope.postDatabase = "";
 
     $scope.foundPayRuns = [];
 
+    $scope.ResetPayroll = function ()
+    {
+      console.log('include benefits', $scope.includeBenefits);
+      timestoredata.resetPayroll($scope.pay_period_ending, $scope.includeBenefits)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.StartPayroll = function ()
+    {
+      timestoredata.startPayroll($scope.pay_period_ending, $scope.includeBenefits)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.ViewEdits = function ()
+    {
+      timestoreNav.goPayrollEditProcess($routeParams.payPeriod);
+    }
+
+    $scope.ViewChanges = function ()
+    {
+      timestoreNav.goPayrollReviewProcess($routeParams.payPeriod);
+    }
+
+    $scope.PostData = function ()
+    {
+
+    }
+
+    GetPayrollStatus()
 
     $scope.selectDatabase = function ()
     {
@@ -55134,6 +55217,39 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       console.log('selectPayRun');
     }
 
+    function GetPayrollStatus()
+    {
+      timestoredata.getPayrollStatus($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);          
+        });
+    }
+
+    function HandleCurrentStatus(data)
+    {
+      if (!data)
+      {
+        console.log('payroll status is invalid');
+        return;
+      }
+      $scope.currentStatus = UpdateDisplays(data);
+      console.log('payroll status', $scope.currentStatus);
+    }    
+
+    function UpdateDisplays(data)
+    {
+      data.started_on_display = formatDatetime(data.started_on);
+      data.edits_completed_on_display = formatDatetime(data.edits_completed_on);
+      data.edits_approved_on_display = formatDatetime(data.edits_approved_on);
+      data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
+      return data;
+    }
+
+    function formatDatetime(d)
+    {
+      return d ? new Date(d).toLocaleString('en-us') : "";
+    }
   }
 
 })();

@@ -21,6 +21,7 @@
     $scope.accessLevels = ["None", "User Only", "Dept Level 1", "Dept Level 2",
       "Dept Level 3", "Dept Level 4", "Dept Level 5", "All"];
 
+    $scope.payrollAccess = ["None", "Can Edit", "Can Approve"];
 
 
     $scope.toastPosition = {
@@ -154,7 +155,8 @@
         BackendReportsAccess: $scope.timecardAccess.Backend_Reports_Access,
         DepartmentsToApprove: getSelectedDepartmentList(),
         DataType: $scope.timecardAccess.Data_Type,
-        CanChangeAccess: $scope.timecardAccess.CanChangeAccess
+        CanChangeAccess: $scope.timecardAccess.CanChangeAccess,
+        PayrollAccess: $scope.timecardAccess.PayrollAccess
       };
       console.log('raw Timecard Access', rawTCA);
       timestoredata.saveAccess(rawTCA).then(function (data) {

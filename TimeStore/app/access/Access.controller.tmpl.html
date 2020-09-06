@@ -16,24 +16,31 @@
       </md-autocomplete>
 
       <div flex="100" class="md-whiteframe-z1" layout-wrap layout="row" layout-align="start center">
-        <md-select aria-label="Select Access Level"
-                   flex="90" id="AccessTypes"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Raw_Access_Type">
-          <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
-          <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
-            {{ al }}
-          </md-option>
-        </md-select>
-        <md-select aria-label="Select Data Type"
-                   flex="90" id="dataTypeList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Data_Type">
-          <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
-          <md-option ng-value="dt" ng-repeat="dt in dataTypes">
-            {{ dt }}
-          </md-option>
-        </md-select>
+        <md-input-container flex="100">
+          <label>Access Level</label>
+          <md-select aria-label="Select Access Level"
+                     flex="90"
+                     id="AccessTypes"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Raw_Access_Type">
+            <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
+            <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
+              {{ al }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Data Type</label>
+          <md-select aria-label="Select Data Type"
+                     flex="90" id="dataTypeList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Data_Type">
+            <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
+            <md-option ng-value="dt" ng-repeat="dt in dataTypes">
+              {{ dt }}
+            </md-option>
+          </md-select>
+        </md-input-container>
 
         <md-checkbox flex="100"
                      id="BackendReportAccess"
@@ -56,27 +63,44 @@
           Can this user change Timestore Access?
         </md-checkbox>
         <md-divider flex="100"></md-divider>
-        <md-select aria-label="Select Reports To"
-                   flex="90"
-                   id="reportsToList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.ReportsTo">
-          <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
-          <md-option ng-value="0">No Specific User</md-option>
-          <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
-            {{ emp.EmployeeDisplay }}
-          </md-option>
-        </md-select>
-        <md-divider flex="100"></md-divider>
-        <div flex="100" layout="row" layout-padding layout-align="end center">
-          <span flex></span>
-          <md-button ng-disabled="employee === null"
-                     class="md-primary md-raised md-whiteframe-z1"
-                     ng-click="saveTimecardAccess()">
-            SAVE User Access
-          </md-button>
-        </div>
-      </div>
+        <md-input-container flex="100">
+          <label>Reports To</label>
+          <md-select aria-label="Select Reports To"
+                     flex="90"
+                     id="reportsToList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.ReportsTo">
+            <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
+            <md-option ng-value="0">No Specific User</md-option>
+            <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
+              {{ emp.EmployeeDisplay }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Payroll Access</label>
+          <md-select flex="90"
+                     aria-label="Select Payroll Access"
+                     id="payrollAccessList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.PayrollAccess">
+            <md-option ng-value="$index" ng-repeat="pra in payrollAccess track by $index">
+              {{ pra }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+
+          <md-divider flex="100"></md-divider>
+          <div flex="100" layout="row" layout-padding layout-align="end center">
+            <span flex></span>
+            <md-button ng-disabled="employee === null"
+                       class="md-primary md-raised md-whiteframe-z1"
+                       ng-click="saveTimecardAccess()">
+              SAVE User Access
+            </md-button>
+          </div>
+</div>
 
     </div>
 
@@ -123,8 +147,9 @@
 
             <md-checkbox ng-disabled="timecardAccess.viewAll || employee === null || timecardAccess.Raw_Access_Type < 2 || dept.disabled"
                          ng-model="dept.selected"
+                         aria-label="{{dept.DepartmentDisplay}}"
                          name="chk-{{dept.DepartmentNumber}}">
-              
+
             </md-checkbox>
             <div>
               {{dept.DepartmentDisplay}}
