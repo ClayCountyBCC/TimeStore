@@ -51981,8 +51981,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       if ($scope.DisasterHoursRelated === null)
       {
-        $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated. Your time has not yet been saved.";
-        $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+        $scope.disasterChoiceError = "You must select whether any of the work hours entered are for any special events. Your time has not yet been saved.";
+        $scope.errorList.push("You must select whether any of the work hours entered are for any special events. Your time has not yet been saved.");
         return;
       }
 

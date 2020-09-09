@@ -310,12 +310,12 @@
               Doubletime(week) += rts.total_hours
               tsDoubletime.Add(rts)
 
-            Case WorkType.BreakCredit
+            Case WorkType.BreakCredit, WorkType.Regular
               Handle_Regular_Non_Exempt(rts)
 
-            Case WorkType.Regular
-              Handle_Regular_Non_Exempt(rts)
-
+            Case WorkType.Admin
+              tsRegular.Add(rts)
+              Regular(week) += rts.total_hours
           End Select
         Next
         ' then disaster
@@ -340,22 +340,134 @@
       Next
     End Sub
 
+    Private Sub Handle_Admin_Non_Exempt(ts As TimeSegment)
+      Dim IsDisaster = ts.work_type = WorkType.Disaster Or
+        (ts.work_type = WorkType.BreakCredit AndAlso ts.disaster_pay_rule <> -1)
+
+      Dim AdminDiff = Admin_Total(ts.week) + Non_Working_Hours(ts.week) - RegularOvertime(ts.week)
+      ' AdminDiff is the upper bound of the number of hours to move
+      ' The lower bound is how many hours that should be in overtime
+      If AdminDiff > 0 Then
+        If AdminDiff >= ts.total_hours Then
+          If IsDisaster Then
+            tsDisasterStraight.Add(ts)
+            DisasterStraight(ts.week) += ts.total_hours
+          Else
+            tsRegularOvertime.Add(ts)
+            RegularOvertime(ts.week) += ts.total_hours
+          End If
+        Else
+          Dim new_end = ts.start_time.AddHours(ts.total_hours - AdminDiff)
+          Dim new_ts = ts.Clone(new_end, ts.end_time)
+          ts.end_time = new_end
+          ts.Update()
+          If IsDisaster Then
+            'tsDisasterOvertime.Add(ts)
+            'DisasterOvertime(ts.week) += ts.total_hours
+            tsDisasterStraight.Add(ts)
+            DisasterStraight(ts.week) += ts.total_hours
+            tsDisasterOvertime.Add(new_ts)
+            DisasterOvertime(new_ts.week) += new_ts.total_hours
+          Else
+            tsOvertime.Add(new_ts)
+            Overtime(ts.week) += ts.total_hours
+            'tsOvertime.Add(ts)
+            'Overtime(ts.week) += ts.total_hours
+            tsRegularOvertime.Add(ts)
+            RegularOvertime(ts.week) += ts.total_hours
+          End If
+
+        End If
+        'Dim TotalDiff = HoursForOTByWeek - (Regular(ts.week) + ts.total_hours)
+
+        'If TotalDiff = 0 Then
+        '  tsRegular.Add(ts)
+        '  Regular(ts.week) += ts.total_hours
+        'Else
+
+        '  If TotalDiff > 0 Then
+
+        '    If TotalDiff >= ts.total_hours Then
+        '      If IsDisaster Then
+        '        tsDisasterStraight.Add(ts)
+        '        DisasterStraight(ts.week) += ts.total_hours
+        '      Else
+        '        tsRegularOvertime.Add(ts)
+        '        RegularOvertime(ts.week) += ts.total_hours
+        '      End If
+        '    Else
+        '      Dim new_end = ts.start_time.AddHours(ts.total_hours - TotalDiff)
+        '      Dim new_ts = ts.Clone(new_end, ts.end_time)
+        '      ts.end_time = new_end
+        '      ts.Update()
+        '      If IsDisaster Then
+        '        'tsDisasterOvertime.Add(ts)
+        '        'DisasterOvertime(ts.week) += ts.total_hours
+        '        tsDisasterStraight.Add(new_ts)
+        '        DisasterStraight(new_ts.week) += new_ts.total_hours
+        '        tsDisasterRegular.Add(ts)
+        '        DisasterRegular(ts.week) += ts.total_hours
+        '      Else
+        '        tsRegularOvertime.Add(new_ts)
+        '        RegularOvertime(ts.week) += ts.total_hours
+        '        'tsOvertime.Add(ts)
+        '        'Overtime(ts.week) += ts.total_hours
+        '        tsRegular.Add(ts)
+        '        Regular(ts.week) += ts.total_hours
+        '      End If
+        '    End If
+
+        '  Else
+        '    If IsDisaster Then
+        '      tsDisasterOvertime.Add(ts)
+        '      DisasterOvertime(ts.week) += ts.total_hours
+        '    Else
+        '      tsOvertime.Add(ts)
+        '      Overtime(ts.week) += ts.total_hours
+        '    End If
+        '  End If
+
+        'End If
+
+
+
+      Else
+        If IsDisaster Then
+          tsDisasterOvertime.Add(ts)
+          DisasterOvertime(ts.week) += ts.total_hours
+        Else
+          tsOvertime.Add(ts)
+          Overtime(ts.week) += ts.total_hours
+        End If
+      End If
+    End Sub
+
     Private Sub Handle_Regular_Non_Exempt(ts As TimeSegment)
-      Dim IsDisaster = ts.work_type = WorkType.Disaster Or (ts.work_type = WorkType.BreakCredit AndAlso ts.disaster_pay_rule <> -1)
+      Dim IsDisaster = ts.work_type = WorkType.Disaster Or
+        (ts.work_type = WorkType.BreakCredit AndAlso ts.disaster_pay_rule <> -1)
+
+      Dim AdminDiff = Admin_Total(ts.week) + Non_Working_Hours(ts.week) - RegularOvertime(ts.week)
+
       Dim RegularDiff = HoursForOTByWeek - (Regular(ts.week) + DisasterRegular(ts.week) + Non_Working_Hours(ts.week))
       If RegularDiff = 0 Then
         If Non_Working_Hours(ts.week) > 0 Then
 
-          Dim RegularOTDiff = Non_Working_Hours(ts.week) - RegularOvertime(ts.week) - DisasterStraight(ts.week)
+          Dim RegularOTDiff = (Non_Working_Hours(ts.week) + Admin_Total(ts.week)) - RegularOvertime(ts.week) - DisasterStraight(ts.week)
           If RegularOTDiff = 0 Then
-            If IsDisaster Then
-              tsDisasterOvertime.Add(ts)
-              DisasterOvertime(ts.week) += ts.total_hours
-            Else
-              tsOvertime.Add(ts)
-              Overtime(ts.week) += ts.total_hours
-            End If
 
+            If AdminDiff > 0 Then
+
+              Handle_Admin_Non_Exempt(ts)
+
+            Else
+              If IsDisaster Then
+                tsDisasterOvertime.Add(ts)
+                DisasterOvertime(ts.week) += ts.total_hours
+              Else
+                tsOvertime.Add(ts)
+                Overtime(ts.week) += ts.total_hours
+              End If
+            End If
 
           Else
             If RegularOTDiff > 0 Then
@@ -388,13 +500,22 @@
             End If
           End If
         Else
-          If IsDisaster Then
-            tsDisasterOvertime.Add(ts)
-            DisasterOvertime(ts.week) += ts.total_hours
+
+          If AdminDiff > 0 Then
+
+            Handle_Admin_Non_Exempt(ts)
+
           Else
-            tsOvertime.Add(ts)
-            Overtime(ts.week) += ts.total_hours
+            If IsDisaster Then
+              tsDisasterOvertime.Add(ts)
+              DisasterOvertime(ts.week) += ts.total_hours
+            Else
+              tsOvertime.Add(ts)
+              Overtime(ts.week) += ts.total_hours
+            End If
           End If
+
+
         End If
 
       Else
@@ -431,6 +552,7 @@
         End If
       End If
     End Sub
+
 
     Private Sub Handle_Disaster_Regular_Non_Exempt(ts As TimeSegment)
       ' Here we will need to handle disaster pay rules and hours worked
@@ -890,7 +1012,8 @@
 
     Public ReadOnly Property Admin(Week As Integer) As Double
       Get
-        Return (From t In Week_TL(Week) Select t.AdminHours).Sum
+        Return (From t In Week_TL(Week)
+                Select t.AdminHours).Sum
       End Get
     End Property
 

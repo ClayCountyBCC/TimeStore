@@ -6,6 +6,7 @@
     BreakCredit = 2
     Doubletime = 3
     DisasterDoubletime = 4
+    Admin = 5
   End Enum
 
   Public Class TimeSegment
@@ -155,6 +156,11 @@
         combined.Add(RefineHolidayHours(tctd, pay_period_start, payrate))
       End If
 
+      Dim total_admin As Double = tctd.AdminBereavement + tctd.AdminHours + tctd.AdminJuryDuty +
+        tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminWorkersComp
+      If total_admin > 0 Then
+        combined.Add(RefineAdminHours(tctd, total_admin, pay_period_start, payrate))
+      End If
       Return combined
     End Function
 
@@ -163,6 +169,14 @@
       Dim end_date = start_date.AddHours(tctd.HolidayHours)
 
       Dim ts As New TimeSegment(start_date, end_date, WorkType.Regular, pay_period_start, -1, payrate)
+      Return ts
+    End Function
+
+    Private Shared Function RefineAdminHours(tctd As TimecardTimeData, total_admin_hours As Double, pay_period_start As Date, payrate As Double) As TimeSegment
+      Dim start_date = tctd.WorkDate.Date
+      Dim end_date = start_date.AddHours(total_admin_hours)
+
+      Dim ts As New TimeSegment(start_date, end_date, WorkType.Admin, pay_period_start, -1, payrate)
       Return ts
     End Function
 
