@@ -29,12 +29,38 @@ Namespace Controllers
 
     <HttpGet>
     <Route("Reset")>
-    Public Function ResetPayroll(PayPeriodEnding As Date, IncludeBenefits As Boolean) As PayrollStatus
+    Public Function ResetPayroll(PayPeriodEnding As Date) As PayrollStatus
       Dim current = GetCurrentStatus(PayPeriodEnding)
       If current.can_reset Then
         Return PayrollStatus.ResetPayroll(PayPeriodEnding, current.my_access)
       Else
         Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("PayrollEdits")>
+    Public Function GetEdits(PayPeriodEnding As Date) As List(Of PayrollEditData)
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.my_access.PayrollAccess > 0 Then
+        Return PayrollEditData.GetPayrollEdits(PayPeriodEnding, current)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("Paycodes")>
+    Public Function GetPaycodes(PayPeriodEnding As Date) As Dictionary(Of String, Paycode)
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.target_db = PayrollStatus.DatabaseTarget.Finplus_Production Then
+        Return Paycode.GetCachedFromProduction()
+      Else
+        If current.target_db = PayrollStatus.DatabaseTarget.Finplus_Training Then
+          Return Paycode.GetCachedFromTraining()
+        Else
+          Return Nothing
+        End If
       End If
     End Function
 

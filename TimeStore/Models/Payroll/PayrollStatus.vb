@@ -41,26 +41,26 @@ Namespace Models
     Public ReadOnly Property can_start As Boolean
       Get
         'If my_access Is Nothing Then Return False
-        Return has_edit_access AndAlso Not started_on.HasValue
+        Return has_edit_access AndAlso started_by.Length = 0
       End Get
     End Property
     Public ReadOnly Property can_reset As Boolean
       Get
         'If my_access Is Nothing Then Return False
-        Return has_edit_access AndAlso can_edit AndAlso edits_completed_by.Length = 0
+        Return has_edit_access AndAlso can_edit AndAlso edits_completed_by.Length = 0 And Not can_start
       End Get
     End Property
     Public ReadOnly Property can_edit As Boolean
       Get
         'If my_access Is Nothing Then Return False
         ' They can't edit anymore if the edits have been approved
-        Return has_edit_access AndAlso edits_approved_by.Length = 0
+        Return has_edit_access AndAlso edits_approved_by.Length = 0 AndAlso can_start = False
       End Get
     End Property
     Public ReadOnly Property can_approve_edits As Boolean
       Get
         'If my_access Is Nothing Then Return False
-        Return has_approval_access AndAlso edits_approved_by.Length = 0 AndAlso finplus_updated_by.Length = 0
+        Return has_approval_access AndAlso can_start = False AndAlso edits_approved_by.Length = 0 AndAlso finplus_updated_by.Length = 0
       End Get
     End Property
     Public ReadOnly Property can_update_finplus As Boolean
@@ -71,6 +71,7 @@ Namespace Models
     End Property
     Public Property my_access As Timecard_Access = Nothing
     Public Property target_db As DatabaseTarget = 2
+    Public Property include_benefits As Boolean = True
 
     Public Sub New()
     End Sub
@@ -95,6 +96,7 @@ Namespace Models
         ,finplus_updated_on
         ,finplus_updated_by
         ,target_db
+        ,include_benefits
       FROM TimeStore.dbo.Payroll_Status
       WHERE
         pay_period_ending = @ppe"
@@ -125,13 +127,13 @@ Namespace Models
       dp.Add("@pay_period_ending", PayPeriodEnding)
       dp.Add("@username", tca.UserName)
       dp.Add("@target_db", Target)
-
+      dp.Add("@include_benefits", IIf(IncludeBenefits, 1, 0))
       Dim sbQuery As New StringBuilder
       sbQuery.AppendLine("BEGIN TRANSACTION;")
       sbQuery.AppendLine("BEGIN TRY")
-      sbQuery.AppendLine(CapturePayratesQuery(Target))
+      sbQuery.AppendLine(CapturePayratesQuery(Target, IncludeBenefits))
       sbQuery.AppendLine(CaptureLeaveBanksQuery(Target))
-      sbQuery.AppendLine(SetupPayrollChanges(IncludeBenefits))
+      sbQuery.AppendLine(SetupPayrollChanges())
       sbQuery.AppendLine(CreateNewPayrollStatus())
       sbQuery.AppendLine("END TRY")
       sbQuery.AppendLine("BEGIN CATCH")
@@ -233,13 +235,13 @@ Namespace Models
 
     End Function
 
-    Public Shared Function CapturePayratesQuery(Target As DatabaseTarget) As String
+    Public Shared Function CapturePayratesQuery(Target As DatabaseTarget, IncludeBenefits As Boolean) As String
       Dim db As String = ""
       Select Case Target
         Case DatabaseTarget.Finplus_Training
-          db = "finplus51"
-        Case DatabaseTarget.Finplus_Production
           db = "trnfinplus51"
+        Case DatabaseTarget.Finplus_Production
+          db = "finplus51"
       End Select
       Dim query As String = $"
       INSERT INTO Finplus_Payrates
@@ -264,12 +266,17 @@ Namespace Models
         ,PR.classify
         ,PR.group_x
         ,PR.pay_hours
-        ,UPPER(@added_by)
+        ,UPPER(@username)
       FROM CLAYBCCFINDB.finplus51.dbo.payrate PR
       INNER JOIN CLAYBCCFINDB.{db}.dbo.person P ON PR.empl_no = P.empl_no AND P.term_date IS NULL
       INNER JOIN CLAYBCCFINDB.{db}.dbo.employee E ON P.empl_no = E.empl_no
       WHERE
-        status_x='A';"
+        status_x='A' "
+      If Not IncludeBenefits Then
+        query += "AND PR.group_x NOT IN ('S'); "
+      Else
+        query += "; "
+      End If
       Return query
     End Function
 
@@ -277,9 +284,9 @@ Namespace Models
       Dim db As String = ""
       Select Case Target
         Case DatabaseTarget.Finplus_Training
-          db = "finplus51"
-        Case DatabaseTarget.Finplus_Production
           db = "trnfinplus51"
+        Case DatabaseTarget.Finplus_Production
+          db = "finplus51"
       End Select
       Dim query As String = $"
 	INSERT INTO [TimeStore].dbo.[Finplus_Payroll]
@@ -636,13 +643,13 @@ SELECT
       ,[rmedtax_m]
       ,[rmedtax_q]
       ,[rmedtax_ft]
-      ,UPPER(@added_by)
+      ,UPPER(@username)
 FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
 "
       Return query
     End Function
 
-    Public Shared Function SetupPayrollChanges(IncludeBenefits As Boolean) As String
+    Public Shared Function SetupPayrollChanges() As String
 
       Dim query As String = $"
         INSERT INTO TimeStore.[dbo].[Payroll_Changes]
@@ -702,12 +709,7 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
         WHERE
           FP.pay_period_ending=@pay_period_ending
           AND PC.employee_id IS NULL
-          AND FP.paycode NOT IN ('002', '001')"
-      If Not IncludeBenefits Then
-        query += "AND FP.pay_group NOT IN ('S') ;"
-      Else
-        query += ";"
-      End If
+          AND FP.paycode NOT IN ('002', '001'); "
       Return query
     End Function
 
@@ -717,12 +719,14 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
           pay_period_ending
           ,started_on
           ,started_by
-          ,target_db)
+          ,target_db
+          ,include_benefits)
         VALUES (
           @pay_period_ending
           ,GETDATE()
           ,UPPER(@username)
-          ,@target_db);"
+          ,@target_db
+          ,@include_benefits);"
       Return query
     End Function
 

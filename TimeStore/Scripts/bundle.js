@@ -49215,10 +49215,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
-      var startPayroll = function (pay_period_ending, include_benefits)
+      var startPayroll = function (pay_period_ending, include_benefits, target_db)
       {
         return $http
-          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString() + "&TargetDB=" + target_db, {
             cache: false
           })
           .then(function (response)
@@ -49227,10 +49227,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
-      var resetPayroll = function (pay_period_ending, include_benefits)
+      var resetPayroll = function (pay_period_ending)
       {
         return $http
-          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49238,6 +49238,30 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             return response.data;
           });
       };
+
+      var getPayrollEdits = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/PayrollEdits?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPaycodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Paycodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -49284,7 +49308,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         checkNewPayPeriod: checkNewPayPeriod,
         getPayrollStatus: getPayrollStatus,
         startPayroll: startPayroll,
-        resetPayroll: resetPayroll
+        resetPayroll: resetPayroll,
+        getPayrollEdits: getPayrollEdits,
+        getPaycodes: getPaycodes
       };
     }
   ]);
@@ -55149,8 +55175,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   {
     
     console.log('payroll overall process');
-    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
-    $scope.includeBenefits = true;
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.StartOrResetInProgress = false;
     //$scope.showSetUpDetails = false;
     //$scope.setUpDetails = "";
     //$scope.setUpCompleted = false;    
@@ -55167,26 +55193,34 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     //$scope.postDetails = "";
     //$scope.postCompleted = false;
 
-    $scope.postDatabase = "";
-
     $scope.foundPayRuns = [];
 
     $scope.ResetPayroll = function ()
     {
-      console.log('include benefits', $scope.includeBenefits);
-      timestoredata.resetPayroll($scope.pay_period_ending, $scope.includeBenefits)
+      $scope.StartOrResetInProgress = true;
+      timestoredata.resetPayroll($scope.pay_period_ending)
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
         });
     }
 
     $scope.StartPayroll = function ()
     {
-      timestoredata.startPayroll($scope.pay_period_ending, $scope.includeBenefits)
+      $scope.StartOrResetInProgress = true;
+      var target = $scope.currentStatus.target_db;
+      if (target !== "1" && target !== "0")
+      {
+        alert("Missing Target Database selection.");
+        $scope.StartOrResetInProgress = false;
+        return false;
+      }
+      timestoredata.startPayroll($scope.pay_period_ending, $scope.currentStatus.include_benefits, $scope.currentStatus.target_db)
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
         });
     }
 
@@ -55264,6 +55298,100 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
   function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
   {
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.loading = false;
+    $scope.base_payroll_edits = [];
+    $scope.filtered_payroll_edits = [];
+    $scope.filter_employee = "";
+    $scope.filter_department = "";
+    $scope.paycodeslist = [];
+    $scope.currentStatus = {};
+    // need to get data for this pay period
+    function HandleCurrentStatus(data)
+    {
+      if (!data)
+      {
+        console.log('payroll status is invalid');
+        return;
+      }
+      $scope.currentStatus = UpdateDisplays(data);
+      console.log('payroll status', $scope.currentStatus);
+    }
+
+    function UpdateDisplays(data)
+    {
+      data.started_on_display = formatDatetime(data.started_on);
+      data.edits_completed_on_display = formatDatetime(data.edits_completed_on);
+      data.edits_approved_on_display = formatDatetime(data.edits_approved_on);
+      data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
+      return data;
+    }
+    function GetPayrollStatus()
+    {
+      timestoredata.getPayrollStatus($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    function formatDatetime(d)
+    {
+      return d ? new Date(d).toLocaleString('en-us') : "";
+    }
+
+    function getPaycodes()
+    {
+      timestoredata.getPaycodes($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('paycode data', data);
+          $scope.paycodeslist = data;
+        });
+    }
+
+    $scope.getPayrollData = function ()
+    {
+      $scope.loading = true;
+      timestoredata.getPayrollEdits($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('payroll data', data);
+          $scope.base_payroll_edits = data;
+          $scope.applyFilters();
+          $scope.loading = false;
+        });
+    }
+
+
+    $scope.applyFilters = function ()
+    {
+      let filtered = $scope.base_payroll_edits;
+      if ($scope.filter_employee.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.EmployeeId.toString().indexOf($scope.filter_employee) > -1 ||
+            j.employee.EmployeeName.toUpperCase().indexOf($scope.filter_employee.toUpperCase()) > -1;
+        });
+      }
+
+      if ($scope.filter_department.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.Department.toString().indexOf($scope.filter_department) > -1 ||
+            j.employee.DepartmentName.toUpperCase().indexOf($scope.filter_department.toUpperCase()) > -1;
+        });
+
+      }
+
+      $scope.filtered_payroll_edits = filtered;
+    }
+
+    $scope.getPayrollData();
+    getPaycodes();
+    GetPayrollStatus();
 
   }
 
@@ -55411,6 +55539,85 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.CheckDisasterWorkType = function ()
     {
       console.log('finish checkDisasterWorkType');
+    }
+
+  }
+})();
+
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("payrollData", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {
+          showheader: "<",
+          messageonly: "<",
+          totalonly: "<",
+          message: "<",
+          pd: "=",
+          totalhours: "<",
+          totalamount: "<"
+          //event: "=",
+          //fulltimelist: "<",
+          //eventerror: "=",
+          //calc: "&"
+        },
+        templateUrl: "PayrollData.directive.tmpl.html",
+        controller: "PayrollDataDirectiveController"
+      };
+    })
+    .controller("PayrollDataDirectiveController", ["$scope", PayrollDataController]);
+
+  function PayrollDataController($scope)
+  {
+
+  }
+})();
+
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("payrollEditGroup", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {       
+          ped: "=",
+          paycodes: "<"
+          //event: "=",
+          //fulltimelist: "<",
+          //eventerror: "=",
+          //calc: "&"
+        },
+        templateUrl: "PayrollEditGroup.directive.tmpl.html",
+        controller: "PayrollEditGroupDirectiveController"
+      };
+    })
+    .controller("PayrollEditGroupDirectiveController", ["$scope", PayrollEditGroupController]);
+
+  function PayrollEditGroupController($scope)
+  {
+
+    $scope.GetTotalHours = function (paydata)
+    {
+      let totalHours = paydata.reduce(function (j, v) { return j + v.hours;  }, 0);
+      //console.log('total hours test', totalHours)
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalAmount = function (paydata)
+    {
+      let totalAmount = paydata.reduce(function (j, v) { return j + v.amount; }, 0);
+      //console.log('total amount test', totalAmount)
+      return totalAmount.toFixed(2);
     }
 
   }

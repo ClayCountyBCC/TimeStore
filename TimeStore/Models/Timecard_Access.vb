@@ -276,6 +276,11 @@ Namespace Models
       Return tca.Check_Access_To_EmployeeId(AccessTo)
     End Function
 
+    Public Shared Function Check_Access_To_Paystub(AccessBy As Integer) As Boolean
+      Dim tca As Timecard_Access = GetTimeCardAccess(AccessBy)
+      Return tca.PayrollAccess > 0
+    End Function
+
     Public Function Check_Access_To_EmployeeId(AccessToEID As Integer) As Boolean
       ', Optional ForApproval As Boolean = False ' removed 6/29/2015
       If EmployeeID = AccessToEID Then Return True

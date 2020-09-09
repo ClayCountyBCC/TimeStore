@@ -167,7 +167,7 @@ SELECT
   ,CASE WHEN TFWC.wstat_abrv_ch IS NOT NULL 
     THEN 1
     ELSE
-      CASE WHEN WT.Wstat_Type_desc_ch != 'NON WORKING' 
+      CASE WHEN UPPER(WT.Wstat_Type_desc_ch) != 'NON WORKING' 
       THEN 1
       ELSE 0
       END
@@ -430,6 +430,21 @@ ORDER  BY
 
             End If
           Next
+        Else
+          ' If they leave off the disaster staffing code, we're just going to convert
+          ' the hours into regular hours.
+          ttd.DisasterRule = -1
+          Select Case ttd.WorkCode
+            Case "299"
+              ttd.WorkCode = "002"
+            Case "301"
+              ttd.WorkCode = "230"
+            Case "302"
+              ttd.WorkCode = "231"
+            Case "303"
+              ttd.WorkCode = "232"
+
+          End Select
         End If
 
       Next

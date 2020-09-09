@@ -609,10 +609,10 @@
           });
       };
 
-      var startPayroll = function (pay_period_ending, include_benefits)
+      var startPayroll = function (pay_period_ending, include_benefits, target_db)
       {
         return $http
-          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString() + "&TargetDB=" + target_db, {
             cache: false
           })
           .then(function (response)
@@ -621,10 +621,10 @@
           });
       };
 
-      var resetPayroll = function (pay_period_ending, include_benefits)
+      var resetPayroll = function (pay_period_ending)
       {
         return $http
-          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString(), {
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -632,6 +632,30 @@
             return response.data;
           });
       };
+
+      var getPayrollEdits = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/PayrollEdits?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPaycodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Paycodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -678,7 +702,9 @@
         checkNewPayPeriod: checkNewPayPeriod,
         getPayrollStatus: getPayrollStatus,
         startPayroll: startPayroll,
-        resetPayroll: resetPayroll
+        resetPayroll: resetPayroll,
+        getPayrollEdits: getPayrollEdits,
+        getPaycodes: getPaycodes
       };
     }
   ]);

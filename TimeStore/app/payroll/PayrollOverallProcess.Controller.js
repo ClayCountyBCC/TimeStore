@@ -13,8 +13,8 @@
   {
     
     console.log('payroll overall process');
-    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
-    $scope.includeBenefits = true;
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.StartOrResetInProgress = false;
     //$scope.showSetUpDetails = false;
     //$scope.setUpDetails = "";
     //$scope.setUpCompleted = false;    
@@ -31,26 +31,34 @@
     //$scope.postDetails = "";
     //$scope.postCompleted = false;
 
-    $scope.postDatabase = "";
-
     $scope.foundPayRuns = [];
 
     $scope.ResetPayroll = function ()
     {
-      console.log('include benefits', $scope.includeBenefits);
-      timestoredata.resetPayroll($scope.pay_period_ending, $scope.includeBenefits)
+      $scope.StartOrResetInProgress = true;
+      timestoredata.resetPayroll($scope.pay_period_ending)
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
         });
     }
 
     $scope.StartPayroll = function ()
     {
-      timestoredata.startPayroll($scope.pay_period_ending, $scope.includeBenefits)
+      $scope.StartOrResetInProgress = true;
+      var target = $scope.currentStatus.target_db;
+      if (target !== "1" && target !== "0")
+      {
+        alert("Missing Target Database selection.");
+        $scope.StartOrResetInProgress = false;
+        return false;
+      }
+      timestoredata.startPayroll($scope.pay_period_ending, $scope.currentStatus.include_benefits, $scope.currentStatus.target_db)
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
         });
     }
 

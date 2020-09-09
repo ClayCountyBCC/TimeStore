@@ -126,11 +126,11 @@ end code
               Control Access
             </md-button>
           </md-list-item>
-          <md-list-item>
+          @*<md-list-item>
             <md-button ng-click="viewFinanceTools()">
               Finance Tools
             </md-button>
-          </md-list-item>
+          </md-list-item>*@
           <md-list-item>
             <md-button ng-click="viewPayrollProcess()">
               Payroll Process

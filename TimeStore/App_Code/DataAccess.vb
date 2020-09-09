@@ -132,6 +132,15 @@ Public Module ModuleDataAccess
     Return fdl
   End Function
 
+  Public Function GetCachedEmployeeDataFromFinplusTraining() As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
+    Dim key As String = "employeedata_training" ' & PayPeriodStart.ToShortDateString
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
+    Return fdl
+  End Function
+
   Public Function GetCachedEmployeeDataFromFinplusAsDictionary() As Dictionary(Of Integer, FinanceData)
     Dim CIP As New CacheItemPolicy With {
       .AbsoluteExpiration = Now.AddHours(12)
@@ -211,6 +220,8 @@ Public Module ModuleDataAccess
         PAY.lv4_bal, 
         PAY.lv5_cd, 
         PAY.lv5_bal, 
+        PAY.lv6_cd, 
+        PAY.lv6_bal, 
         P.empl_type, 
         P.term_date 
       FROM employee E 
@@ -252,6 +263,78 @@ Public Module ModuleDataAccess
       Return Nothing
     End Try
   End Function
+
+  Public Function GetAllEmployeeDataFromFinPlusTraining() As List(Of FinanceData)
+    ' This pulls the employee data from Pentamation for the list of departments 
+    'Dim sbQuery As New StringBuilder, 
+    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.FinplusTraining), toolsAppId, toolsDBError)
+    Dim query As String = "
+      USE trnfinplus51;
+      SELECT 
+        E.hire_date, 
+        E.empl_no, 
+        LTRIM(RTRIM(E.l_name)) AS l_name, 
+        LTRIM(RTRIM(E.f_name)) AS f_name, 
+        E.home_orgn AS department, 
+        E.birthdate, C.title, 
+        D.desc_x AS department_name, 
+        PR.classify, P.part_time, 
+        PR.rate, 
+        PR.pay_hours, 
+        PAY.lv1_cd, 
+        PAY.lv1_bal, 
+        PAY.lv2_cd, 
+        PAY.lv2_bal, 
+        PAY.lv3_cd, 
+        PAY.lv3_bal, 
+        PAY.lv4_cd, 
+        PAY.lv4_bal, 
+        PAY.lv5_cd, 
+        PAY.lv5_bal, 
+        PAY.lv6_cd, 
+        PAY.lv6_bal,
+        P.empl_type, 
+        P.term_date 
+      FROM employee E 
+      INNER JOIN person P ON E.empl_no=P.empl_no 
+      INNER JOIN payrate PR ON E.empl_no=PR.empl_no 
+      INNER JOIN clstable C on PR.classify = C.class_cd
+      INNER JOIN payroll PAY ON E.empl_no = PAY.empl_no 
+      INNER JOIN dept D ON E.home_orgn=D.code 
+      WHERE 
+        PR.pay_cd IN ('001', '002') 
+        AND (PR.rate_no = 1) 
+      ORDER BY E.l_name ASC, E.f_name ASC"
+    'With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
+    '  .AppendLine("USE finplus50;")
+    '  .AppendLine("SELECT E.hire_date, E.empl_no, LTRIM(RTRIM(E.l_name)) AS l_name, LTRIM(RTRIM(E.f_name)) AS f_name, ")
+    '  .AppendLine("E.home_orgn AS department, E.birthdate, C.title, D.desc_x AS department_name, PR.classify, P.part_time, ")
+    '  .AppendLine("PR.rate, PR.pay_hours, PAY.lv1_cd, PAY.lv1_bal, PAY.lv2_cd, PAY.lv2_bal, PAY.lv3_cd, PAY.lv3_bal, PAY.lv4_cd, PAY.lv4_bal, ")
+    '  .AppendLine("PAY.lv5_cd, PAY.lv5_bal, P.empl_type, P.term_date FROM employee E INNER JOIN person P ON E.empl_no=P.empl_no ")
+    '  .AppendLine("INNER JOIN payrate PR ON E.empl_no=PR.empl_no INNER JOIN clstable C on PR.classify = C.class_cd ")
+    '  .AppendLine("INNER JOIN payroll PAY ON E.empl_no = PAY.empl_no INNER JOIN dept D ON E.home_orgn=D.code WHERE PR.pay_cd IN ('001', '002') ")
+    '  .Append("AND (PR.rate_no = 1) ")
+    '  '.Append("AND (P.term_date IS NULL OR P.term_date >= DATEADD(mm,-3, GETDATE())) ")
+    '  'If DepartmentList.Length > 0 Then
+    '  '    .Append(" AND E.home_orgn IN (").Append(DepartmentList).Append(")")
+    '  'End If
+    '  'If EmployeeID.Length > 0 Then
+    '  '    .Append(" AND E.empl_no = '").Append(EmployeeID).Append("'")
+    '  'End If
+    '  .Append(" ORDER BY E.l_name ASC, E.f_name ASC")
+    'End With
+    Dim ds As DataSet = dbc.Get_Dataset(query)
+    'Dim tb As DataSet = GetTimeBankData(StartDate)
+    Try
+      'Dim tmp As List(Of FinanceData) = (From dr In ds.Tables(0).AsEnumerable Select New FinanceData(dr)).ToList
+      'tmp = (From dr In ds.Tables(0).AsEnumerable() Select GetEmployeePayPeriodByDataRow(dr)).ToList
+      Return (From dr In ds.Tables(0).AsEnumerable Select New FinanceData(dr)).ToList
+    Catch ex As Exception
+      Log(ex)
+      Return Nothing
+    End Try
+  End Function
+
 
   Public Function GetDepartmentListFromFinPlus() As List(Of FinplusDepartment)
     ' This pulls the employee data from Pentamation for the list of departments 
@@ -945,6 +1028,8 @@ SELECT
   SUM([110]) AS [110],
   SUM([046]) AS [046],
   SUM([100]) AS [100],
+  SUM([118]) AS [118],
+  SUM([119]) AS [119],
   SUM([120]) AS [120],
   SUM([121]) AS [121],
   SUM([230]) AS [230],
@@ -988,6 +1073,8 @@ FROM (
     [131],
     [134],
     [120],
+    [118],
+    [119],
     [122],
     [124],
     [006],
@@ -1024,7 +1111,7 @@ FROM (
       AND S.pay_period_ending='{ppEnd.ToShortDateString}'
   ) AS ST 
 PIVOT (	SUM(hours) 
-  FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [121], [123], [230], [231], [232],  
+  FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [118], [119], [121], [123], [230], [231], [232],  
       		[130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303]) 
   ) AS PivotTable) AS T1 
 GROUP BY ROLLUP (T1.orgn, T1.employee_id);"

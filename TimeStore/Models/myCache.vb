@@ -45,6 +45,10 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "paycode_production"
+          Return Paycode.GetFromProduction()
+        Case "paycode_training"
+          Return Paycode.GetFromTraining()
         Case "recent_paystubs"
           Return Paystub.PaystubList.Get_All_Recent_Paystubs()
         Case "disaster_rules"
@@ -94,6 +98,8 @@ Namespace Models
         Case "employeedata"
           'Dim payperiodstart As Date = s(1)
           Return GetAllEmployeeDataFromFinPlus()
+        Case "employeedata_training"
+          Return GetAllEmployeeDataFromFinPlusTraining()
         'Case "tca"
         '  Dim eid As Integer = s(1)
         '  Return New Timecard_Access(eid, Nothing)

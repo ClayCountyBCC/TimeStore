@@ -4104,16 +4104,31 @@
       </div>
       <div flex="50"
            layout="row"
-           layout-align="center center">
+           layout-align="space-around center">
+        <md-input-container flex="35">
+          <label>Target Database</label>
+          <md-select ng-disabled="!currentStatus.can_start"
+                     ng-model="currentStatus.target_db"
+                     multiple="false"
+                     aria-label="Select the target Database">
+            <md-option value="0">
+              Production (finplus51)
+            </md-option>
+            <md-option value="1">
+              Training (trnfinplus51)
+            </md-option>
+          </md-select>
+        </md-input-container>
         <md-input-container flex="40"
                             class="md-input-has-value"
-                            layout="row" 
-                            layout-align="space-around center" 
+                            layout="row"
+                            layout-align="space-around center"
                             layout-wrap>
           <label>
             Include Pay Benefits (pay_group S)
           </label>
-          <md-radio-group ng-model="includeBenefits"
+          <md-radio-group ng-model="currentStatus.include_benefits"
+                          ng-disabled="!currentStatus.can_start"
                           layout="row"
                           layout-align="center center"
                           layout-wrap>
@@ -4130,17 +4145,20 @@
         </md-input-container>
         <md-button class="md-primary md-raised"
                    ng-click="StartPayroll()"
-                   ng-show="currentStatus.can_start">
+                   ng-show="currentStatus.can_start && !StartOrResetInProgress">
           Start
         </md-button>
         <md-button class="md-primary md-raised"
                    ng-click="ResetPayroll()"
-                   ng-show="currentStatus.can_reset">
+                   ng-show="currentStatus.can_reset && !StartOrResetInProgress">
           Reset Data
           <md-tooltip>
             This button should only be used when you know the data in Finplus has been changed since this process was originally started.
           </md-tooltip>
         </md-button>
+        <md-progress-circular ng-if="StartOrResetInProgress"
+                              md-mode="indeterminate">
+        </md-progress-circular>
       </div>
       <div flex="100">
         <p style="padding-left: 1em;"
@@ -4266,24 +4284,7 @@
            layout="column"
            layout-wrap
            layout-align="center center">
-        <md-input-container flex="55">
-          <label>Target Database</label>
-          <md-select ng-disabled="!currentStatus.can_update_finplus"
-                     ng-model="postDatabase"
-                     multiple="false"
-                     md-on-close="selectDatabase()"
-                     aria-label="Select the target Database">
-            <md-option value="">
-              Please Select
-            </md-option>
-            <md-option value="finplus51">
-              Production (finplus51)
-            </md-option>
-            <md-option value="trnfinplus51">
-              Training (trnfinplus51)
-            </md-option>
-          </md-select>
-        </md-input-container>
+
         <md-input-container flex="55">
           <label>Select Pay Run</label>
           <md-select ng-disabled="!currentStatus.can_update_finplus"
@@ -4333,14 +4334,53 @@
 </script>
 <script type="text/ng-template" id="PayrollEdit.tmpl.html">
 
-  <div>
+  <md-progress-linear ng-if="loading"
+                      flex="100"
+                      md-mode="indeterminate">
+  </md-progress-linear>
+  <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+            layout="row"
+            layout-align="start center"
+            flex="100">
+    <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Department Name / Number
+      </label>
+      <input type="text" 
+             ng-model="filter_department"
+             ng-model-options="{ debounce: 300}"
+             ng-change="applyFilters()"
+             class="md-input short" />
+    </md-input-container>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Employee Name / Number
+      </label>
+      <input type="text" 
+             class="md-input short" 
+             ng-model-options="{ debounce: 300}"
+             ng-model="filter_employee"
+             ng-change="applyFilters()" />
+    </md-input-container>
+  </fieldset>
+
+  <!--<div>
     Sort by Department, employee name
     Group rows by Employee name
-    Filter by employee number, name, department, has errors, has specific error, 
-      has unmarked error (you can mark an error to show that it does not require fixing.)
+    Filter by has errors, has specific error,
+    has unmarked error (you can mark an error to show that it does not require fixing.)    
 
-  </div>
- 
+  </div>-->
+
+  <payroll-edit-group ng-repeat="pd in filtered_payroll_edits track by pd.employee.EmployeeId"
+                      ped="pd"
+                      paycodes="paycodeslist"
+                      flex="100">
+  </payroll-edit-group>
+
 </script>
 
 <script type="text/ng-template" id="PayrollReview.tmpl.html">
@@ -4984,4 +5024,158 @@
     </div>
   </div>
 
+</script>
+<script type="text/ng-template" id="PayrollData.directive.tmpl.html">
+
+  <div ng-if="showheader"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+    <span style="text-align: left;"
+          flex="25">
+      Pay Code
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Hours
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Pay Rate
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Amount
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      Classify
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      Project Code
+    </span>
+  </div>
+  <hr ng-if="showheader"
+      flex="100" />
+  <div ng-if="!showheader && !messageonly && !totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      {{pd.paycode_detail.title}} ({{pd.paycode}})
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{pd.hours.toFixed(2)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.payrate.toFixed(5)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.amount.toFixed(2)}}
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      {{pd.classify}}
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      {{pd.project_code}}
+    </span>
+  </div>
+  <div style="border-top: 1px dotted #040404; margin-top: .25em;"
+       ng-if="totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      TOTAL
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalhours}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{totalamount}}
+    </span>
+    <span style="text-align: center;"
+          flex="35">
+      
+    </span>
+  </div>
+  <div ng-if="!showheader && !messageonly"
+       ng-repeat="m in pd.messages track by $index"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ m }}
+    </div>
+  </div>
+  <div ng-if="messageonly"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ message }}
+    </div>
+  </div>
+
+</script>
+<script type="text/ng-template" id="PayrollEditGroup.directive.tmpl.html">
+
+  <div layout="row"
+       layout-wrap
+       style="background-color: #efefef;"
+       flex="100">
+    <div style="padding-left: 1em; padding-right: 1em;"
+         class="my-accent"
+         layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="100">
+      <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
+      <span flex="20" style="padding-left: 1em;">{{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})</span>
+      <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
+      <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
+      <md-button class="md-primary md-raised">
+        Change
+      </md-button>
+    </div>
+    <div style="padding: 1em 1em 1em 1em;"
+         flex="100">
+      <payroll-data showheader="true"></payroll-data>
+      <payroll-data ng-repeat="pcd in ped.payroll_change_data track by $index"
+                    pd="pcd"
+                    flex="100">
+      </payroll-data>
+      <payroll-data ng-repeat="m in ped.messages track by $index"
+                    messageonly="true"
+                    message="m"
+                    flex="100">
+      </payroll-data>
+      <payroll-data totalonly="true"
+                    totalhours="GetTotalHours(ped.payroll_change_data)"
+                    totalamount="GetTotalAmount(ped.payroll_change_data)">
+
+      </payroll-data>
+    </div>
+  </div>
+  
 </script>

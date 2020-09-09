@@ -218,6 +218,10 @@
     <Content Include="app\main\DefaultController.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.tmpl.html" />
+    <Content Include="app\payroll\PayrollData.directive.js" />
+    <Content Include="app\payroll\PayrollData.directive.tmpl.html" />
+    <Content Include="app\payroll\PayrollEditGroup.directive.js" />
+    <Content Include="app\payroll\PayrollEditGroup.directive.tmpl.html" />
     <Content Include="app\payroll\PayrollEditProcess.Controller.js" />
     <Content Include="app\payroll\PayrollEditProcess.tmpl.html" />
     <Content Include="app\payroll\PayrollOverallProcess.Controller.js" />
@@ -472,6 +476,11 @@
     <Compile Include="Models\Namedday.vb" />
     <Compile Include="Models\Note.vb" />
     <Compile Include="Models\PayPeriodList.vb" />
+    <Compile Include="Models\Payroll\LeaveBalance.vb" />
+    <Compile Include="Models\Payroll\Paycode.vb" />
+    <Compile Include="Models\Payroll\PayrollData.vb" />
+    <Compile Include="Models\Payroll\PayrollEditData.vb" />
+    <Compile Include="Models\Payroll\PayrollJustification.vb" />
     <Compile Include="Models\Payroll\PayrollModule.vb" />
     <Compile Include="Models\Payroll\PayrollStatus.vb" />
     <Compile Include="Models\Paystub\Paystub.vb" />

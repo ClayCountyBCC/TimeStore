@@ -17,6 +17,7 @@
     'Property PayPeriodStart As Date = Date.MinValue
     Property HoursNeededForOvertime As Double = 0
     Property Base_Payrate As Double = 0
+    Property Comp_Time_Code As String = ""
     Property Banked_Vacation_Hours As Double = Double.MinValue
     Property Banked_Sick_Hours As Double = Double.MinValue
     Property Banked_Comp_Hours As Double = Double.MinValue
@@ -59,10 +60,16 @@
         Select Case IsNull(dr("lv5_cd"), "").ToString.Trim
           Case "500" ' Comp time bank
             Banked_Comp_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
+            Comp_Time_Code = "500"
           Case "510" ' Holiday Bank
             Banked_Holiday_Hours = IsNull(dr("lv5_bal"), Double.MinValue)
           Case Else
         End Select
+        If IsNull(dr("lv6_cd"), "").ToString.Trim = "600" Then
+          Banked_Comp_Hours = IsNull(dr("lv6_bal"), Double.MinValue)
+          Comp_Time_Code = "600"
+        End If
+
         Banked_Vacation_Hours = IsNull(dr("lv2_bal"), Double.MinValue)
         Banked_Sick_Hours = IsNull(dr("lv1_bal"), Double.MinValue)
       Catch ex As Exception

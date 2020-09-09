@@ -264,7 +264,12 @@
 
         Next
         If (EmployeeData.HireDate <= PayPeriodStart) Then
-          Regular(week) = Math.Max(40 - (DisasterRegular(week) + Non_Working_Hours(week)), 0)
+          If Total_Hours(week) > 0 Then
+            Regular(week) = Math.Max(40 - (DisasterRegular(week) + Non_Working_Hours(week)), 0)
+          Else
+            Regular(week) = 0
+          End If
+
         Else
           Dim weekstart As Date = IIf(week = 1, PayPeriodStart, PayPeriodStart.AddDays(7))
           Dim weekend As Date = weekstart.AddDays(6)
