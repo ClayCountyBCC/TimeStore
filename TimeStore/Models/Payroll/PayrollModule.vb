@@ -8,7 +8,8 @@ Module PayrollModule
                                       Target As PayrollStatus.DatabaseTarget) As PayrollStatus
     If current.can_start Then
       ' we'll need to force a recalculate of all of the timestore data
-      GetTimeCards(PayPeriodEnding.AddDays(-13), True) ' the true passed to this function forces a recalculate
+      Dim timecards = GetTimeCards(PayPeriodEnding.AddDays(-13), True) ' the true passed to this function forces a recalculate
+      Timestore_Error.SaveErrors(PayPeriodEnding, timecards)
       ' then we'll do the payroll start process.
       Return PayrollStatus.StartPayroll(PayPeriodEnding,
                                         IncludeBenefits,

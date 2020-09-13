@@ -1,6 +1,7 @@
 ﻿<script type="text/ng-template" id="PayrollEditGroup.directive.tmpl.html">
 
-  <div layout="row"
+  <div id="editgroup{{ped.employee.EmployeeId}}"
+       layout="row"
        layout-wrap
        style="background-color: #efefef;"
        flex="100">
@@ -10,12 +11,21 @@
          layout-align="start center"
          layout-wrap
          flex="100">
+
       <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
-      <span flex="20" style="padding-left: 1em;">{{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})</span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
       <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
-      <md-button class="md-primary md-raised">
-        Change
+
+      <md-button ng-click="ShowEdit($event)"
+                 class="md-primary md-raised">
+        Edit
       </md-button>
     </div>
     <div style="padding: 1em 1em 1em 1em;"
@@ -30,12 +40,14 @@
                     message="m"
                     flex="100">
       </payroll-data>
-      <payroll-data totalonly="true"
+      <payroll-data flex="100"
+                    totalonly="true"
                     totalhours="GetTotalHours(ped.payroll_change_data)"
                     totalamount="GetTotalAmount(ped.payroll_change_data)">
 
       </payroll-data>
     </div>
+
   </div>
   
 </script>

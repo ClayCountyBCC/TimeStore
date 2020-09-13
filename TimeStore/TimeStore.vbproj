@@ -218,8 +218,12 @@
     <Content Include="app\main\DefaultController.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.tmpl.html" />
+    <Content Include="app\payroll\EditPayrollData.directive.js" />
+    <Content Include="app\payroll\EditPayrollData.directive.tmpl.html" />
     <Content Include="app\payroll\PayrollData.directive.js" />
     <Content Include="app\payroll\PayrollData.directive.tmpl.html" />
+    <Content Include="app\payroll\PayrollEditDialog.controller.js" />
+    <Content Include="app\payroll\PayrollEditDialog.tmpl.html" />
     <Content Include="app\payroll\PayrollEditGroup.directive.js" />
     <Content Include="app\payroll\PayrollEditGroup.directive.tmpl.html" />
     <Content Include="app\payroll\PayrollEditProcess.Controller.js" />
@@ -371,6 +375,7 @@
     <Content Include="images\ic_alarm_black_48dp_2x.png" />
     <Content Include="images\ic_cake_24px.svg" />
     <Content Include="images\ic_clear_24px.svg" />
+    <Content Include="images\ic_close_24px.svg" />
     <Content Include="images\ic_collections_bookmark_24px.svg" />
     <Content Include="images\ic_done_24px.svg" />
     <Content Include="images\ic_file_download_24px.svg" />
@@ -463,6 +468,7 @@
     <Compile Include="Models\ErrorLog.vb" />
     <Compile Include="Models\FinanceData.vb" />
     <Compile Include="Models\FinplusDepartment.vb" />
+    <Compile Include="Models\FinplusProjectCodes.vb" />
     <Compile Include="Models\GenericTimecard.vb" />
     <Compile Include="Models\GenericTimeData.vb" />
     <Compile Include="Models\GroupedHours.vb" />
@@ -480,9 +486,10 @@
     <Compile Include="Models\Payroll\Paycode.vb" />
     <Compile Include="Models\Payroll\PayrollData.vb" />
     <Compile Include="Models\Payroll\PayrollEditData.vb" />
-    <Compile Include="Models\Payroll\PayrollJustification.vb" />
+    <Compile Include="Models\Payroll\PayrollChangeJustification.vb" />
     <Compile Include="Models\Payroll\PayrollModule.vb" />
     <Compile Include="Models\Payroll\PayrollStatus.vb" />
+    <Compile Include="Models\Payroll\Timestore_Error.vb" />
     <Compile Include="Models\Paystub\Paystub.vb" />
     <Compile Include="Models\Paystub\PaystubDeductions.vb" />
     <Compile Include="Models\Paystub\PaystubEarnings.vb" />

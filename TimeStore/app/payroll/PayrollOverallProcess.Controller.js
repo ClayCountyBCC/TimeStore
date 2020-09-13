@@ -44,6 +44,42 @@
         });
     }
 
+    $scope.EditsCompleted = function ()
+    {
+      timestoredata.editsCompleted($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.ChangesApproved = function ()
+    {
+      timestoredata.changesApproved($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.CancelApproval = function ()
+    {
+      timestoredata.cancelApproval($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.MarkEditsIncomplete = function ()
+    {
+      timestoredata.editsInComplete($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
     $scope.StartPayroll = function ()
     {
       $scope.StartOrResetInProgress = true;

@@ -8,6 +8,7 @@
     Property lv_sub As String
     Property pay_type As String
     Property time_type As String
+    Property default_classify As String = ""
 
     Public Sub New()
     End Sub
@@ -22,16 +23,46 @@
 
     Public Shared Function GetData(cs As ConnectionStringType) As Dictionary(Of String, Paycode)
       Dim query As String = "
-      SELECT
-        pay_code
-        ,LTRIM(RTRIM(title)) title
-        ,percent_x
-        ,ISNULL(LTRIM(RTRIM(lv_add)), '') lv_add
-        ,ISNULL(LTRIM(RTRIM(lv_sub)), '') lv_sub
-        ,LTRIM(RTRIM(time_type)) time_type
-        ,LTRIM(RTRIM(pay_type)) pay_type
-      FROM paytable
-      ORDER BY pay_code;"
+        WITH DefaultClassify AS (
+
+          SELECT DISTINCT
+            C.class_cd classify
+            ,PT.pay_code
+          FROM paytable PT
+          INNER JOIN clstable C ON C.pay_cd = PT.pay_code AND C.pay_cd != '002'
+          WHERE
+            C.class_cd IN (SELECT DISTINCT classify FROM payrate)
+
+        ), DefaultClassifyNoDupes AS (
+
+          SELECT
+            pay_code
+            ,COUNT(*) CNT
+          FROM DefaultClassify
+          GROUP BY pay_code
+          HAVING COUNT(*) = 1
+
+        ), DefaultClassifyFinal AS (
+
+          SELECT
+            DC.classify
+            ,DC.pay_code
+          FROM DefaultClassify DC
+          INNER JOIN DefaultClassifyNoDupes N ON N.pay_code = DC.pay_code
+
+        )
+        SELECT
+          P.pay_code
+          ,LTRIM(RTRIM(P.title)) title
+          ,P.percent_x
+          ,ISNULL(LTRIM(RTRIM(P.lv_add)), '') lv_add
+          ,ISNULL(LTRIM(RTRIM(P.lv_sub)), '') lv_sub
+          ,LTRIM(RTRIM(P.time_type)) time_type
+          ,LTRIM(RTRIM(P.pay_type)) pay_type
+          ,ISNULL(LTRIM(RTRIM(C.classify)), '') default_classify
+        FROM paytable P
+        LEFT OUTER JOIN DefaultClassifyFinal C ON P.pay_code = C.pay_code
+        ORDER BY P.pay_code;"
       Dim data = Get_Data(Of Paycode)(query, cs)
       Dim dict As Dictionary(Of String, Paycode) = data.ToDictionary(Function(p) p.pay_code, Function(p) p)
       Return dict

@@ -364,72 +364,20 @@
           If IsDisaster Then
             'tsDisasterOvertime.Add(ts)
             'DisasterOvertime(ts.week) += ts.total_hours
-            tsDisasterStraight.Add(ts)
-            DisasterStraight(ts.week) += ts.total_hours
-            tsDisasterOvertime.Add(new_ts)
-            DisasterOvertime(new_ts.week) += new_ts.total_hours
+            tsDisasterStraight.Add(new_ts)
+            DisasterStraight(new_ts.week) += new_ts.total_hours
+            tsDisasterOvertime.Add(ts)
+            DisasterOvertime(ts.week) += ts.total_hours
           Else
-            tsOvertime.Add(new_ts)
+            tsOvertime.Add(ts)
             Overtime(ts.week) += ts.total_hours
             'tsOvertime.Add(ts)
             'Overtime(ts.week) += ts.total_hours
-            tsRegularOvertime.Add(ts)
-            RegularOvertime(ts.week) += ts.total_hours
+            tsRegularOvertime.Add(new_ts)
+            RegularOvertime(new_ts.week) += new_ts.total_hours
           End If
 
         End If
-        'Dim TotalDiff = HoursForOTByWeek - (Regular(ts.week) + ts.total_hours)
-
-        'If TotalDiff = 0 Then
-        '  tsRegular.Add(ts)
-        '  Regular(ts.week) += ts.total_hours
-        'Else
-
-        '  If TotalDiff > 0 Then
-
-        '    If TotalDiff >= ts.total_hours Then
-        '      If IsDisaster Then
-        '        tsDisasterStraight.Add(ts)
-        '        DisasterStraight(ts.week) += ts.total_hours
-        '      Else
-        '        tsRegularOvertime.Add(ts)
-        '        RegularOvertime(ts.week) += ts.total_hours
-        '      End If
-        '    Else
-        '      Dim new_end = ts.start_time.AddHours(ts.total_hours - TotalDiff)
-        '      Dim new_ts = ts.Clone(new_end, ts.end_time)
-        '      ts.end_time = new_end
-        '      ts.Update()
-        '      If IsDisaster Then
-        '        'tsDisasterOvertime.Add(ts)
-        '        'DisasterOvertime(ts.week) += ts.total_hours
-        '        tsDisasterStraight.Add(new_ts)
-        '        DisasterStraight(new_ts.week) += new_ts.total_hours
-        '        tsDisasterRegular.Add(ts)
-        '        DisasterRegular(ts.week) += ts.total_hours
-        '      Else
-        '        tsRegularOvertime.Add(new_ts)
-        '        RegularOvertime(ts.week) += ts.total_hours
-        '        'tsOvertime.Add(ts)
-        '        'Overtime(ts.week) += ts.total_hours
-        '        tsRegular.Add(ts)
-        '        Regular(ts.week) += ts.total_hours
-        '      End If
-        '    End If
-
-        '  Else
-        '    If IsDisaster Then
-        '      tsDisasterOvertime.Add(ts)
-        '      DisasterOvertime(ts.week) += ts.total_hours
-        '    Else
-        '      tsOvertime.Add(ts)
-        '      Overtime(ts.week) += ts.total_hours
-        '    End If
-        '  End If
-
-        'End If
-
-
 
       Else
         If IsDisaster Then
@@ -496,7 +444,7 @@
               End If
             Else
               ' we have a problem
-              Dim el As New ErrorLog("RegularOTDiff calculation error", ts.work_date.ToShortDateString, RegularOTDiff.ToString, "", "")
+              Dim el As New ErrorLog("RegularOTDiff calculation error", EmployeeData.EmployeeId.ToString & " " & ts.work_date.ToShortDateString, RegularOTDiff.ToString, "", "")
             End If
           End If
         Else
@@ -548,7 +496,7 @@
           End If
         Else
           ' we have a problem
-          Dim el As New ErrorLog("RegularDiff calculation error", ts.work_date.ToShortDateString, ts.start_time_raw, ts.end_time_raw, "")
+          Dim el As New ErrorLog("RegularDiff calculation error", EmployeeData.EmployeeId.ToString & " " & ts.work_date.ToShortDateString, ts.start_time_raw, ts.end_time_raw, "")
         End If
       End If
     End Sub
@@ -990,7 +938,11 @@
     Public ReadOnly Property HoursForOTByWeek As Double
       Get
         If _HoursForOTByWeek = -1 Then
-          _HoursForOTByWeek = EmployeeData.HoursNeededForOvertime / 2
+          If EmployeeData.HoursNeededForOvertime = 0 Then
+            _HoursForOTByWeek = 40
+          Else
+            _HoursForOTByWeek = EmployeeData.HoursNeededForOvertime / 2
+          End If
         End If
         Return _HoursForOTByWeek
       End Get

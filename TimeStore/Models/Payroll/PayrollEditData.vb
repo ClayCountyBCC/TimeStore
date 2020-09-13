@@ -21,7 +21,8 @@
                    ByRef justifications As List(Of PayrollChangeJustification),
                    ByRef payrates As List(Of PayrollData),
                    ByRef paystubs As List(Of Paystub.PaystubList),
-                   leave_balance As Dictionary(Of String, Decimal))
+                   leave_balance As Dictionary(Of String, Decimal),
+                   ByRef timestoreErrors As List(Of Timestore_Error))
       employee = e
       If leave_balance IsNot Nothing Then
         Me.leave_balance = leave_balance
@@ -54,6 +55,11 @@
                              Where p.employee_id = employee.EmployeeId
                              Order By p.check_date Descending
                              Select p).ToList)
+      For Each tse In (From t In timestoreErrors
+                       Where t.employee_id = e.EmployeeId
+                       Select t).ToList
+        messages.Add(tse.error_text)
+      Next
       GenerateMessages()
     End Sub
 
@@ -76,7 +82,7 @@
         Case Else
           Return Nothing
       End Select
-
+      Dim timestore_errors As List(Of Timestore_Error) = Timestore_Error.GetErrors(PayPeriodEnding)
       Dim leave_balances = LeaveBalance.GetLeaveBalances(PayPeriodEnding)
       Dim edit_data As New List(Of PayrollEditData)
       Dim finplus_payrates = PayrollData.GetAllFinplusPayrates(PayPeriodEnding, paycodes)
@@ -99,7 +105,8 @@
                                           justifications,
                                           finplus_payrates,
                                           paystubs,
-                                          lb))
+                                          lb,
+                                          timestore_errors))
       Next
       Return edit_data
     End Function

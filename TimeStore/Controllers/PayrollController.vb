@@ -39,6 +39,54 @@ Namespace Controllers
     End Function
 
     <HttpGet>
+    <Route("EditsCompleted")>
+    Public Function EditsCompleted(PayPeriodEnding As Date) As PayrollStatus
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_edit Then
+        PayrollStatus.MarkEditsComplete(PayPeriodEnding, current.my_access, ConnectionStringType.Timestore)
+        Return GetCurrentStatus(PayPeriodEnding)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("ChangesApproved")>
+    Public Function ChangesApproved(PayPeriodEnding As Date) As PayrollStatus
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_approve_edits Then
+        PayrollStatus.ApproveEdits(PayPeriodEnding, current.my_access, ConnectionStringType.Timestore)
+        Return GetCurrentStatus(PayPeriodEnding)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("CancelApproval")>
+    Public Function CancelApproval(PayPeriodEnding As Date) As PayrollStatus
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.my_access.PayrollAccess > 1 Then
+        PayrollStatus.CancelApproval(PayPeriodEnding, current.my_access, ConnectionStringType.Timestore)
+        Return GetCurrentStatus(PayPeriodEnding)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("EditsInComplete")>
+    Public Function EditsInComplete(PayPeriodEnding As Date) As PayrollStatus
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.my_access.PayrollAccess > 0 Then
+        PayrollStatus.MarkEditsInComplete(PayPeriodEnding, current.my_access, ConnectionStringType.Timestore)
+        Return GetCurrentStatus(PayPeriodEnding)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
     <Route("PayrollEdits")>
     Public Function GetEdits(PayPeriodEnding As Date) As List(Of PayrollEditData)
       Dim current = GetCurrentStatus(PayPeriodEnding)
@@ -74,6 +122,55 @@ Namespace Controllers
       Dim tca As Timecard_Access = GetTimeCardAccess(User.Identity.Name)
       Return PayrollStatus.GetPayrollStatus(PayPeriodEnding, tca)
     End Function
+
+    <HttpGet>
+    <Route("GetCheck")>
+    Public Function GetCheckInfo(EmployeeId As Integer, CheckNumber As String) As List(Of PayrollData)
+      Dim tca As Timecard_Access = GetTimeCardAccess(User.Identity.Name)
+      If tca.PayrollAccess < 1 Then Return New List(Of PayrollData)
+      Return PayrollData.GetCheckPayInformation(EmployeeId, CheckNumber)
+    End Function
+
+    <HttpPost>
+    <Route("SaveChanges")>
+    Public Function SaveChanges(PayPeriodEnding As Date, PayrollChanges As List(Of PayrollData)) As Boolean
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_edit Then
+        Return PayrollData.SavePayrollChanges(PayPeriodEnding, current.my_access.UserName, PayrollChanges)
+      Else
+        Return False
+      End If
+      Return True
+    End Function
+
+    <HttpPost>
+    <Route("SaveJustifications")>
+    Public Function SaveJustifications(PayPeriodEnding As Date, EmployeeId As Integer, Justifications As List(Of PayrollChangeJustification)) As List(Of PayrollChangeJustification)
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_edit Then
+        Return PayrollChangeJustification.SaveJustifications(PayPeriodEnding, EmployeeId, current.my_access.UserName, Justifications)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("DeleteJustification")>
+    Public Function DeleteJustification(PayPeriodEnding As Date, id As Integer) As Boolean
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_edit Then
+        Return PayrollChangeJustification.DeleteJustification(id)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
+    <Route("GetProjectCodes")>
+    Public Function GetProjectCodes(PayPeriodEnding As Date) As List(Of FinplusProjectCodes)
+      Return FinplusProjectCodes.GetCachedFilteredProjectCodes(PayPeriodEnding.AddDays(-13))
+    End Function
+
 
   End Class
 End Namespace

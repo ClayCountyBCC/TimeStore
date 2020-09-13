@@ -711,9 +711,9 @@
               Try
                 timeList.RemoveAll(Function(x) x.payCode = c.PayCode)
                 calculatedTimeList.RemoveAll(Function(x) x.payCode = c.PayCode)
-                approvalTimeList.Add(New WorkType(PayCodes(c.PayCode), c.Hours, 16, c.PayCode, c.PayRate))
-                timeList.Add(New WorkType(PayCodes(c.PayCode), c.Hours, 16, c.PayCode, c.PayRate))
-                calculatedTimeList.Add(New WorkType(PayCodes(c.PayCode), c.Hours, 16, c.PayCode, c.PayRate))
+                approvalTimeList.Add(New WorkType(Paycodes(c.PayCode), c.Hours, 16, c.PayCode, "", c.PayRate))
+                timeList.Add(New WorkType(Paycodes(c.PayCode), c.Hours, 16, c.PayCode, "", c.PayRate))
+                calculatedTimeList.Add(New WorkType(Paycodes(c.PayCode), c.Hours, 16, c.PayCode, "", c.PayRate))
               Catch ex As Exception
                 Log(ex)
               End Try
@@ -909,6 +909,18 @@
       foundEmployee = True
       Load_TCTD(e)
       Save(allowDataSave)
+      CheckTimestoreHours(e)
+    End Sub
+
+    Public Sub CheckTimestoreHours(e As TC_New_EPP)
+      Dim total_saved_hours = (From c In calculatedTimeList
+                               Where c.payCode <> "046"
+                               Select c.hours).Sum
+      Dim total_hours = (From t In e.TL
+                         Select t.TotalHours).Sum
+      If Not isExempt AndAlso total_saved_hours <> total_hours Then
+        Dim el As New ErrorLog("Timestore hours don't match", e.EmployeeData.EmployeeId, total_saved_hours, total_hours, "")
+      End If
     End Sub
 
     Public Sub New(e As EPP, STD As List(Of Saved_Timecard_Data), SavedNotes As List(Of Note), Optional allowDataSave As Boolean = False)
@@ -933,6 +945,7 @@
       Current_Timecard_Data.AddRange(STD)
       Notes.AddRange(SavedNotes)
       Save(allowDataSave)
+      CheckTimestoreHours(e)
     End Sub
 
     Public Sub New(StartDate As Date, EmployeeID As Integer)
@@ -965,7 +978,7 @@
           'Dim e As New TC_EPP(tctd, fd, payPeriodStart)
           Dim e As New TC_New_EPP(tctd, fd, payPeriodStart)
           Load_TCTD(e)
-
+          CheckTimestoreHours(e)
         Else
 
           Dim ttdl As List(Of TelestaffTimeData) = TelestaffTimeData.GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)

@@ -4164,21 +4164,7 @@
         <p style="padding-left: 1em;"
            ng-if="currentStatus.started_by.length > 0">
           Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-        </p>
-        <!--<ol style="padding-right: 1em;">
-          <li ng-if="currentStatus.started_by.length > 0">
-            Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-          </li>
-          <li>
-            Pull current Payrates from Finplus
-          </li>
-          <li>
-            Pull current leave banks from Finplus
-          </li>
-          <li>
-            If changes are made in Finplus after this process has been started, they will not be reflected in this process.
-          </li>
-        </ol>-->
+        </p>        
       </div>
     </div>
 
@@ -4201,27 +4187,25 @@
            layout-align="center center">
         <md-button ng-click="ViewEdits()"
                    ng-disabled="!currentStatus.can_edit"
-                   class="md-primary md-raised">View Edits</md-button>
+                   class="md-primary md-raised">
+          View Edits
+        </md-button>
+        <md-button ng-disabled="!currentStatus.can_edit || currentStatus.edits_completed_by.length > 0"
+                   ng-click="EditsCompleted()"
+                   class="md-warn md-raised">
+          Mark Edits Completed
+        </md-button>
+        <md-button ng-show="currentStatus.edits_completed_by.length > 0 && currentStatus.edits_approved_by.length === 0"
+                   ng-click="MarkEditsIncomplete()"
+                   class="md-warn md-raised">
+          Mark Edits Incomplete
+        </md-button>
       </div>
       <div flex="100">
         <p ng-if="currentStatus.edits_completed_by.length > 0"
            style="padding-left: 1em;">
           Edits Completed by {{ currentStatus.edits_completed_by }} on {{ currentStatus.edits_completed_on_display }}
         </p>
-        <!--<ol style="padding-right: 1em;">
-          <li>
-            Change Payrates, hours, and paycodes as necessary
-          </li>
-          <li>
-            Depending on the need, it may be possible to unlock someone's Timestore for the pay period in process so that they can make any changes or additions as needed.  This will most likely apply to to people who did not complete their hours.
-          </li>
-          <li>
-            Provide justification for changes
-          </li>
-          <li>
-            Indiciate when the changes are complete
-          </li>
-        </ol>-->
       </div>
     </div>
 
@@ -4244,8 +4228,19 @@
            layout-align="center center">
         <md-button ng-disabled="!currentStatus.can_approve_edits"
                    ng-click="ViewChanges()"
-                   class="md-primary md-raised">View Changes</md-button>
-
+                   class="md-primary md-raised">
+          View Changes
+        </md-button>
+        <md-button ng-click="ChangesApproved()"
+                   ng-disabled="currentStatus.edits_completed_by.length === 0 || currentStatus.edits_approved_by.length > 0"
+                   class="md-warn md-raised">
+          Approve All Changes
+        </md-button>
+        <md-button ng-show="currentStatus.edits_approved_by.length > 0 && currentStatus.finplus_updated_by.length === 0"
+                   ng-click="CancelApproval()"
+                   class="md-warn md-raised">
+          Cancel Approval
+        </md-button>
       </div>
       <div flex="100">
         <p ng-if="currentStatus.edits_approved_by.length > 0"
@@ -4333,53 +4328,57 @@
 
 </script>
 <script type="text/ng-template" id="PayrollEdit.tmpl.html">
+  
+    <md-progress-linear ng-if="loading"
+                        flex="100"
+                        md-mode="indeterminate">
+    </md-progress-linear>
+    <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+              layout="row"
+              layout-align="start center"
+              flex="100">
+      <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Department Name / Number
+        </label>
+        <input type="text"
+               ng-model="filter_department"
+               ng-model-options="{ debounce: 300}"
+               ng-change="applyFilters()"
+               class="md-input short" />
+      </md-input-container>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Employee Name / Number
+        </label>
+        <input type="text"
+               class="md-input short"
+               ng-model-options="{ debounce: 300}"
+               ng-model="filter_employee"
+               ng-change="applyFilters()" />
+      </md-input-container>
+      <span flex></span>
+      <md-button ng-click="returnToOverallProcess()"
+                 class="md-button md-raised md-primary">Return to Process</md-button>
+    </fieldset>
+    <!--<div>
+      Sort by Department, employee name
+      Group rows by Employee name
+      Filter by has errors, has specific error,
+      has unmarked error (you can mark an error to show that it does not require fixing.)
 
-  <md-progress-linear ng-if="loading"
-                      flex="100"
-                      md-mode="indeterminate">
-  </md-progress-linear>
-  <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
-            layout="row"
-            layout-align="start center"
-            flex="100">
-    <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
-    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
-                        flex="30">
-      <label>
-        Department Name / Number
-      </label>
-      <input type="text" 
-             ng-model="filter_department"
-             ng-model-options="{ debounce: 300}"
-             ng-change="applyFilters()"
-             class="md-input short" />
-    </md-input-container>
-    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
-                        flex="30">
-      <label>
-        Employee Name / Number
-      </label>
-      <input type="text" 
-             class="md-input short" 
-             ng-model-options="{ debounce: 300}"
-             ng-model="filter_employee"
-             ng-change="applyFilters()" />
-    </md-input-container>
-  </fieldset>
+    </div>-->
 
-  <!--<div>
-    Sort by Department, employee name
-    Group rows by Employee name
-    Filter by has errors, has specific error,
-    has unmarked error (you can mark an error to show that it does not require fixing.)    
 
-  </div>-->
-
-  <payroll-edit-group ng-repeat="pd in filtered_payroll_edits track by pd.employee.EmployeeId"
-                      ped="pd"
-                      paycodes="paycodeslist"
-                      flex="100">
-  </payroll-edit-group>
+    <payroll-edit-group ng-repeat="pd in filtered_payroll_edits track by pd.employee.EmployeeId"
+                        ped="pd"
+                        paycodes="paycodeslist"
+                        projectcodes="project_codes"
+                        flex="100">
+    </payroll-edit-group>
 
 </script>
 
@@ -5138,9 +5137,184 @@
   </div>
 
 </script>
+<script type="text/ng-template" id="EditPayrollData.directive.tmpl.html">
+
+  <div ng-if="showheader"
+       layout="row"
+       layout-align="space-between center"
+       flex="100">
+    <span flex="5">
+
+    </span>
+    <span style="text-align: left;"
+          flex="30">
+      Pay Code
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Hours
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Pay Rate
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Amount
+    </span>
+    <span style="text-align: center;"
+          flex="10">
+      Classify
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      Project Code
+    </span>
+  </div>
+
+  <hr ng-if="showheader"
+      flex="100" />
+
+  <div ng-if="!showheader && !messageonly && !totalonly"
+       layout="row"
+       layout-align="start start"
+       flex="100">
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="10">
+      <md-button ng-click="DeleteData()"
+                 class="md-button md-primary md-raised">
+        DELETE
+      </md-button>
+    </div>
+
+    <md-input-container flex="25">
+      <label>Pay Code</label>
+      <md-select class=""
+                 ng-change="UpdatePaycodeDetail()"
+                 ng-model="pd.paycode">
+        <md-option ng-repeat="pc in paycodes track by pc.pay_code"
+                   ng-value="pc.pay_code">
+          {{pc.title}} ({{pc.pay_code}})
+        </md-option>
+      </md-select>
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Hours</label>
+      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+             style="text-align: right;"
+             ng-model="pd.hours"
+             ng-change="RecalculateAmount()"
+             type="number"
+             step=".25" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Payrate</label>
+      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+             style="text-align: right;"
+             ng-model="pd.payrate"
+             ng-change="RecalculateAmount()"
+             type="number"
+             step="any" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Amount</label>
+      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type === 'H'"
+             style="text-align: right;"
+             ng-model="pd.amount"
+             type="number"
+             step="any" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Classify</label>
+      <input style="text-align: right;"
+             ng-model="pd.classify"
+             maxlength="4"
+             type="text" />
+    </md-input-container>
+
+    <md-input-container flex="15">
+      <label>Project Code</label>
+      <md-select ng-change="validate()"
+                 ng-model="pd.project_code">
+        <md-option ng-value="''">None</md-option>
+        <md-option ng-repeat="pc in projectcodes track by pc.project_code"
+                   ng-value="pc.project_code">{{pc.project_code}}</md-option>
+      </md-select>
+
+    </md-input-container>
+
+    <!--<md-input-container flex="10">
+    <label>Project Code</label>
+    <input style="text-align: right;"
+           ng-model="pd.project_code"
+           maxlength="8"
+           type="text" />
+  </md-input-container>-->
+
+  </div>
+  <div style="border-top: 1px dotted #040404; margin-top: .25em;"
+       ng-if="totalonly"
+       layout="row"
+       layout-align="start start"
+       layout-wrap
+       flex="100">
+    <span flex="10">
+
+    </span>
+    <span style="text-align: right;"
+          flex="25">
+      TOTAL
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalhours}}
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalamount}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+    </span>
+  </div>
+  <div ng-if="!showheader && !messageonly"
+       ng-repeat="m in pd.messages track by $index"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ m }}
+    </div>
+  </div>
+  <div ng-if="messageonly"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ message }}
+    </div>
+  </div>
+
+</script>
 <script type="text/ng-template" id="PayrollEditGroup.directive.tmpl.html">
 
-  <div layout="row"
+  <div id="editgroup{{ped.employee.EmployeeId}}"
+       layout="row"
        layout-wrap
        style="background-color: #efefef;"
        flex="100">
@@ -5150,12 +5324,21 @@
          layout-align="start center"
          layout-wrap
          flex="100">
+
       <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
-      <span flex="20" style="padding-left: 1em;">{{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})</span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
       <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
-      <md-button class="md-primary md-raised">
-        Change
+
+      <md-button ng-click="ShowEdit($event)"
+                 class="md-primary md-raised">
+        Edit
       </md-button>
     </div>
     <div style="padding: 1em 1em 1em 1em;"
@@ -5170,12 +5353,248 @@
                     message="m"
                     flex="100">
       </payroll-data>
-      <payroll-data totalonly="true"
+      <payroll-data flex="100"
+                    totalonly="true"
                     totalhours="GetTotalHours(ped.payroll_change_data)"
                     totalamount="GetTotalAmount(ped.payroll_change_data)">
 
       </payroll-data>
     </div>
+
   </div>
   
 </script>
+<script type="text/ng-template" id="PayrollEditDialog.tmpl.html">
+  <md-dialog aria-label="Edit Time">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex="30">{{edit_data.employee.DepartmentName}} ({{edit_data.employee.Department}}) </h2>
+        <h2 flex="20" style="padding-left: 1em;">{{edit_data.employee.EmployeeName}} ({{edit_data.employee.EmployeeId}})</h2>
+        <h2 flex="10">{{ edit_data.employee.isFulltime ? 'Full time' : 'Part time';}}</h2>
+        <h2 flex="10">{{ edit_data.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-svg-src="images/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+        </md-button>
+      </div>
+
+    </md-toolbar>
+    <md-dialog-content>
+      <md-tabs md-dynamic-height
+               md-border-bottom>
+        <md-tab label="Payroll Changes">
+          <div layout="row"
+               layout-wrap
+               style="padding: .5em .5em .5em .5em;"
+               flex="100">
+            <!-- Show tabs for Current Payroll Data and Base Data  -->
+            <div layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <edit-payroll-data ng-repeat="pcd in edit_data.payroll_change_data track by $index"
+                                 pd="pcd"
+                                 employee="edit_data.employee"
+                                 payrates="edit_data.finplus_payrates"
+                                 paycodes="paycodes"
+                                 projectcodes="project_codes"
+                                 remove="RemoveDeleted()"
+                                 validate="ValidateChanges()"
+                                 flex="100">
+              </edit-payroll-data>
+              <edit-payroll-data ng-repeat="m in edit_data.messages track by $index"
+                                 messageonly="true"
+                                 message="m"
+                                 flex="100">
+              </edit-payroll-data>
+              <div layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <md-button ng-click="AddPayrollChange()"
+                           class="md-warn md-raised">
+                  Add
+                </md-button>
+                <md-button ng-click="RevertAllChanges()"
+                           class="md-raised">
+                  Revert All Changes
+                </md-button>
+              </div>
+              <edit-payroll-data flex="100"
+                                 totalonly="true"
+                                 totalhours="GetTotalHours(edit_data.payroll_change_data)"
+                                 totalamount="GetTotalAmount(edit_data.payroll_change_data)">
+
+              </edit-payroll-data>
+            </div>
+            <div style="margin-top: .5em;"
+                 layout-align="center start"
+                 layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <div layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="AddJustification()"
+                             class="md-primary md-raised">
+                    Add
+                  </md-button>
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="20">
+                  <md-button ng-click="SaveJustifications();"
+                             ng-show="edit_data.justifications.length > 0"
+                             class="md-primary md-raised">
+                    Save All
+                  </md-button>
+                </div>
+                <div style="padding-left: 1em; padding-right: 1em;"
+                     layout="row"
+                     layout-align="start center"
+                     flex="70">
+                  {{edit_data.justifications.length === 0 ? "No Justifications have been added." : "Justifications"}}
+                </div>
+              </div>
+              <div ng-repeat="j in edit_data.justifications track by $index"
+                   layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="DeleteJustification(j.id);"
+                             class="md-warn md-raised">
+                    Delete
+                  </md-button>
+
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="90">
+                  <textarea rows="6"
+                            flex="100"
+                            ng-model="j.justification"></textarea>
+                </div>
+              </div>
+            </div>
+
+
+            <div ng-if="validation_errors.length > 0"
+                 class="ErrorText"
+                 style="margin-top: 1em;"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+              Error: {{ validation_errors }}
+            </div>
+          </div>
+        </md-tab>
+        <md-tab label="Base Timestore Data">
+          <div style="padding: 1em 1em 1em 1em;"
+               flex="100">
+            <payroll-data showheader="true"></payroll-data>
+            <payroll-data ng-repeat="pcd in edit_data.base_payroll_data track by $index"
+                          pd="pcd"
+                          flex="100">
+            </payroll-data>
+            <payroll-data flex="100"
+                          totalonly="true"
+                          totalhours="GetTotalHours(edit_data.base_payroll_data)"
+                          totalamount="GetTotalAmount(edit_data.base_payroll_data)">
+
+            </payroll-data>
+          </div>
+        </md-tab>
+        <md-tab label="Default / Past Pay">
+          <div layout="row"
+               layout-align="start center"
+               flex="100"
+               layout-wrap
+               style="padding: 1em 1em 1em 1em;">
+
+
+            <md-input-container flex="60">
+              <label>Show Default Info</label>
+              <md-select ng-model="defaultview"
+                         ng-change="UpdateView()">
+                <md-option value="default">
+                  Default Pay
+                </md-option>
+                <md-option ng-repeat="ps in edit_data.paystub_data"
+                           ng-value="ps.check_number">
+                  Check # {{ps.check_number}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <div layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                Pay Code
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Hours
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Payrate
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Amount
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Classify
+              </span>
+            </div>
+            <div ng-repeat="d in default_display track by $index"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.paycode}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.hours}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.payrate}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.amount}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.classify}}
+              </span>
+            </div>
+
+          </div>
+          
+        </md-tab>
+      </md-tabs>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="cancel()"
+                 class="md-raised">
+        Cancel
+      </md-button>
+      <md-button ng-disabled="validation_errors.length > 0"
+                 ng-click="hide()"
+                 class="md-primary md-raised">
+        Save
+      </md-button>
+    </md-dialog-actions>
+  </md-dialog>
+  </script>

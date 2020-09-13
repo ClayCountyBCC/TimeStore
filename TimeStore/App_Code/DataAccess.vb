@@ -115,8 +115,6 @@ Public Module ModuleDataAccess
     End Select
   End Function
 
-
-
   'Public Function GetADEmployeeData() As List(Of AD_EmployeeData)
   '  Dim key As String = "employee_ad_data"
   '  Dim adl As List(Of AD_EmployeeData) = myCache.GetItem(key)

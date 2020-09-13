@@ -92,21 +92,7 @@
         <p style="padding-left: 1em;"
            ng-if="currentStatus.started_by.length > 0">
           Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-        </p>
-        <!--<ol style="padding-right: 1em;">
-          <li ng-if="currentStatus.started_by.length > 0">
-            Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-          </li>
-          <li>
-            Pull current Payrates from Finplus
-          </li>
-          <li>
-            Pull current leave banks from Finplus
-          </li>
-          <li>
-            If changes are made in Finplus after this process has been started, they will not be reflected in this process.
-          </li>
-        </ol>-->
+        </p>        
       </div>
     </div>
 
@@ -129,27 +115,25 @@
            layout-align="center center">
         <md-button ng-click="ViewEdits()"
                    ng-disabled="!currentStatus.can_edit"
-                   class="md-primary md-raised">View Edits</md-button>
+                   class="md-primary md-raised">
+          View Edits
+        </md-button>
+        <md-button ng-disabled="!currentStatus.can_edit || currentStatus.edits_completed_by.length > 0"
+                   ng-click="EditsCompleted()"
+                   class="md-warn md-raised">
+          Mark Edits Completed
+        </md-button>
+        <md-button ng-show="currentStatus.edits_completed_by.length > 0 && currentStatus.edits_approved_by.length === 0"
+                   ng-click="MarkEditsIncomplete()"
+                   class="md-warn md-raised">
+          Mark Edits Incomplete
+        </md-button>
       </div>
       <div flex="100">
         <p ng-if="currentStatus.edits_completed_by.length > 0"
            style="padding-left: 1em;">
           Edits Completed by {{ currentStatus.edits_completed_by }} on {{ currentStatus.edits_completed_on_display }}
         </p>
-        <!--<ol style="padding-right: 1em;">
-          <li>
-            Change Payrates, hours, and paycodes as necessary
-          </li>
-          <li>
-            Depending on the need, it may be possible to unlock someone's Timestore for the pay period in process so that they can make any changes or additions as needed.  This will most likely apply to to people who did not complete their hours.
-          </li>
-          <li>
-            Provide justification for changes
-          </li>
-          <li>
-            Indiciate when the changes are complete
-          </li>
-        </ol>-->
       </div>
     </div>
 
@@ -172,8 +156,19 @@
            layout-align="center center">
         <md-button ng-disabled="!currentStatus.can_approve_edits"
                    ng-click="ViewChanges()"
-                   class="md-primary md-raised">View Changes</md-button>
-
+                   class="md-primary md-raised">
+          View Changes
+        </md-button>
+        <md-button ng-click="ChangesApproved()"
+                   ng-disabled="currentStatus.edits_completed_by.length === 0 || currentStatus.edits_approved_by.length > 0"
+                   class="md-warn md-raised">
+          Approve All Changes
+        </md-button>
+        <md-button ng-show="currentStatus.edits_approved_by.length > 0 && currentStatus.finplus_updated_by.length === 0"
+                   ng-click="CancelApproval()"
+                   class="md-warn md-raised">
+          Cancel Approval
+        </md-button>
       </div>
       <div flex="100">
         <p ng-if="currentStatus.edits_approved_by.length > 0"

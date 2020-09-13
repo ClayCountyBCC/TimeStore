@@ -45,6 +45,14 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "filtered_project_codes"
+          Dim pps As Date = Date.Parse(s(1))
+          Return FinplusProjectCodes.GetFilteredProjectCodes(pps)
+
+        Case "all_project_codes"
+          Dim pps As Date = Date.Parse(s(1))
+          Return FinplusProjectCodes.GetAllProjectCodes(pps)
+
         Case "paycode_production"
           Return Paycode.GetFromProduction()
         Case "paycode_training"

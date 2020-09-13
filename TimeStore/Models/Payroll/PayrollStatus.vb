@@ -194,6 +194,7 @@ Namespace Models
           DELETE FROM Finplus_Payroll WHERE pay_period_ending=@pay_period_ending;
           DELETE FROM Payroll_Status WHERE pay_period_ending=@pay_period_ending;
           DELETE FROM Payroll_Changes WHERE pay_period_ending=@pay_period_ending;
+          DELETE FROM Timestore_Errors WHERE pay_period_ending=@pay_period_ending;
           INSERT INTO TimeStore.dbo.notes (employee_id, pay_period_ending, note, note_added_by)
           VALUES (@employee_id, @pay_period_ending, 'Payroll Process has been reset.', @username);
         END TRY
@@ -220,19 +221,82 @@ Namespace Models
     End Function
 
     Public Shared Function MarkEditsComplete(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@username", tca.UserName)
+      Dim query As String = "
+        UPDATE Payroll_Status
+        SET
+          edits_completed_on=GETDATE()
+          ,edits_completed_by=@username
+        WHERE 
+          pay_period_ending=@pay_period_ending;"
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
+      Return GetPayrollStatus(PayPeriodEnding, tca)
+    End Function
 
+    Public Shared Function MarkEditsInComplete(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@username", tca.UserName)
+      Dim query As String = "
+        UPDATE Payroll_Status
+        SET
+          edits_completed_on=NULL
+          ,edits_completed_by=NULL
+        WHERE 
+          pay_period_ending=@pay_period_ending;"
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
+      Return GetPayrollStatus(PayPeriodEnding, tca)
     End Function
 
     Public Shared Function ApproveEdits(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
-
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@username", tca.UserName)
+      Dim query As String = "
+        UPDATE Payroll_Status
+        SET
+          edits_approved_on=GETDATE()
+          ,edits_approved_by=@username
+        WHERE 
+          pay_period_ending=@pay_period_ending;"
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
+      Return GetPayrollStatus(PayPeriodEnding, tca)
     End Function
 
     Public Shared Function CancelApproval(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
-
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@username", tca.UserName)
+      Dim query As String = "
+        UPDATE Payroll_Status
+        SET
+          edits_approved_on=NULL
+          ,edits_approved_by=NULL
+        WHERE 
+          pay_period_ending=@pay_period_ending;"
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
+      Return GetPayrollStatus(PayPeriodEnding, tca)
     End Function
 
     Public Shared Function PostToFinplus(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
 
+    End Function
+
+    Public Shared Function PostToFinplusComplete(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@username", tca.UserName)
+      Dim query As String = "
+        UPDATE Payroll_Status
+        SET
+          finplus_updated_on=GETDATE()
+          ,finplus_updated_by=@username
+        WHERE 
+          pay_period_ending=@pay_period_ending;"
+      Exec_Query(query, dp, ConnectionStringType.Timestore)
+      Return GetPayrollStatus(PayPeriodEnding, tca)
     End Function
 
     Public Shared Function CapturePayratesQuery(Target As DatabaseTarget, IncludeBenefits As Boolean) As String
@@ -696,7 +760,7 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
           FP.employee_id
           ,FP.pay_period_ending
           ,FP.paycode
-          ,FP.payrate
+          ,0
           ,'' project_code
           ,FP.pay_hours hours
           ,FP.pay_hours * FP.payrate amount

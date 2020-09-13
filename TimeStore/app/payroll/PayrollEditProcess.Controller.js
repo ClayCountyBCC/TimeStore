@@ -4,19 +4,22 @@
 
   angular.module('timestoreApp')
     .controller('PayrollEditController',
-      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollEditController]);
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', '$mdDialog', PayrollEditController]);
 
 
-  function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams, $mdDialog)
   {
     $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
     $scope.loading = false;
+    $scope.project_codes = [];
     $scope.base_payroll_edits = [];
     $scope.filtered_payroll_edits = [];
     $scope.filter_employee = "";
     $scope.filter_department = "";
+    $scope.paycodes = {};
     $scope.paycodeslist = [];
     $scope.currentStatus = {};
+    $scope.edit_target = [];
     // need to get data for this pay period
     function HandleCurrentStatus(data)
     {
@@ -27,6 +30,11 @@
       }
       $scope.currentStatus = UpdateDisplays(data);
       console.log('payroll status', $scope.currentStatus);
+    }
+
+    $scope.returnToOverallProcess = function ()
+    {
+      timestoreNav.goPayrollOverallProcess($routeParams.payPeriod);
     }
 
     function UpdateDisplays(data)
@@ -46,6 +54,16 @@
         });
     }
 
+    function GetProjectCodes()
+    {
+      timestoredata.getProjectCodes($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('project codes', data);
+          $scope.project_codes = data;
+        });
+    }
+
     function formatDatetime(d)
     {
       return d ? new Date(d).toLocaleString('en-us') : "";
@@ -57,8 +75,20 @@
         .then(function (data)
         {
           console.log('paycode data', data);
-          $scope.paycodeslist = data;
+          $scope.paycodes = data;
+          $scope.paycodeslist = ConvertPaycodeDictionaryToArray(data);
         });
+    }
+
+    function ConvertPaycodeDictionaryToArray(data)
+    {
+      let list = [];
+      for (const [key, value] of Object.entries(data))
+      {
+        list.push(value);
+      }
+      list.sort(function (a, b) { return a.pay_code - b.pay_code; })
+      return list;
     }
 
     $scope.getPayrollData = function ()
@@ -103,7 +133,7 @@
     $scope.getPayrollData();
     getPaycodes();
     GetPayrollStatus();
-
+    GetProjectCodes();
   }
 
 })();
