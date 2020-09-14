@@ -4072,6 +4072,7 @@
 
 <script type="text/ng-template" id="PayrollOverall.tmpl.html">
 
+
   <div flex="100"
        layout="row"
        layout-align="center start"
@@ -4164,7 +4165,7 @@
         <p style="padding-left: 1em;"
            ng-if="currentStatus.started_by.length > 0">
           Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-        </p>        
+        </p>
       </div>
     </div>
 
@@ -4276,7 +4277,7 @@
         </h5>
       </div>
       <div flex="50"
-           layout="column"
+           layout="row"
            layout-wrap
            layout-align="center center">
 
@@ -4290,13 +4291,18 @@
             <md-option ng-value="">
               No payrun
             </md-option>
-            <md-option ng-repeat="p in foundPayRuns track by $index"
-                       ng-value="p.pay_run_number">
-              {{p.pay_run_number}}
+            <md-option ng-repeat="p in payruns track by $index"
+                       ng-value="p">
+              {{p}}
             </md-option>
           </md-select>
         </md-input-container>
-        <md-button ng-disabled="!currentStatus.can_update_finplus"
+        <md-button ng-click="GetPayruns()"
+                   class="md-warn md-raised">
+          Refresh Pay Runs
+        </md-button>
+        <md-button ng-click="PostTimestoreData()"
+                   ng-disabled="!currentStatus.can_update_finplus || (!postPayrun || postPayrun.length === 0)"
                    class="md-primary md-raised">
           Post to Finplus
         </md-button>
@@ -4304,22 +4310,11 @@
       <div flex="100">
         <p ng-if="currentStatus.finplus_updated_by.length > 0"
            style="padding-left: 1em;">
-          Edits Approved by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
+          Data Posted to Finplus by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
         </p>
-        <!--<ol style="padding-right: 1em;">
-          <li>
-            This action can only be performed after the completion of the Approve Timestore Payroll changes step.
-          </li>
-          <li>
-            Show a list of the manual corrections that need to be made (like manually updating Leave banks, etc)
-          </li>
-          <li>
-            Prior to the migration of this process to the clerk's office, this will be done by our Payroll department.
-          </li>
-          <li>
-            After the migration, this will be done by the Clerk's designee.
-          </li>
-        </ol>-->
+        <p ng-if="payruns.length === 0 && currentStatus.can_update_finplus">
+          No pay runs were found in Finplus.  It doesn't look like the pay roll has been started there.
+        </p>
       </div>
     </div>
 
@@ -4383,11 +4378,153 @@
 </script>
 
 <script type="text/ng-template" id="PayrollReview.tmpl.html">
+  <md-progress-linear ng-if="loading"
+                      flex="100"
+                      md-mode="indeterminate">
+  </md-progress-linear>
+  <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+            layout="row"
+            layout-align="start center"
+            flex="100">
+    <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Department Name / Number
+      </label>
+      <input type="text"
+             ng-model="filter_department"
+             ng-model-options="{ debounce: 300}"
+             ng-change="applyFilters()"
+             class="md-input short" />
+    </md-input-container>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Employee Name / Number
+      </label>
+      <input type="text"
+             class="md-input short"
+             ng-model-options="{ debounce: 300}"
+             ng-model="filter_employee"
+             ng-change="applyFilters()" />
+    </md-input-container>
+    <md-checkbox ng-change="applyFilters()"
+                 ng-model="changes_only" 
+                 aria-label="Show Changes Only?">
+      Show Changes Only?
+    </md-checkbox>
+    <span flex></span>
+    <md-button ng-click="returnToOverallProcess()"
+               class="md-button md-raised md-primary">Return to Process</md-button>
+  </fieldset>
 
- <div>
-   Review!
- </div>
+  <div ng-repeat="ped in filtered_payroll_edits track by ped.employee.EmployeeId"
+       id="reviewgroup{{ped.employee.EmployeeId}}"
+       layout="row"
+       layout-wrap
+       style="background-color: #efefef;"
+       flex="100">
+    <div style="padding-left: 1em; padding-right: 1em; height: 2em;"
+         class="my-accent"
+         layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="100">
+
+      <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
+      <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
+      <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
+    </div>
+    <div style="padding-top: 1em; padding-bottom: 1em;"
+         flex="100">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th colspan=2 style="width: 30%;"></th>
+            <th colspan=2 style="width: 10%; text-align: center;">Hours</th>
+            <th colspan=2 style="width: 20%; text-align: center;">Pay Rate</th>
+            <th colspan=2 style="width: 10%; text-align: center;">Amount</th>
+            <th colspan=2 style="width: 10%; text-align: center;">Classify</th>
+            <th colspan=2 style="width: 20%; text-align: center;">Project Code</th>
+          </tr>
+          <tr>
+            <th style="width: 25%;">Pay Code</th>
+            <th style="width: 5%; text-align: right;">Status</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 10%; text-align: right;">Before</th>
+            <th style="width: 10%; text-align: right;">After</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 10%; text-align: right;">Before</th>
+            <th style="width: 10%; text-align: right; padding-right: .5em;">After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="c in ped.comparisons track by $index"
+              style="background-color: {{c.status === 'Same' ? 'White' : '#ffffE0'}};">
+            <td style="padding-left: .5em;">
+              {{ !original ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'  }}
+            </td>
+            <td style="text-align: right;">{{c.status}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.hours.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.hours.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.payrate : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.payrate : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.amount.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.amount.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.classify : ''}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.classify : ''}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.project_code : ''}}</td>
+            <td style="text-align: right; padding-right: .5em;">{{c.changed ? c.changed.project_code : ''}}</td>
+          </tr>
+
+        </tbody>
+        <tfoot style="border-top: 2px solid black;">
+          <tr>
+            <td style="text-align: left; padding-left: .5em;" colspan="2">Totals</td>
+            <td style="text-align: right;">{{GetTotalOriginalHours(ped.comparisons)}}</td>
+            <td style="text-align: right;">{{GetTotalChangedHours(ped.comparisons)}}</td>
+            <td colspan="2"></td>
+            <td style="text-align: right;">{{GetTotalOriginalAmount(ped.comparisons)}}</td>
+            <td style="text-align: right;">{{GetTotalChangedAmount(ped.comparisons)}}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <table ng-if="ped.justifications.length > 0"
+             style="width: 100%; border-collapse: collapse; margin-top: 1em;">
+        <thead>
+          <th style="text-align: center;">Justifications</th>
+        </thead>
+          <tbody>
+            <tr ng-repeat="j in ped.justifications">
+              <td>
+                <div style="width: 100%; white-space: pre-wrap; border: 1px solid black;">
+                  {{j.justification}}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+
 </script>
+
 
 <script type="text/ng-template" id="PaystubView.controller.tmpl.html">
 

@@ -216,8 +216,12 @@
         {
           if (!data) return;
           $scope.edit_data.justifications = data;
+          $scope.ValidateChanges();
+        }, function ()
+          {
+            $scope.ValidateChanges();
         })
-      $scope.ValidateChanges();
+      
     }
 
     $scope.DeleteJustification = function (id)

@@ -18,6 +18,7 @@ Namespace Models
     Property changed_on As Date?
     Property messages As New List(Of String)
     Property paycode_detail As Paycode
+    Property compared As Boolean = False
 
     Public Sub New()
     End Sub
@@ -72,9 +73,11 @@ Namespace Models
         pay_period_ending=@pay_period_ending
       ORDER BY orgn, employee_id"
       Dim data = Get_Data(Of PayrollData)(query, dp, ConnectionStringType.Timestore)
-      For Each d In data
-        If paycodes.ContainsKey(d.paycode) Then d.paycode_detail = paycodes(d.paycode)
-      Next
+      If paycodes IsNot Nothing Then
+        For Each d In data
+          If paycodes.ContainsKey(d.paycode) Then d.paycode_detail = paycodes(d.paycode)
+        Next
+      End If
       Return data
     End Function
 
@@ -90,7 +93,7 @@ Namespace Models
         ,CASE WHEN rate_number != 1 THEN 0 ELSE payrate END payrate
         ,'' project_code
         ,pay_hours hours
-        ,CASE WHEN rate_number != 1 THEN payrate ELSE payrate * pay_hours END amount
+        ,CASE WHEN rate_number != 1 THEN payrate ELSE CAST(payrate * pay_hours AS DECIMAL(12, 2)) END amount
         ,home_orgn orgn
         ,classify
         ,NULL changed_by

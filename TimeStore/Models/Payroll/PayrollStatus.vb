@@ -280,7 +280,125 @@ Namespace Models
       Return GetPayrollStatus(PayPeriodEnding, tca)
     End Function
 
-    Public Shared Function PostToFinplus(PayPeriodEnding As Date, tca As Timecard_Access, cs As ConnectionStringType) As PayrollStatus
+    Public Shared Function GetPayruns(current As PayrollStatus) As List(Of String)
+      Dim db As String = ""
+      Dim cs As ConnectionStringType
+      Select Case current.target_db
+        Case DatabaseTarget.Finplus_Training
+          db = "trnfinplus51"
+          cs = ConnectionStringType.FinplusTraining
+
+
+        Case Else
+          'Case DatabaseTarget.Finplus_Production
+          db = "finplus51"
+          cs = ConnectionStringType.FinPlus
+      End Select
+      Dim query As String = $"
+SELECT DISTINCT
+  pay_run
+FROM timecard
+ORDER BY pay_run"
+      Return Get_Data(Of String)(query, cs)
+    End Function
+
+    Private Shared Function BuildFinplusPostDataTable() As DataTable
+      Dim dt As New DataTable("Payroll_Changes_Data")
+      'dt.Columns.Add("work_hours_id", Type.GetType("System.Int64"))
+      dt.Columns.Add("employee_id", Type.GetType("System.Int32"))
+      dt.Columns.Add("pay_period_ending", Type.GetType("System.DateTime"))
+      dt.Columns.Add("paycode", Type.GetType("System.String"))
+      dt.Columns.Add("payrate", Type.GetType("System.Decimal"))
+      dt.Columns.Add("project_code", Type.GetType("System.String"))
+      dt.Columns.Add("hours", Type.GetType("System.Double"))
+      dt.Columns.Add("amount", Type.GetType("System.Double"))
+      dt.Columns.Add("orgn", Type.GetType("System.String"))
+      dt.Columns.Add("classify", Type.GetType("System.String"))
+      Return dt
+    End Function
+
+    Public Shared Function PostToFinplus(PayPeriodEnding As Date, Payrun As String, current As PayrollStatus) As PayrollStatus
+      Dim pc = PayrollData.GetAllPayrollChanges(PayPeriodEnding, Nothing)
+      Dim cst As ConnectionStringType
+      If current.target_db = DatabaseTarget.Finplus_Training Then
+        cst = ConnectionStringType.FinplusTraining
+      Else
+        cst = ConnectionStringType.FinPlus
+      End If
+      Dim dp As New DynamicParameters
+      Dim dt = BuildFinplusPostDataTable()
+      For Each c In pc
+        dt.Rows.Add(c.employee_id, c.pay_period_ending, c.paycode, c.payrate, c.project_code, c.hours, c.amount, c.orgn, c.classify)
+      Next
+      dp.Add("@payrun", Payrun)
+      dp.Add("@PC", dt.AsTableValuedParameter("Payroll_Changes_Data"))
+
+      Dim query As String = "
+        MERGE timecard WITH (HOLDLOCK) AS TC
+
+        USING @PC AS PC ON PC.employee_id = TC.empl_no
+          AND TC.pay_run = @payrun          
+          AND TC.pay_code = PC.paycode
+          AND TC.payrate = PC.payrate
+          AND ISNULL(TC.proj, '') = PC.project_code
+      
+
+        WHEN MATCHED THEN
+          UPDATE
+            SET 
+              hours = PC.hours
+              ,amount = PC.amount
+              ,orgn = PC.orgn
+              ,classify = PC.classify
+              ,user_chg = 'TimeStore'
+              ,date_chg=GETDATE()
+
+        WHEN NOT MATCHED BY TARGET THEN
+          INSERT (
+            empl_no
+            ,pay_code
+            ,hours
+            ,payrate
+            ,amount
+            ,orgn
+            ,proj
+            ,classify
+            ,pay_cycle
+            ,pay_run
+            ,reported
+            ,user_chg
+            ,date_chg
+            ,flsa_cycle
+            ,flsa_flg
+            ,flsa_carry_ovr
+          )
+          VALUES (
+            PC.employee_id
+            ,PC.paycode
+            ,PC.hours
+            ,PC.payrate
+            ,PC.amount            
+            ,PC.orgn
+            ,CASE WHEN PC.project_code = '' THEN NULL ELSE PC.project_code END
+            ,PC.classify            
+            ,1
+            ,@payrun
+            ,'N'
+            ,'TimeStore'
+            ,GETDATE()
+            ,0
+            ,'N'
+            ,'N'
+          )
+        WHEN NOT MATCHED BY SOURCE 
+          AND TC.pay_run = @payrun THEN
+          DELETE;"
+      Dim i = Exec_Query(query, dp, cst)
+      If i > -1 Then
+        Return PostToFinplusComplete(PayPeriodEnding, current.my_access, ConnectionStringType.Timestore)
+      Else
+        Return Nothing
+      End If
 
     End Function
 

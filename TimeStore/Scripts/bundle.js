@@ -49373,6 +49373,30 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       }
 
+      var getPayruns = function (pay_period_ending)
+      {
+        return $http
+          .get(`API/Payroll/GetPayruns?PayPeriodEnding=${pay_period_ending}`, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postTimestoreData = function (pay_period_ending, payrun)
+      {
+        return $http
+          .get(`API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=${pay_period_ending}&Payrun=${payrun}`, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -49430,7 +49454,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         editsCompleted: editsCompleted,
         changesApproved: changesApproved,
         editsInComplete: editsInComplete,
-        cancelApproval: cancelApproval
+        cancelApproval: cancelApproval,
+        getPayruns: getPayruns,
+        postTimestoreData: postTimestoreData
       };
     }
   ]);
@@ -55295,6 +55321,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   {
     
     console.log('payroll overall process');
+    $scope.payruns = [];
+    $scope.postPayrun = "";
     $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
     $scope.StartOrResetInProgress = false;
     //$scope.showSetUpDetails = false;
@@ -55313,7 +55341,20 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     //$scope.postDetails = "";
     //$scope.postCompleted = false;
 
-    $scope.foundPayRuns = [];
+    
+    $scope.PostTimestoreData = function ()
+    {
+      $scope.StartOrResetInProgress = true;
+      timestoredata.postTimestoreData($scope.pay_period_ending, $scope.postPayrun)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
+          $scope.StartOrResetInProgress = false;
+        });
+    };
 
     $scope.ResetPayroll = function ()
     {
@@ -55322,6 +55363,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
           $scope.StartOrResetInProgress = false;
         });
     }
@@ -55334,6 +55378,17 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           HandleCurrentStatus(data);
         });
     }
+
+    $scope.GetPayruns = function()
+    {
+      timestoredata.getPayruns($scope.pay_period_ending)
+        .then(function (data)
+        {
+          $scope.payruns = data;
+        })
+    }
+
+    $scope.GetPayruns();
 
     $scope.ChangesApproved = function ()
     {
@@ -55388,11 +55443,6 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.ViewChanges = function ()
     {
       timestoreNav.goPayrollReviewProcess($routeParams.payPeriod);
-    }
-
-    $scope.PostData = function ()
-    {
-
     }
 
     GetPayrollStatus()
@@ -55461,6 +55511,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.filtered_payroll_edits = [];
     $scope.filter_employee = "";
     $scope.filter_department = "";
+    
     $scope.paycodes = {};
     $scope.paycodeslist = [];
     $scope.currentStatus = {};
@@ -55490,6 +55541,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
       return data;
     }
+
     function GetPayrollStatus()
     {
       timestoredata.getPayrollStatus($scope.pay_period_ending)
@@ -55498,6 +55550,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           HandleCurrentStatus(data);
         });
     }
+
 
     function GetProjectCodes()
     {
@@ -55593,6 +55646,105 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
   function PayrollReviewController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
   {
+    // need to get changes
+    $scope.payPeriod = $routeParams.payPeriod;
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
+
+    $scope.loading = false;
+    $scope.changes_only = true;
+    $scope.base_payroll_edits = [];
+    $scope.filtered_payroll_edits = [];
+    $scope.filter_employee = "";
+    $scope.filter_department = "";
+
+    $scope.GetTotalOriginalHours = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.hours : 0); }, 0);
+      return totalHours.toFixed(2);      
+    }
+    $scope.GetTotalChangedHours = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.changed ? v.changed.hours : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+    $scope.GetTotalOriginalAmount = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.amount : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+    $scope.GetTotalChangedAmount = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.changed ? v.changed.amount : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalHours = function (paydata)
+    {
+      let totalHours = paydata.reduce(function (j, v) { return j + v.hours; }, 0);
+      //console.log('total hours test', totalHours)
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalAmount = function (paydata)
+    {
+      let totalAmount = paydata.reduce(function (j, v) { return j + v.amount; }, 0);
+      //console.log('total amount test', totalAmount)
+      return totalAmount.toFixed(2);
+
+    }
+
+    $scope.returnToOverallProcess = function ()
+    {
+      timestoreNav.goPayrollOverallProcess($routeParams.payPeriod);
+    }
+
+    $scope.getPayrollData = function ()
+    {
+      $scope.loading = true;
+      timestoredata.getPayrollEdits($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('payroll data', data);
+          $scope.base_payroll_edits = data;
+          $scope.applyFilters();
+          $scope.loading = false;
+        });
+    }
+
+    $scope.applyFilters = function ()
+    {
+      console.log('apply filters');
+      let filtered = $scope.base_payroll_edits;
+      if ($scope.changes_only)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.comparisons.filter(function (c) { return c.has_changed }).length > 0
+        });
+      }
+      if ($scope.filter_employee.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.EmployeeId.toString().indexOf($scope.filter_employee) > -1 ||
+            j.employee.EmployeeName.toUpperCase().indexOf($scope.filter_employee.toUpperCase()) > -1;
+        });
+      }
+
+      if ($scope.filter_department.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.Department.toString().indexOf($scope.filter_department) > -1 ||
+            j.employee.DepartmentName.toUpperCase().indexOf($scope.filter_department.toUpperCase()) > -1;
+        });
+
+      }
+      console.log('filtered payroll data', filtered);
+      $scope.filtered_payroll_edits = filtered;
+    }
+
+    $scope.getPayrollData();
 
   }
 
@@ -55808,7 +55960,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     {
       if ($scope.pd.paycode_detail.pay_type === 'H')
       {
-        $scope.pd.amount = $scope.pd.hours * $scope.pd.payrate;
+        $scope.pd.amount = Math.round($scope.pd.hours * $scope.pd.payrate, 2);
       }
       $scope.validate();
     }
@@ -55824,7 +55976,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           case 'H':
             // use their regular payrate
-            $scope.pd.payrate = $scope.employee.Base_Payrate * d.percent_x;
+            var new_payrate = parseFloat(($scope.employee.Base_Payrate * d.percent_x).toFixed(5));
+            $scope.pd.payrate = new_payrate;
             $scope.pd.hours = 0;
             $scope.pd.amount = 0; // amount will be hours * payrate
             $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
@@ -55890,10 +56043,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   function PayrollEditGroupController($scope, $routeParams, timestoredata, $mdDialog, $anchorScroll)
   {
     $scope.payPeriod = $routeParams.payPeriod;
-    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
     $scope.storeYOffset = 0;
-
-
+    
     $scope.GetTotalHours = function (paydata)
     {
       let totalHours = paydata.reduce(function (j, v) { return j + v.hours;  }, 0);
@@ -56161,8 +56313,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           if (!data) return;
           $scope.edit_data.justifications = data;
+          $scope.ValidateChanges();
+        }, function ()
+          {
+            $scope.ValidateChanges();
         })
-      $scope.ValidateChanges();
+      
     }
 
     $scope.DeleteJustification = function (id)

@@ -484,6 +484,7 @@
     <Compile Include="Models\PayPeriodList.vb" />
     <Compile Include="Models\Payroll\LeaveBalance.vb" />
     <Compile Include="Models\Payroll\Paycode.vb" />
+    <Compile Include="Models\Payroll\PayrollChangeComparison.vb" />
     <Compile Include="Models\Payroll\PayrollData.vb" />
     <Compile Include="Models\Payroll\PayrollEditData.vb" />
     <Compile Include="Models\Payroll\PayrollChangeJustification.vb" />

@@ -16,6 +16,7 @@
     $scope.filtered_payroll_edits = [];
     $scope.filter_employee = "";
     $scope.filter_department = "";
+    
     $scope.paycodes = {};
     $scope.paycodeslist = [];
     $scope.currentStatus = {};
@@ -45,6 +46,7 @@
       data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
       return data;
     }
+
     function GetPayrollStatus()
     {
       timestoredata.getPayrollStatus($scope.pay_period_ending)
@@ -53,6 +55,7 @@
           HandleCurrentStatus(data);
         });
     }
+
 
     function GetProjectCodes()
     {

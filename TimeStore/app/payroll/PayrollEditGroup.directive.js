@@ -26,10 +26,9 @@
   function PayrollEditGroupController($scope, $routeParams, timestoredata, $mdDialog, $anchorScroll)
   {
     $scope.payPeriod = $routeParams.payPeriod;
-    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
     $scope.storeYOffset = 0;
-
-
+    
     $scope.GetTotalHours = function (paydata)
     {
       let totalHours = paydata.reduce(function (j, v) { return j + v.hours;  }, 0);

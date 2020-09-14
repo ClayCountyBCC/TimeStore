@@ -41,7 +41,7 @@
     {
       if ($scope.pd.paycode_detail.pay_type === 'H')
       {
-        $scope.pd.amount = $scope.pd.hours * $scope.pd.payrate;
+        $scope.pd.amount = Math.round($scope.pd.hours * $scope.pd.payrate, 2);
       }
       $scope.validate();
     }
@@ -57,7 +57,8 @@
         {
           case 'H':
             // use their regular payrate
-            $scope.pd.payrate = $scope.employee.Base_Payrate * d.percent_x;
+            var new_payrate = parseFloat(($scope.employee.Base_Payrate * d.percent_x).toFixed(5));
+            $scope.pd.payrate = new_payrate;
             $scope.pd.hours = 0;
             $scope.pd.amount = 0; // amount will be hours * payrate
             $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;

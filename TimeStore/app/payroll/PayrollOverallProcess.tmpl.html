@@ -1,5 +1,6 @@
 ﻿<script type="text/ng-template" id="PayrollOverall.tmpl.html">
 
+
   <div flex="100"
        layout="row"
        layout-align="center start"
@@ -92,7 +93,7 @@
         <p style="padding-left: 1em;"
            ng-if="currentStatus.started_by.length > 0">
           Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
-        </p>        
+        </p>
       </div>
     </div>
 
@@ -204,7 +205,7 @@
         </h5>
       </div>
       <div flex="50"
-           layout="column"
+           layout="row"
            layout-wrap
            layout-align="center center">
 
@@ -218,13 +219,18 @@
             <md-option ng-value="">
               No payrun
             </md-option>
-            <md-option ng-repeat="p in foundPayRuns track by $index"
-                       ng-value="p.pay_run_number">
-              {{p.pay_run_number}}
+            <md-option ng-repeat="p in payruns track by $index"
+                       ng-value="p">
+              {{p}}
             </md-option>
           </md-select>
         </md-input-container>
-        <md-button ng-disabled="!currentStatus.can_update_finplus"
+        <md-button ng-click="GetPayruns()"
+                   class="md-warn md-raised">
+          Refresh Pay Runs
+        </md-button>
+        <md-button ng-click="PostTimestoreData()"
+                   ng-disabled="!currentStatus.can_update_finplus || (!postPayrun || postPayrun.length === 0)"
                    class="md-primary md-raised">
           Post to Finplus
         </md-button>
@@ -232,22 +238,11 @@
       <div flex="100">
         <p ng-if="currentStatus.finplus_updated_by.length > 0"
            style="padding-left: 1em;">
-          Edits Approved by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
+          Data Posted to Finplus by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
         </p>
-        <!--<ol style="padding-right: 1em;">
-          <li>
-            This action can only be performed after the completion of the Approve Timestore Payroll changes step.
-          </li>
-          <li>
-            Show a list of the manual corrections that need to be made (like manually updating Leave banks, etc)
-          </li>
-          <li>
-            Prior to the migration of this process to the clerk's office, this will be done by our Payroll department.
-          </li>
-          <li>
-            After the migration, this will be done by the Clerk's designee.
-          </li>
-        </ol>-->
+        <p ng-if="payruns.length === 0 && currentStatus.can_update_finplus">
+          No pay runs were found in Finplus.  It doesn't look like the pay roll has been started there.
+        </p>
       </div>
     </div>
 

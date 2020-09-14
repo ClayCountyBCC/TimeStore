@@ -767,6 +767,30 @@
           });
       }
 
+      var getPayruns = function (pay_period_ending)
+      {
+        return $http
+          .get(`API/Payroll/GetPayruns?PayPeriodEnding=${pay_period_ending}`, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postTimestoreData = function (pay_period_ending, payrun)
+      {
+        return $http
+          .get(`API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=${pay_period_ending}&Payrun=${payrun}`, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -824,7 +848,9 @@
         editsCompleted: editsCompleted,
         changesApproved: changesApproved,
         editsInComplete: editsInComplete,
-        cancelApproval: cancelApproval
+        cancelApproval: cancelApproval,
+        getPayruns: getPayruns,
+        postTimestoreData: postTimestoreData
       };
     }
   ]);

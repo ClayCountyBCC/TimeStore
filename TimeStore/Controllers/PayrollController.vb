@@ -171,6 +171,23 @@ Namespace Controllers
       Return FinplusProjectCodes.GetCachedFilteredProjectCodes(PayPeriodEnding.AddDays(-13))
     End Function
 
+    <HttpGet>
+    <Route("GetPayruns")>
+    Public Function GetPayruns(PayPeriodEnding As Date) As List(Of String)
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      Return PayrollStatus.GetPayruns(current)
+    End Function
+
+    <HttpGet>
+    <Route("PostTimestoreDataToFinplus")>
+    Public Function PostTimestoreDataToFinplus(PayPeriodEnding As Date, Payrun As String) As PayrollStatus
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.can_update_finplus Then
+        Return PayrollStatus.PostToFinplus(PayPeriodEnding, Payrun, current)
+      Else
+        Return Nothing
+      End If
+    End Function
 
   End Class
 End Namespace

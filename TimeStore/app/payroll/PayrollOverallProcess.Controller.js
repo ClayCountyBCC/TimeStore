@@ -13,6 +13,8 @@
   {
     
     console.log('payroll overall process');
+    $scope.payruns = [];
+    $scope.postPayrun = "";
     $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
     $scope.StartOrResetInProgress = false;
     //$scope.showSetUpDetails = false;
@@ -31,7 +33,20 @@
     //$scope.postDetails = "";
     //$scope.postCompleted = false;
 
-    $scope.foundPayRuns = [];
+    
+    $scope.PostTimestoreData = function ()
+    {
+      $scope.StartOrResetInProgress = true;
+      timestoredata.postTimestoreData($scope.pay_period_ending, $scope.postPayrun)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
+          $scope.StartOrResetInProgress = false;
+        });
+    };
 
     $scope.ResetPayroll = function ()
     {
@@ -40,6 +55,9 @@
         .then(function (data)
         {
           HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
           $scope.StartOrResetInProgress = false;
         });
     }
@@ -52,6 +70,17 @@
           HandleCurrentStatus(data);
         });
     }
+
+    $scope.GetPayruns = function()
+    {
+      timestoredata.getPayruns($scope.pay_period_ending)
+        .then(function (data)
+        {
+          $scope.payruns = data;
+        })
+    }
+
+    $scope.GetPayruns();
 
     $scope.ChangesApproved = function ()
     {
@@ -106,11 +135,6 @@
     $scope.ViewChanges = function ()
     {
       timestoreNav.goPayrollReviewProcess($routeParams.payPeriod);
-    }
-
-    $scope.PostData = function ()
-    {
-
     }
 
     GetPayrollStatus()
