@@ -1645,7 +1645,7 @@ ORDER BY home_orgn, empl_no
     dp.Add("@Amount", Math.Round(Payrate, 5) * Hours)
     dp.Add("@Orgn", Department)
     dp.Add("@Classify", Classify)
-    dp.Add("@PayRate", Math.Round(Payrate, 5))
+    dp.Add("@PayRate", Math.Round(GetPayrate(PayCode, Payrate), 5))
 
     Dim sql As String = "
       SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;

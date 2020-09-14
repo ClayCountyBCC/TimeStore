@@ -54526,7 +54526,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
                 ctrl.showHolidayError = true;
                 for (var j = 0; j < ctl.length; j++)
                 {
-                  if (ctl[j].payCode === '122' || ctl[j].payCode === '134')
+                  if (ctl[j].payCode === '122' || ctl[j].payCode === '800' ||  ctl[j].payCode === '134')
                   {
                     ctrl.showHolidayError = false;
                   }

@@ -1770,7 +1770,9 @@
       End If
 
 
-      If e.Payrates.Count > 1 Then
+      If (From p In e.Payrates
+          Where p <> 0
+          Select p).Count > 1 Then
         TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Multiple Payrates for this employee in this pay period."))
       End If
 

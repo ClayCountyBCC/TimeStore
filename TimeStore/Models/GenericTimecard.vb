@@ -266,6 +266,8 @@
 
     ReadOnly Property HolidayHoursChoice As String()
       Get
+        If departmentNumber <> "1703" AndAlso departmentNumber <> "2103" Then Return Array.Empty(Of String)
+
         ' Here we need to look at the saved data and see if we have any hours under the 134 or 122 pay codes
         ' This function needs to either return "" for codes not found, "Bank" for pay code 122, or "Paid" for pay code 134.
         'Dim choices As List(Of String) = New List(Of String)
@@ -290,7 +292,7 @@
                      Where HolidayPayCodes.Contains(c.PayCode)
                      Group By PayCode = c.PayCode Into PaycodeGroup = Group,
                        totalHours = Sum(c.Hours)
-                     Select New With {PayCode, totalHours})
+                     Select New With {PayCode, totalHours}).ToList
           If tmp.Count > 0 Then
             For i As Integer = 0 To choices.GetUpperBound(0)
               Try
@@ -316,6 +318,8 @@
                   Catch ex As Exception
                     Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
                   End Try
+                Else
+                  choices(i) = hourType
                 End If
               Catch ex As Exception
                 Dim e As New ErrorLog("problem with holiday increment", employeeID & " " & payPeriodEndingDisplay & " " & holidayIncrement.ToString, i, tmp(i).totalHours, ex.StackTrace)
@@ -722,7 +726,9 @@
         Next
 
         If Not WarningList.Contains("Multiple Payrates for this employee in this pay period.") Then
-          If (From c In Current_Timecard_Data Select c.PayRate Distinct).Count > 1 Then
+          If (From c In Current_Timecard_Data
+              Where c.PayRate <> 0
+              Select c.PayRate Distinct).Count > 1 Then
             WarningList.Add("Multiple Payrates for this employee in this pay period.")
           End If
         End If
