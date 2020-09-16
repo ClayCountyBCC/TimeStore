@@ -65,7 +65,7 @@
 
     <md-input-container flex="10">
       <label>Hours</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+      <input ng-disabled="disablehours"
              style="text-align: right;"
              ng-model="pd.hours"
              ng-change="RecalculateAmount()"
@@ -75,7 +75,7 @@
 
     <md-input-container flex="10">
       <label>Payrate</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+      <input ng-disabled="disablepayrate"
              style="text-align: right;"
              ng-model="pd.payrate"
              ng-change="RecalculateAmount()"
@@ -85,7 +85,7 @@
 
     <md-input-container flex="10">
       <label>Amount</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type === 'H'"
+      <input ng-disabled="disableamount"
              style="text-align: right;"
              ng-model="pd.amount"
              type="number"

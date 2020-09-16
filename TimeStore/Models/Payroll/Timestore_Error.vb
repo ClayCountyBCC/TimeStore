@@ -30,6 +30,23 @@
       Return Get_Data(Of Timestore_Error)(query, dp, ConnectionStringType.Timestore)
     End Function
 
+    Public Shared Function GetErrorsByEmployee(PayPeriodEnding As Date, EmployeeId As Integer) As List(Of Timestore_Error)
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", PayPeriodEnding)
+      dp.Add("@employee_id", EmployeeId)
+      Dim query As String = "
+        SELECT
+          employee_id
+          ,pay_period_ending
+          ,error_text 
+          FROM Timestore_Errors
+        WHERE
+          pay_period_ending = @pay_period_ending
+          AND employee_id = @employee_id
+        ORDER BY employee_id;"
+      Return Get_Data(Of Timestore_Error)(query, dp, ConnectionStringType.Timestore)
+    End Function
+
     Public Shared Function SaveErrors(PayPeriodEnding As Date, ByRef timecards As List(Of GenericTimecard)) As Boolean
       Dim ts_errors As New List(Of Timestore_Error)
       For Each tc In timecards

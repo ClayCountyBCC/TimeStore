@@ -4474,7 +4474,7 @@
           <tr ng-repeat="c in ped.comparisons track by $index"
               style="background-color: {{c.status === 'Same' ? 'White' : '#ffffE0'}};">
             <td style="padding-left: .5em;">
-              {{ !original ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'  }}
+              {{ GetPaycode(c) }}
             </td>
             <td style="text-align: right;">{{c.status}}</td>
             <td style="text-align: right;">{{c.original ? c.original.hours.toFixed(2) : 0}}</td>
@@ -4505,7 +4505,9 @@
       <table ng-if="ped.justifications.length > 0"
              style="width: 100%; border-collapse: collapse; margin-top: 1em;">
         <thead>
-          <th style="text-align: center;">Justifications</th>
+          <tr>
+            <th style="text-align: center;">Justifications</th>
+          </tr>
         </thead>
           <tbody>
             <tr ng-repeat="j in ped.justifications">
@@ -5341,7 +5343,7 @@
 
     <md-input-container flex="10">
       <label>Hours</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+      <input ng-disabled="disablehours"
              style="text-align: right;"
              ng-model="pd.hours"
              ng-change="RecalculateAmount()"
@@ -5351,7 +5353,7 @@
 
     <md-input-container flex="10">
       <label>Payrate</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type !== 'H'"
+      <input ng-disabled="disablepayrate"
              style="text-align: right;"
              ng-model="pd.payrate"
              ng-change="RecalculateAmount()"
@@ -5361,7 +5363,7 @@
 
     <md-input-container flex="10">
       <label>Amount</label>
-      <input ng-disabled="pd.paycode === '' || pd.paycode_detail.pay_type === 'H'"
+      <input ng-disabled="disableamount"
              style="text-align: right;"
              ng-model="pd.amount"
              type="number"
@@ -5563,6 +5565,16 @@
 
               </edit-payroll-data>
             </div>
+
+            <div ng-if="validation_errors.length > 0"
+                 class="ErrorText"
+                 style="margin-top: 1em; margin-bottom: 1em;"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+              Error: {{ validation_errors }}
+            </div>
+
             <div style="margin-top: .5em;"
                  layout-align="center start"
                  layout="row"
@@ -5576,7 +5588,7 @@
                      flex="10">
                   <md-button ng-click="AddJustification()"
                              class="md-primary md-raised">
-                    Add
+                    Add Justification
                   </md-button>
                 </div>
                 <div layout="row"
@@ -5585,7 +5597,7 @@
                   <md-button ng-click="SaveJustifications();"
                              ng-show="edit_data.justifications.length > 0"
                              class="md-primary md-raised">
-                    Save All
+                    Save Justifications
                   </md-button>
                 </div>
                 <div style="padding-left: 1em; padding-right: 1em;"
@@ -5618,14 +5630,7 @@
             </div>
 
 
-            <div ng-if="validation_errors.length > 0"
-                 class="ErrorText"
-                 style="margin-top: 1em;"
-                 layout="row"
-                 layout-align="start center"
-                 flex="100">
-              Error: {{ validation_errors }}
-            </div>
+
           </div>
         </md-tab>
         <md-tab label="Base Timestore Data">

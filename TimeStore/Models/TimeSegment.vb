@@ -99,13 +99,25 @@
       Dim dpr = DisasterEventRules.Get_Cached_Disaster_Rules(pay_period_start.AddDays(13))
       Dim regular_segments As New List(Of TimeSegment)
       Dim disaster_segments As New List(Of TimeSegment)
+      If tctd.WorkTimes.Length > 0 Then
+        regular_segments.AddRange(CreateSpecific(tctd.WorkTimes,
+                                                 WorkType.Regular,
+                                                 -1,
+                                                 tctd.WorkDate,
+                                                 pay_period_start,
+                                                 payrate))
+      End If
 
-      regular_segments.AddRange(CreateSpecific(tctd.WorkTimes,
-                                               WorkType.Regular,
-                                               -1,
-                                               tctd.WorkDate,
-                                               pay_period_start,
-                                               payrate))
+      If tctd.OnCallWorkTimes.Length > 0 Then
+        regular_segments.AddRange(CreateSpecific(tctd.OnCallWorkTimes,
+                                                 WorkType.Regular,
+                                                 -1,
+                                                 tctd.WorkDate,
+                                                 pay_period_start,
+                                                 payrate))
+      End If
+
+
 
       If tctd.BreakCreditHours > 0 Then
         ' if the entire day is nothing but disaster hours, the 
@@ -157,7 +169,7 @@
       End If
 
       Dim total_admin As Double = tctd.AdminBereavement + tctd.AdminHours + tctd.AdminJuryDuty +
-        tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminWorkersComp
+        tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminWorkersComp + tctd.OnCallMinimumHours
       If total_admin > 0 Then
         combined.Add(RefineAdminHours(tctd, total_admin, pay_period_start, payrate))
       End If

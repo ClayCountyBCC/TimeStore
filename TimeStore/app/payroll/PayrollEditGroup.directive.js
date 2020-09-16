@@ -63,14 +63,22 @@
       }).then(function ()
       {
         console.log('after save clicked ped', $scope.ped);
-        timestoredata.postPayrollChanges($scope.pay_period_ending, $scope.ped.payroll_change_data)
+
+        timestoredata.postPayrollChanges($scope.pay_period_ending, $scope.ped.employee.EmployeeId, $scope.ped.payroll_change_data)
           .then(function (data)
           {
             console.log('postpayrollchange data', data);
+            $scope.ped = data;
           });
         document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
       }, function ()
-      {
+        {
+          timestoredata.getPayrollEditsByEmployee($scope.pay_period_ending, $scope.ped.employee.EmployeeId)
+            .then(function (data)
+            {
+              console.log('payroll change cancelled', data);
+              $scope.ped = data;
+            });
         document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
       });
     }

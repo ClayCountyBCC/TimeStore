@@ -847,7 +847,7 @@
         End If
 
         std.PayCode = c.payCode
-        std.PayRate = GetPayrate(c.payCode, c.payRate)
+        std.PayRate = c.payRate 'GetPayrate(c.payCode, c.payRate)
         ' Test 
         'std.PayRate = GetPayrate(c.payCode, c.payRate)
 

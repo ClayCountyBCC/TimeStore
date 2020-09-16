@@ -49266,7 +49266,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getCheckPay = function (employee_id, check_number)
       {
         return $http
-          .get(`API/Payroll/GetCheck?EmployeeId=${employee_id}&CheckNumber=${check_number}`, {
+          .get("API/Payroll/GetCheck?EmployeeId=" + employee_id + "&CheckNumber=" + check_number, {
             cache: false
           })
           .then(function (response)
@@ -49275,10 +49275,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       }
 
-      var postPayrollChanges = function (pay_period_ending, changes)
+      var postPayrollChanges = function (pay_period_ending, employee_id, changes)
       {
         return $http
-          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending, changes,
+          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, changes,
             {
             cache: false
           })
@@ -49288,10 +49288,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       }
 
+      var getPayrollEditsByEmployee = function (pay_period_ending, employee_id)
+      {
+        return $http
+          .get("API/Payroll/PayrollEditsByEmployee?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, 
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
+
       var saveJustifications = function (pay_period_ending, employee_id, justifications)
       {
         return $http
-          .post(`API/Payroll/SaveJustifications?PayPeriodEnding=${pay_period_ending}&EmployeeId=${employee_id.toString()}`, justifications,
+          .post("API/Payroll/SaveJustifications?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id.toString(), justifications,
             {
               cache: false
             })
@@ -49304,7 +49319,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var deleteJustification = function (pay_period_ending, justification_id)
       {
         return $http
-          .get(`API/Payroll/DeleteJustification?PayPeriodEnding=${pay_period_ending}&id=${justification_id}`, {
+          .get("API/Payroll/DeleteJustification?PayPeriodEnding=" + + pay_period_ending + "&id=" + justification_id, {
             cache: false
           })
           .then(function (response)
@@ -49316,7 +49331,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getProjectCodes = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/GetProjectCodes?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/GetProjectCodes?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49328,7 +49343,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var changesApproved = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/ChangesApproved?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/ChangesApproved?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49340,7 +49355,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var editsCompleted = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/EditsCompleted?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/EditsCompleted?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49352,7 +49367,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var editsInComplete = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/EditsInComplete?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/EditsInComplete?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49364,7 +49379,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var cancelApproval = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/CancelApproval?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/CancelApproval?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49376,7 +49391,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var getPayruns = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/GetPayruns?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/GetPayruns?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -49388,7 +49403,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       var postTimestoreData = function (pay_period_ending, payrun)
       {
         return $http
-          .get(`API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=${pay_period_ending}&Payrun=${payrun}`, {
+          .get("API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=" + pay_period_ending + "&Payrun=" + payrun, {
             cache: false
           })
           .then(function (response)
@@ -49456,7 +49471,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         editsInComplete: editsInComplete,
         cancelApproval: cancelApproval,
         getPayruns: getPayruns,
-        postTimestoreData: postTimestoreData
+        postTimestoreData: postTimestoreData,
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee
       };
     }
   ]);
@@ -55657,6 +55673,16 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.filter_employee = "";
     $scope.filter_department = "";
 
+    $scope.GetPaycode = function (c)
+    {
+      if (c.original === null)
+      {
+        return c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')';
+      }
+      return c.original.paycode_detail.title + ' (' + c.original.paycode + ')';
+      //original === null ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'
+    }
+
     $scope.GetTotalOriginalHours = function (c)
     {
       let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.hours : 0); }, 0);
@@ -55956,55 +55982,128 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
   function EditPayrollDataController($scope)
   {
+    $scope.disablehours = true;
+    $scope.disablepayrate = true;
+    $scope.disableamount = true;
+
     $scope.RecalculateAmount = function ()
     {
       if ($scope.pd.paycode_detail.pay_type === 'H')
       {
-        $scope.pd.amount = Math.round($scope.pd.hours * $scope.pd.payrate, 2);
+        $scope.pd.amount = parseFloat(($scope.pd.hours * $scope.pd.payrate).toFixed(2));
       }
       $scope.validate();
     }
+
     $scope.UpdatePaycodeDetail = function ()
     {
+       
       let pc = $scope.paycodes.filter(function (j) { return j.pay_code === $scope.pd.paycode });
       if (pc && pc.length > 0)
       {
         $scope.pd.paycode_detail = pc[0];
-        let employee_classify = $scope.employee.Classify;
         let d = $scope.pd.paycode_detail;
-        switch (d.pay_type)
-        {
-          case 'H':
-            // use their regular payrate
-            var new_payrate = parseFloat(($scope.employee.Base_Payrate * d.percent_x).toFixed(5));
-            $scope.pd.payrate = new_payrate;
-            $scope.pd.hours = 0;
-            $scope.pd.amount = 0; // amount will be hours * payrate
-            $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
-            break;
-
-          case 'U':
-            // default hours to 1
-            // default payrate to 0 
-            // default amount to percent_x
-            $scope.pd.payrate = 0; // locked
-            $scope.pd.hours = 1; // locked
-            $scope.pd.amount = d.percent_x; 
-            $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
-            break;
-
-          case 'P':
-          case 'A': // adjustment
-            $scope.pd.payrate = 0; // locked
-            $scope.pd.hours = 1; // locked
-            $scope.pd.amount = 0; // this will be variable 
-            $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
-            break;
-
-        }
-
+        console.log('update paycode detail', d);
+        UpdateDefaults();
       }
       $scope.validate()
+    }
+
+    function UpdateDefaults()
+    {
+      var d = $scope.pd.paycode_detail;
+      let employee_classify = $scope.employee.Classify;
+      $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
+      
+      switch (d.time_type)
+      {
+        case 'A':
+          $scope.pd.payrate = 0; // locked
+          $scope.pd.hours = 1; // locked
+          $scope.pd.amount = 0; // this will be variable 
+
+          break;
+
+        default:
+          switch (d.pay_type)
+          {
+            case 'A':
+            case 'P':
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 1; // locked
+              $scope.pd.amount = 0; // this will be variable 
+              break;
+
+            case 'H':
+              // use their regular payrate
+              var new_payrate = parseFloat(($scope.employee.Base_Payrate * d.percent_x).toFixed(5));
+              $scope.pd.payrate = new_payrate;
+              if (!$scope.pd.hours)
+              {
+                $scope.pd.hours = 0;
+              }
+              if (!$scope.pd.hours || !$scope.pd.payrate)
+              {
+                $scope.pd.amount = 0; // amount will be hours * payrate
+              }
+              else
+              {
+                $scope.pd.amount = parseFloat(($scope.pd.payrate * $scope.pd.hours).toFixed(2)); // amount will be hours * payrate
+              }
+
+              break;
+
+            case 'U':
+              // default hours to 1
+              // default payrate to 0 
+              // default amount to percent_x
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 1; // locked
+              $scope.pd.amount = d.percent_x;
+              // all fields except the amount should be locked.
+              break;
+          }
+      }
+      UpdatePayFields();
+
+    }
+
+    function UpdatePayFields()
+    {
+      $scope.disablehours = true;
+      $scope.disablepayrate = true;
+      $scope.disableamount = true;
+     
+      if ($scope.pd && $scope.pd.paycode_detail)
+      {
+        switch ($scope.pd.paycode_detail.time_type)
+        {
+          case 'A':
+            $scope.disableamount = false;
+            break;
+
+          default:
+            switch ($scope.pd.paycode_detail.pay_type)
+            {
+              case 'A':
+              case 'P':
+                $scope.disableamount = false;
+                break;
+
+              case 'H':
+                $scope.disableamount = false;
+                $scope.disablehours = false;
+                $scope.disablepayrate = false;
+
+                break;
+
+              case 'U':
+                $scope.disableamount = false;
+                break;
+            }
+        }
+      }
+
     }
 
     $scope.DeleteData = function ()
@@ -56012,6 +56111,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.pd.delete = true;
       $scope.remove();
     }
+
+    UpdatePayFields();
   }
 })();
 
@@ -56080,14 +56181,22 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       }).then(function ()
       {
         console.log('after save clicked ped', $scope.ped);
-        timestoredata.postPayrollChanges($scope.pay_period_ending, $scope.ped.payroll_change_data)
+
+        timestoredata.postPayrollChanges($scope.pay_period_ending, $scope.ped.employee.EmployeeId, $scope.ped.payroll_change_data)
           .then(function (data)
           {
             console.log('postpayrollchange data', data);
+            $scope.ped = data;
           });
         document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
       }, function ()
-      {
+        {
+          timestoredata.getPayrollEditsByEmployee($scope.pay_period_ending, $scope.ped.employee.EmployeeId)
+            .then(function (data)
+            {
+              console.log('payroll change cancelled', data);
+              $scope.ped = data;
+            });
         document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
       });
     }

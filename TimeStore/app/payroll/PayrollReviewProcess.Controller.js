@@ -20,6 +20,16 @@
     $scope.filter_employee = "";
     $scope.filter_department = "";
 
+    $scope.GetPaycode = function (c)
+    {
+      if (c.original === null)
+      {
+        return c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')';
+      }
+      return c.original.paycode_detail.title + ' (' + c.original.paycode + ')';
+      //original === null ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'
+    }
+
     $scope.GetTotalOriginalHours = function (c)
     {
       let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.hours : 0); }, 0);

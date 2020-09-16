@@ -139,6 +139,57 @@
               Select e).ToList
     End Function
 
+    Public Shared Function GetPayrollEditsByEmployee(PayPeriodEnding As Date, current As PayrollStatus, EmployeeId As Integer) As PayrollEditData
+      Dim employee_data As List(Of FinanceData)
+      Dim paycodes As Dictionary(Of String, Paycode)
+      Select Case current.target_db
+        Case PayrollStatus.DatabaseTarget.Finplus_Production
+          employee_data = (From d In GetCachedEmployeeDataFromFinplus()
+                           Where d.IsTerminated = False And
+                             d.EmployeeId = EmployeeId
+                           Order By d.DepartmentName, d.EmployeeLastName, d.EmployeeFirstName
+                           Select d).ToList
+          paycodes = Paycode.GetCachedFromProduction()
+        Case PayrollStatus.DatabaseTarget.Finplus_Training
+          employee_data = (From d In GetCachedEmployeeDataFromFinplusTraining()
+                           Where d.IsTerminated = False And
+                             d.EmployeeId = EmployeeId
+                           Order By d.DepartmentName, d.EmployeeLastName, d.EmployeeFirstName
+                           Select d).ToList
+          paycodes = Paycode.GetCachedFromTraining
+        Case Else
+          Return Nothing
+      End Select
+      Dim timestore_errors As List(Of Timestore_Error) = Timestore_Error.GetErrorsByEmployee(PayPeriodEnding, EmployeeId)
+      Dim leave_balances = LeaveBalance.GetLeaveBalancesByEmployee(PayPeriodEnding, EmployeeId)
+      Dim edit_data As New List(Of PayrollEditData)
+      Dim finplus_payrates = PayrollData.GetAllFinplusPayratesByEmployee(PayPeriodEnding, EmployeeId, paycodes)
+      Dim justifications = PayrollChangeJustification.GetJustificationsByEmployeeAndPayPeriod(EmployeeId, PayPeriodEnding)
+      Dim base_data = PayrollData.GetAllBasePayrollDataByEmployee(PayPeriodEnding, EmployeeId, paycodes)
+      Dim base_data_comparison = PayrollData.GetAllBasePayrollDataByEmployee(PayPeriodEnding, EmployeeId, paycodes)
+      Dim payroll_changes = PayrollData.GetAllPayrollChangesByEmployee(PayPeriodEnding, EmployeeId, paycodes)
+      Dim payroll_changes_comparison = PayrollData.GetAllPayrollChangesByEmployee(PayPeriodEnding, EmployeeId, paycodes)
+      Dim paystubs = (From p In Paystub.PaystubList.Get_All_Recent_Paystubs_Cached()
+                      Where p.employee_id = EmployeeId
+                      Select p).ToList
+      If employee_data.Count() <> 1 Then Return Nothing
+
+      Dim ed = employee_data.First
+
+      Return New PayrollEditData(ed,
+                                 PayPeriodEnding,
+                                 base_data,
+                                 payroll_changes,
+                                 justifications,
+                                 finplus_payrates,
+                                 paystubs,
+                                 leave_balances,
+                                 timestore_errors,
+                                 base_data_comparison,
+                                 payroll_changes_comparison)
+
+    End Function
+
     Public Sub GenerateMessages()
       ' Non-Overtime hours entered less than normal
       ' compare some summation of hours to the payhours for 002
@@ -186,7 +237,8 @@
 
           Dim total_regular = (From pcd In payroll_change_data
                                Where pcd.paycode_detail.pay_type = "H" AndAlso
-                                 pcd.paycode_detail.time_type = "R"
+                                 pcd.paycode_detail.time_type = "R" OrElse
+                                 pcd.paycode_detail.time_type = "C"
                                Select pcd.hours).Sum
           If total_regular < employee.HoursNeededForOvertime Then
             messages.Add($"NON-OVERTIME HOURS ENTERED  LESS  THAN NORMAL ({employee.HoursNeededForOvertime}) HOURS")

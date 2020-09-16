@@ -98,6 +98,17 @@ Namespace Controllers
     End Function
 
     <HttpGet>
+    <Route("PayrollEditsByEmployee")>
+    Public Function GetEdits(PayPeriodEnding As Date, EmployeeId As Integer) As PayrollEditData
+      Dim current = GetCurrentStatus(PayPeriodEnding)
+      If current.my_access.PayrollAccess > 0 Then
+        Return PayrollEditData.GetPayrollEditsByEmployee(PayPeriodEnding, current, EmployeeId)
+      Else
+        Return Nothing
+      End If
+    End Function
+
+    <HttpGet>
     <Route("Paycodes")>
     Public Function GetPaycodes(PayPeriodEnding As Date) As Dictionary(Of String, Paycode)
       Dim current = GetCurrentStatus(PayPeriodEnding)
@@ -133,14 +144,14 @@ Namespace Controllers
 
     <HttpPost>
     <Route("SaveChanges")>
-    Public Function SaveChanges(PayPeriodEnding As Date, PayrollChanges As List(Of PayrollData)) As Boolean
+    Public Function SaveChanges(PayPeriodEnding As Date, EmployeeId As Integer, PayrollChanges As List(Of PayrollData)) As PayrollEditData
       Dim current = GetCurrentStatus(PayPeriodEnding)
       If current.can_edit Then
-        Return PayrollData.SavePayrollChanges(PayPeriodEnding, current.my_access.UserName, PayrollChanges)
+        Dim b = PayrollData.SavePayrollChanges(PayPeriodEnding, EmployeeId, current.my_access.UserName, PayrollChanges)
       Else
-        Return False
+        Return Nothing
       End If
-      Return True
+      Return PayrollEditData.GetPayrollEditsByEmployee(PayPeriodEnding, current, EmployeeId)
     End Function
 
     <HttpPost>

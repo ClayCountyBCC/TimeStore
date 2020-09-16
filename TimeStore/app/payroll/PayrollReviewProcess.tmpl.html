@@ -95,7 +95,7 @@
           <tr ng-repeat="c in ped.comparisons track by $index"
               style="background-color: {{c.status === 'Same' ? 'White' : '#ffffE0'}};">
             <td style="padding-left: .5em;">
-              {{ !original ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'  }}
+              {{ GetPaycode(c) }}
             </td>
             <td style="text-align: right;">{{c.status}}</td>
             <td style="text-align: right;">{{c.original ? c.original.hours.toFixed(2) : 0}}</td>
@@ -126,7 +126,9 @@
       <table ng-if="ped.justifications.length > 0"
              style="width: 100%; border-collapse: collapse; margin-top: 1em;">
         <thead>
-          <th style="text-align: center;">Justifications</th>
+          <tr>
+            <th style="text-align: center;">Justifications</th>
+          </tr>
         </thead>
           <tbody>
             <tr ng-repeat="j in ped.justifications">

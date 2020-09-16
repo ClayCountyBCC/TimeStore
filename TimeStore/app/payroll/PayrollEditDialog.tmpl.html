@@ -60,6 +60,16 @@
 
               </edit-payroll-data>
             </div>
+
+            <div ng-if="validation_errors.length > 0"
+                 class="ErrorText"
+                 style="margin-top: 1em; margin-bottom: 1em;"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+              Error: {{ validation_errors }}
+            </div>
+
             <div style="margin-top: .5em;"
                  layout-align="center start"
                  layout="row"
@@ -73,7 +83,7 @@
                      flex="10">
                   <md-button ng-click="AddJustification()"
                              class="md-primary md-raised">
-                    Add
+                    Add Justification
                   </md-button>
                 </div>
                 <div layout="row"
@@ -82,7 +92,7 @@
                   <md-button ng-click="SaveJustifications();"
                              ng-show="edit_data.justifications.length > 0"
                              class="md-primary md-raised">
-                    Save All
+                    Save Justifications
                   </md-button>
                 </div>
                 <div style="padding-left: 1em; padding-right: 1em;"
@@ -115,14 +125,7 @@
             </div>
 
 
-            <div ng-if="validation_errors.length > 0"
-                 class="ErrorText"
-                 style="margin-top: 1em;"
-                 layout="row"
-                 layout-align="start center"
-                 flex="100">
-              Error: {{ validation_errors }}
-            </div>
+
           </div>
         </md-tab>
         <md-tab label="Base Timestore Data">

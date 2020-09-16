@@ -348,7 +348,6 @@ ORDER BY pay_run"
             SET 
               hours = PC.hours
               ,amount = PC.amount
-              ,orgn = PC.orgn
               ,classify = PC.classify
               ,user_chg = 'TimeStore'
               ,date_chg=GETDATE()
@@ -360,7 +359,6 @@ ORDER BY pay_run"
             ,hours
             ,payrate
             ,amount
-            ,orgn
             ,proj
             ,classify
             ,pay_cycle
@@ -378,7 +376,6 @@ ORDER BY pay_run"
             ,PC.hours
             ,PC.payrate
             ,PC.amount            
-            ,PC.orgn
             ,CASE WHEN PC.project_code = '' THEN NULL ELSE PC.project_code END
             ,PC.classify            
             ,1

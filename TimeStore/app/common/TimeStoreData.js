@@ -660,7 +660,7 @@
       var getCheckPay = function (employee_id, check_number)
       {
         return $http
-          .get(`API/Payroll/GetCheck?EmployeeId=${employee_id}&CheckNumber=${check_number}`, {
+          .get("API/Payroll/GetCheck?EmployeeId=" + employee_id + "&CheckNumber=" + check_number, {
             cache: false
           })
           .then(function (response)
@@ -669,10 +669,10 @@
           });
       }
 
-      var postPayrollChanges = function (pay_period_ending, changes)
+      var postPayrollChanges = function (pay_period_ending, employee_id, changes)
       {
         return $http
-          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending, changes,
+          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, changes,
             {
             cache: false
           })
@@ -682,10 +682,25 @@
           });
       }
 
+      var getPayrollEditsByEmployee = function (pay_period_ending, employee_id)
+      {
+        return $http
+          .get("API/Payroll/PayrollEditsByEmployee?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, 
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
+
       var saveJustifications = function (pay_period_ending, employee_id, justifications)
       {
         return $http
-          .post(`API/Payroll/SaveJustifications?PayPeriodEnding=${pay_period_ending}&EmployeeId=${employee_id.toString()}`, justifications,
+          .post("API/Payroll/SaveJustifications?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id.toString(), justifications,
             {
               cache: false
             })
@@ -698,7 +713,7 @@
       var deleteJustification = function (pay_period_ending, justification_id)
       {
         return $http
-          .get(`API/Payroll/DeleteJustification?PayPeriodEnding=${pay_period_ending}&id=${justification_id}`, {
+          .get("API/Payroll/DeleteJustification?PayPeriodEnding=" + + pay_period_ending + "&id=" + justification_id, {
             cache: false
           })
           .then(function (response)
@@ -710,7 +725,7 @@
       var getProjectCodes = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/GetProjectCodes?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/GetProjectCodes?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -722,7 +737,7 @@
       var changesApproved = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/ChangesApproved?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/ChangesApproved?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -734,7 +749,7 @@
       var editsCompleted = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/EditsCompleted?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/EditsCompleted?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -746,7 +761,7 @@
       var editsInComplete = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/EditsInComplete?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/EditsInComplete?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -758,7 +773,7 @@
       var cancelApproval = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/CancelApproval?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/CancelApproval?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -770,7 +785,7 @@
       var getPayruns = function (pay_period_ending)
       {
         return $http
-          .get(`API/Payroll/GetPayruns?PayPeriodEnding=${pay_period_ending}`, {
+          .get("API/Payroll/GetPayruns?PayPeriodEnding=" + pay_period_ending, {
             cache: false
           })
           .then(function (response)
@@ -782,7 +797,7 @@
       var postTimestoreData = function (pay_period_ending, payrun)
       {
         return $http
-          .get(`API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=${pay_period_ending}&Payrun=${payrun}`, {
+          .get("API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=" + pay_period_ending + "&Payrun=" + payrun, {
             cache: false
           })
           .then(function (response)
@@ -850,7 +865,8 @@
         editsInComplete: editsInComplete,
         cancelApproval: cancelApproval,
         getPayruns: getPayruns,
-        postTimestoreData: postTimestoreData
+        postTimestoreData: postTimestoreData,
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee
       };
     }
   ]);

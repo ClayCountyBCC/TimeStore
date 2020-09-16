@@ -51,6 +51,37 @@ Namespace Models
       Return data
     End Function
 
+    Public Shared Function GetAllBasePayrollDataByEmployee(pay_period_ending As Date,
+                                                           employee_id As Integer,
+                                                           ByRef paycodes As Dictionary(Of String, Paycode))
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", pay_period_ending)
+      dp.Add("@employee_id", employee_id)
+      Dim query As String = "
+      SELECT
+        employee_id
+        ,pay_period_ending
+        ,paycode
+        ,payrate
+        ,project_code
+        ,hours
+        ,amount
+        ,orgn
+        ,classify
+        ,NULL changed_by
+        ,NULL changed_on
+      FROM Base_Payroll_Data
+      WHERE
+        pay_period_ending=@pay_period_ending
+        AND employee_id = @employee_id
+      ORDER BY orgn, employee_id"
+      Dim data = Get_Data(Of PayrollData)(query, dp, ConnectionStringType.Timestore)
+      For Each d In data
+        If paycodes.ContainsKey(d.paycode) Then d.paycode_detail = paycodes(d.paycode)
+      Next
+      Return data
+    End Function
+
     Public Shared Function GetAllPayrollChanges(pay_period_ending As Date,
                                                 ByRef paycodes As Dictionary(Of String, Paycode))
       Dim dp As New DynamicParameters
@@ -81,6 +112,39 @@ Namespace Models
       Return data
     End Function
 
+    Public Shared Function GetAllPayrollChangesByEmployee(pay_period_ending As Date,
+                                                          employee_id As Integer,
+                                                          ByRef paycodes As Dictionary(Of String, Paycode))
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", pay_period_ending)
+      dp.Add("@employee_id", employee_id)
+      Dim query As String = "
+      SELECT
+        employee_id
+        ,pay_period_ending
+        ,paycode
+        ,payrate
+        ,project_code
+        ,hours
+        ,amount
+        ,orgn
+        ,classify
+        ,NULL changed_by
+        ,NULL changed_on
+      FROM Payroll_Changes
+      WHERE
+        pay_period_ending=@pay_period_ending
+        AND employee_id = @employee_id
+      ORDER BY orgn, employee_id"
+      Dim data = Get_Data(Of PayrollData)(query, dp, ConnectionStringType.Timestore)
+      If paycodes IsNot Nothing Then
+        For Each d In data
+          If paycodes.ContainsKey(d.paycode) Then d.paycode_detail = paycodes(d.paycode)
+        Next
+      End If
+      Return data
+    End Function
+
     Public Shared Function GetAllFinplusPayrates(pay_period_ending As Date,
                                                  ByRef paycodes As Dictionary(Of String, Paycode))
       Dim dp As New DynamicParameters
@@ -101,6 +165,37 @@ Namespace Models
       FROM Finplus_Payrates
       WHERE
         pay_period_ending=@pay_period_ending
+      ORDER BY orgn, employee_id"
+      Dim data = Get_Data(Of PayrollData)(query, dp, ConnectionStringType.Timestore)
+      For Each d In data
+        If paycodes.ContainsKey(d.paycode) Then d.paycode_detail = paycodes(d.paycode)
+      Next
+      Return data
+    End Function
+
+    Public Shared Function GetAllFinplusPayratesByEmployee(pay_period_ending As Date,
+                                                           employee_id As Integer,
+                                                           ByRef paycodes As Dictionary(Of String, Paycode))
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", pay_period_ending)
+      dp.Add("@employee_id", employee_id)
+      Dim query As String = "
+      SELECT
+        employee_id
+        ,pay_period_ending
+        ,paycode
+        ,CASE WHEN rate_number != 1 THEN 0 ELSE payrate END payrate
+        ,'' project_code
+        ,pay_hours hours
+        ,CASE WHEN rate_number != 1 THEN payrate ELSE CAST(payrate * pay_hours AS DECIMAL(12, 2)) END amount
+        ,home_orgn orgn
+        ,classify
+        ,NULL changed_by
+        ,NULL changed_on
+      FROM Finplus_Payrates
+      WHERE
+        pay_period_ending=@pay_period_ending
+        AND employee_id = @employee_id
       ORDER BY orgn, employee_id"
       Dim data = Get_Data(Of PayrollData)(query, dp, ConnectionStringType.Timestore)
       For Each d In data
@@ -147,9 +242,20 @@ Namespace Models
       Return dt
     End Function
 
-    Public Shared Function SavePayrollChanges(pay_period_ending As Date, username As String, change_data As List(Of PayrollData)) As Boolean
-      If change_data.Count = 0 Then Return False
-      Dim employee_id As Integer = change_data.First.employee_id
+    Public Shared Function DeleteAllByEmployeeAndPayPeriod(pay_period_ending As Date, employee_id As Integer) As Boolean
+      Dim dp As New DynamicParameters
+      dp.Add("@pay_period_ending", pay_period_ending)
+      dp.Add("@employee_id", employee_id)
+      Dim query As String = "
+        DELETE FROM Timestore.dbo.Payroll_Changes
+        WHERE
+          pay_period_ending=@pay_period_ending
+          AND employee_id = @employee_id;"
+      Return Exec_Query(query, dp, ConnectionStringType.Timestore) > 0
+    End Function
+
+    Public Shared Function SavePayrollChanges(pay_period_ending As Date, employee_id As Integer, username As String, change_data As List(Of PayrollData)) As Boolean
+      If change_data.Count = 0 Then Return DeleteAllByEmployeeAndPayPeriod(pay_period_ending, employee_id)
 
       Dim dt As DataTable = BuildDataTable()
       For Each c In change_data
