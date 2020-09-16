@@ -55596,11 +55596,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     function ConvertPaycodeDictionaryToArray(data)
     {
-      let list = [];
-      for (const [key, value] of Object.entries(data))
+      var list = [];
+      Object.keys(data).forEach(function (k, i)
       {
-        list.push(value);
-      }
+        list.push(data[k]);
+      })
+      //for (const [key, value] of Object.entries(data))
+      //{
+      //  list.push(value);
+      //}
       list.sort(function (a, b) { return a.pay_code - b.pay_code; })
       return list;
     }
@@ -56314,10 +56318,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.RevertAllChanges = function ()
     {
       $scope.edit_data.payroll_change_data.splice(0, $scope.edit_data.payroll_change_data.length);
-      for (let e of $scope.edit_data.base_payroll_data)
+      for (var i = 0; i < $scope.edit_data.base_payroll_data; i++)
       {
+        var e = $scope.edit_data.base_payroll_data[i];
         $scope.edit_data.payroll_change_data.push(Object.assign({}, e));
       }
+      //for (let e of $scope.edit_data.base_payroll_data)
+      //{
+      //  $scope.edit_data.payroll_change_data.push(Object.assign({}, e));
+      //}
       $scope.ValidateChanges()
     }
 
@@ -56359,8 +56368,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     function UpdateDefaultDisplay(data)
     {
       $scope.default_display.splice(0, $scope.default_display.length);
-      for (let d of data)
+      for (var i = 0; i < data.length; i++)      
       {
+        var d = data[i];
         $scope.default_display.push({
           paycode: d.paycode,
           hours: d.hours,

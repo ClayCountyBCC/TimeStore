@@ -135,7 +135,7 @@
                                           payroll_changes_comparison))
       Next
       Return (From e In edit_data
-              Order By e.employee.Department Ascending, e.employee.EmployeeId Ascending
+              Order By e.employee.Department Ascending, e.employee.EmployeeLastName Ascending, e.employee.EmployeeFirstName Ascending
               Select e).ToList
     End Function
 
@@ -201,9 +201,12 @@
         amount_check_time_types.Add("A")
         amount_check_time_types.Add("N")
         For Each pcd In payroll_change_data
+          If pcd.paycode = "090" Then
+            pcd.messages.Add("*** WARNING - TIMECARD AMOUNT = 0")
+          End If
           If amount_check_time_types.Contains(pcd.paycode_detail.time_type) = False Then
             If pcd.payrate = 0 Then
-              pcd.messages.Add("*** WARNING - TIMECARD AMOUNT = 0")
+              'pcd.messages.Add("*** WARNING - TIMECARD AMOUNT = 0")
             Else
               Dim calc_payrate = Math.Round((employee.Base_Payrate * pcd.paycode_detail.percent_x), 5)
 
@@ -213,6 +216,7 @@
                 pcd.messages.Add($"*** TIMECARD RATE {pcd.payrate} NOT = CURRENT RATE {calc_payrate}")
               End If
             End If
+
           End If
 
           ' Check leave balances against the right paycode
@@ -237,8 +241,8 @@
 
           Dim total_regular = (From pcd In payroll_change_data
                                Where pcd.paycode_detail.pay_type = "H" AndAlso
-                                 pcd.paycode_detail.time_type = "R" OrElse
-                                 pcd.paycode_detail.time_type = "C"
+                                 (pcd.paycode_detail.time_type = "R" OrElse
+                                 pcd.paycode_detail.time_type = "C")
                                Select pcd.hours).Sum
           If total_regular < employee.HoursNeededForOvertime Then
             messages.Add($"NON-OVERTIME HOURS ENTERED  LESS  THAN NORMAL ({employee.HoursNeededForOvertime}) HOURS")

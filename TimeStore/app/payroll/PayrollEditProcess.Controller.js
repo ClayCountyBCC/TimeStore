@@ -85,11 +85,15 @@
 
     function ConvertPaycodeDictionaryToArray(data)
     {
-      let list = [];
-      for (const [key, value] of Object.entries(data))
+      var list = [];
+      Object.keys(data).forEach(function (k, i)
       {
-        list.push(value);
-      }
+        list.push(data[k]);
+      })
+      //for (const [key, value] of Object.entries(data))
+      //{
+      //  list.push(value);
+      //}
       list.sort(function (a, b) { return a.pay_code - b.pay_code; })
       return list;
     }
