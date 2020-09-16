@@ -313,6 +313,10 @@
             Case WorkType.BreakCredit, WorkType.Regular
               Handle_Regular_Non_Exempt(rts)
 
+            Case WorkType.HolidayRegularOvertime
+              tsRegularOvertime.Add(rts)
+              RegularOvertime(week) += rts.total_hours
+
             Case WorkType.Admin
               tsRegular.Add(rts)
               Regular(week) += rts.total_hours

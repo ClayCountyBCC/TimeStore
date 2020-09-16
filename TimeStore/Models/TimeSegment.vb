@@ -7,6 +7,7 @@
     Doubletime = 3
     DisasterDoubletime = 4
     Admin = 5
+    HolidayRegularOvertime = 6
   End Enum
 
   Public Class TimeSegment
@@ -165,7 +166,7 @@
       End If
 
       If tctd.HolidayHours > 0 Then
-        combined.Add(RefineHolidayHours(tctd, pay_period_start, payrate))
+        combined.AddRange(RefineHolidayHours(tctd, pay_period_start, payrate))
       End If
 
       Dim total_admin As Double = tctd.AdminBereavement + tctd.AdminHours + tctd.AdminJuryDuty +
@@ -176,12 +177,25 @@
       Return combined
     End Function
 
-    Private Shared Function RefineHolidayHours(tctd As TimecardTimeData, pay_period_start As Date, payrate As Double) As TimeSegment
+    Private Shared Function RefineHolidayHours(tctd As TimecardTimeData, pay_period_start As Date, payrate As Double) As List(Of TimeSegment)
+      Dim tslist As New List(Of TimeSegment)
       Dim start_date = tctd.WorkDate.Date
       Dim end_date = start_date.AddHours(tctd.HolidayHours)
 
-      Dim ts As New TimeSegment(start_date, end_date, WorkType.Regular, pay_period_start, -1, payrate)
-      Return ts
+      Dim wh = tctd.WorkHours + tctd.BreakCreditHours
+      Dim h = tctd.HolidayHours
+      Dim dt = tctd.DoubleTimeHours
+      Dim diff = wh - dt
+      Dim totalworked = wh - diff
+      If diff < h Then
+        Dim new_end = start_date.AddHours(diff)
+        tslist.Add(New TimeSegment(start_date, new_end, WorkType.HolidayRegularOvertime, pay_period_start, -1, payrate))
+        tslist.Add(New TimeSegment(new_end, end_date, WorkType.Regular, pay_period_start, -1, payrate))
+      Else
+        tslist.Add(New TimeSegment(start_date, end_date, WorkType.HolidayRegularOvertime, pay_period_start, -1, payrate))
+      End If
+
+      Return tslist
     End Function
 
     Private Shared Function RefineAdminHours(tctd As TimecardTimeData, total_admin_hours As Double, pay_period_start As Date, payrate As Double) As TimeSegment

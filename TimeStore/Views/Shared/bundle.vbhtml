@@ -4355,6 +4355,22 @@
                ng-model="filter_employee"
                ng-change="applyFilters()" />
       </md-input-container>
+      <md-input-container flex="20">
+        <label>
+          Filter By Error
+        </label>
+        <md-select ng-change="applyFilters()"
+                   aria-label="Filter by Error"
+                   ng-model="filter_error_message">
+          <md-option ng-value="''">
+            None
+          </md-option>
+          <md-option ng-repeat="m in error_messages"
+                     ng-value="m">
+            {{m}}
+          </md-option>
+        </md-select>
+      </md-input-container>
       <span flex></span>
       <md-button ng-click="returnToOverallProcess()"
                  class="md-button md-raised md-primary">Return to Process</md-button>
@@ -5473,7 +5489,7 @@
         {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
       </a>
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
-      <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
+      <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
 
       <md-button ng-click="ShowEdit($event)"
                  class="md-primary md-raised">
