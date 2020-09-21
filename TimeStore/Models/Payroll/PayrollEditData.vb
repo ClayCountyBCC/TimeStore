@@ -90,17 +90,18 @@
       Dim paycodes As Dictionary(Of String, Paycode)
       Select Case current.target_db
         Case PayrollStatus.DatabaseTarget.Finplus_Production
-          employee_data = (From d In GetCachedEmployeeDataFromFinplus()
+          employee_data = (From d In GetAllEmployeeDataFromFinPlus()
                            Where d.IsTerminated = False
                            Order By d.DepartmentName, d.EmployeeLastName, d.EmployeeFirstName
                            Select d).ToList
-          paycodes = Paycode.GetCachedFromProduction()
+          paycodes = Paycode.GetFromProduction()
         Case PayrollStatus.DatabaseTarget.Finplus_Training
-          employee_data = (From d In GetCachedEmployeeDataFromFinplusTraining()
+          employee_data = (From d In GetAllEmployeeDataFromFinPlusTraining()
                            Where d.IsTerminated = False
                            Order By d.DepartmentName, d.EmployeeLastName, d.EmployeeFirstName
                            Select d).ToList
-          paycodes = Paycode.GetCachedFromTraining
+          paycodes = Paycode.GetFromTraining()
+          'paycodes = Paycode.GetCachedFromTraining
         Case Else
           Return Nothing
       End Select
@@ -242,7 +243,7 @@
           Dim total_regular = (From pcd In payroll_change_data
                                Where pcd.paycode_detail.pay_type = "H" AndAlso
                                  (pcd.paycode_detail.time_type = "R" OrElse
-                                 pcd.paycode_detail.time_type = "C")
+                                 (pcd.paycode = "006" OrElse pcd.paycode = "007"))
                                Select pcd.hours).Sum
           If total_regular < employee.HoursNeededForOvertime Then
             messages.Add($"NON-OVERTIME HOURS ENTERED  LESS  THAN NORMAL ({employee.HoursNeededForOvertime}) HOURS")

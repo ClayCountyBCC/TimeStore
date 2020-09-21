@@ -59,7 +59,7 @@ Public Module ModuleDataAccess
     ' MSIL03, CLAYBCCDV10 = Development / Testing
     ' CLAYBCCIIS01 = Production
     Select Case Environment.MachineName.ToUpper
-      Case "CLAYBCCDV10", "MISSL01" ' QA
+      Case "CLAYBCCDV10" ', "MISSL01" ' QA
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -83,7 +83,7 @@ Public Module ModuleDataAccess
             Return ""
         End Select
 
-      Case "CLAYBCCIIS01" ', "MISSL01" ' Production
+      Case "CLAYBCCIIS01", "MISSL01" ' Production
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -1092,13 +1092,13 @@ FROM (
       S.orgn,
       S.pay_period_ending,
       S2.TotalHours 
-    FROM Saved_Time S 
+    FROM Payroll_Changes S 
     LEFT OUTER JOIN CLAYBCCFINDB.finplus51.dbo.person P ON S.employee_id = P.empl_no
     INNER JOIN (
       SELECT 
         employee_id, 
         SUM(hours) AS TotalHours 
-      FROM Saved_Time 
+      FROM Payroll_Changes
       WHERE pay_period_ending='{ppEnd.ToShortDateString}'
       GROUP BY employee_id
     ) AS S2 ON S2.employee_id = S.employee_id 
@@ -1636,16 +1636,17 @@ ORDER BY home_orgn, empl_no
 
     'Dim deleted As Boolean = Delete_Hours(EmployeeID, PayPeriodEnding, PayCode, Payrate)
     ' Here we're going to insert their time data into the database.
+    Dim RealPayrate = Math.Round(GetPayrate(PayCode, Payrate), 5)
     Dim dp = New DynamicParameters()
     dp.Add("@EmployeeId", EmployeeID)
     dp.Add("@PayPeriodEnding", PayPeriodEnding)
     dp.Add("@PayCode", PayCode)
     dp.Add("@ProjectCode", ProjectCode)
     dp.Add("@Hours", Hours)
-    dp.Add("@Amount", Math.Round(Payrate, 5) * Hours)
+    dp.Add("@Amount", Math.Round(RealPayrate, 5) * Hours)
     dp.Add("@Orgn", Department)
     dp.Add("@Classify", Classify)
-    dp.Add("@PayRate", Math.Round(GetPayrate(PayCode, Payrate), 5))
+    dp.Add("@PayRate", RealPayrate)
 
     Dim sql As String = "
       SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;

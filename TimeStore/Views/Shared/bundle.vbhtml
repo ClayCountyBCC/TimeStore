@@ -4401,6 +4401,7 @@
   <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
             layout="row"
             layout-align="start center"
+            class="hide-print"
             flex="100">
     <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
     <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
@@ -4457,7 +4458,7 @@
         {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
       </a>
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
-      <span flex="10">{{ ped.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</span>
+      <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
     </div>
     <div style="padding-top: 1em; padding-bottom: 1em;"
          flex="100">
@@ -5491,8 +5492,9 @@
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
       <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
 
-      <md-button ng-click="ShowEdit($event)"
-                 class="md-primary md-raised">
+      <md-button ng-show="allowEdit"
+                 ng-click="ShowEdit($event)"
+                 class="md-primary md-raised hide-print">
         Edit
       </md-button>
     </div>
@@ -5526,7 +5528,7 @@
         <h2 flex="30">{{edit_data.employee.DepartmentName}} ({{edit_data.employee.Department}}) </h2>
         <h2 flex="20" style="padding-left: 1em;">{{edit_data.employee.EmployeeName}} ({{edit_data.employee.EmployeeId}})</h2>
         <h2 flex="10">{{ edit_data.employee.isFulltime ? 'Full time' : 'Part time';}}</h2>
-        <h2 flex="10">{{ edit_data.employee.isExempt ? 'Exempt' : 'Non Exempt';}}</h2>
+        <h2 flex="10">{{ edit_data.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-svg-src="images/ic_close_24px.svg" aria-label="Close dialog"></md-icon>

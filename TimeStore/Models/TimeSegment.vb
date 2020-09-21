@@ -448,15 +448,24 @@
     End Function
 
     Public Shared Function FindBreakCreditGap(segments As List(Of TimeSegment)) As Date?
-      If segments.Count <= 1 Then Return Nothing
-      Dim tmp = (From s In segments
-                 Order By s.start_time Descending
-                 Select s).ToArray
-      For i As Integer = tmp.GetLowerBound(0) To tmp.GetUpperBound(0)
-        If tmp(i).start_time.Subtract(tmp(i + 1).end_time).TotalHours >= 1 Then
-          Return tmp(i).start_time.AddMinutes(-30)
-        End If
-      Next
+      Try
+        If segments.Count <= 1 Then Return Nothing
+        Dim tmp = (From s In segments
+                   Order By s.start_time Descending
+                   Select s).ToArray
+        For i As Integer = tmp.GetLowerBound(0) To tmp.GetUpperBound(0)
+          If i < tmp.GetUpperBound(0) Then
+            If tmp(i).start_time.Subtract(tmp(i + 1).end_time).TotalHours >= 0.5 Then
+              Return tmp(i).start_time.AddMinutes(-30)
+            End If
+          Else
+            Return tmp(i).start_time.AddMinutes(-30)
+          End If
+        Next
+      Catch ex As Exception
+        Dim el As New ErrorLog(ex, "")
+      End Try
+
       Return Nothing
     End Function
 

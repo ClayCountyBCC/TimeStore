@@ -1402,7 +1402,7 @@
         calculatedTimeList.Add(New WorkType("LWOP", e.LWOP_All(0), 2, "090", "", Payrate))
         calculatedTimeList.Add(New WorkType("Vacation", e.Vacation(0), 3, "100", "", Payrate))
         calculatedTimeList.Add(New WorkType("Sick", e.Sick_All(0), 4, "110", "", Payrate))
-        calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", "", Payrate))
+        calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", "", GetPayrate("046", Payrate)))
         'calculatedTimeList.Add(New WorkType("Vehicle", e.TakeHomeVehicle(0), 15, "046", GetPayrate("046", Payrate)))
 
 

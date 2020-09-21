@@ -292,10 +292,22 @@
       For i As Integer = 1 To 2
         Dim week As Integer = i
 
+        Dim admin_ts = (From tts In BaseTS
+                        Where tts.week = week And
+                            tts.work_type = WorkType.Admin
+                        Order By tts.start_time Ascending
+                        Select tts).ToList
+
+        For Each ats In admin_ts
+          tsRegular.Add(ats)
+          Regular(week) += ats.total_hours
+        Next
+
         Dim regular_ts = (From tts In BaseTS
                           Where tts.week = week And
-                            tts.work_type <> WorkType.Disaster And
-                            tts.disaster_pay_rule = -1
+                            tts.work_type <> WorkType.Disaster AndAlso
+                            tts.disaster_pay_rule = -1 AndAlso
+                            tts.work_type <> WorkType.Admin
                           Order By tts.start_time Ascending
                           Select tts).ToList
 
@@ -313,13 +325,13 @@
             Case WorkType.BreakCredit, WorkType.Regular
               Handle_Regular_Non_Exempt(rts)
 
-            Case WorkType.HolidayRegularOvertime
-              tsRegularOvertime.Add(rts)
-              RegularOvertime(week) += rts.total_hours
+              'Case WorkType.HolidayRegularOvertime
+              '  tsRegularOvertime.Add(rts)
+              '  RegularOvertime(week) += rts.total_hours
 
-            Case WorkType.Admin
-              tsRegular.Add(rts)
-              Regular(week) += rts.total_hours
+              'Case WorkType.Admin
+              '  tsRegular.Add(rts)
+              '  Regular(week) += rts.total_hours
           End Select
         Next
         ' then disaster
@@ -338,6 +350,34 @@
             Handle_Disaster_Regular_Non_Exempt(dts)
           End If
 
+        Next
+
+        Dim holiday_ts = (From tts In BaseTS
+                          Where tts.week = week And
+                            tts.work_type = WorkType.HolidayRegularOvertime
+                          Order By tts.start_time Ascending
+                          Select tts).ToList
+
+        For Each hts In holiday_ts
+          Dim RegularDiff = HoursForOTByWeek - (Regular(hts.week) + DisasterRegular(hts.week) + Non_Working_Hours(hts.week))
+          If RegularDiff > 0 Then
+            If hts.total_hours <= RegularDiff Then
+              tsRegular.Add(hts)
+              Regular(hts.week) += hts.total_hours
+            Else
+              Dim new_end = hts.start_time.AddHours(RegularDiff)
+              Dim new_ts = hts.Clone(new_end, hts.end_time)
+              hts.end_time = new_end
+              hts.Update()
+              tsRegular.Add(hts)
+              Regular(hts.week) += hts.total_hours
+              tsRegularOvertime.Add(new_ts)
+              RegularOvertime(new_ts.week) += new_ts.total_hours
+            End If
+          Else
+            tsRegularOvertime.Add(hts)
+            RegularOvertime(hts.week) += hts.total_hours
+          End If
         Next
 
 
