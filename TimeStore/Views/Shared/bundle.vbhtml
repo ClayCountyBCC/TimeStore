@@ -4187,7 +4187,7 @@
            layout="row"
            layout-align="center center">
         <md-button ng-click="ViewEdits()"
-                   ng-disabled="!currentStatus.can_edit"
+                   ng-disabled="currentStatus.started_by.length === 0"
                    class="md-primary md-raised">
           View Edits
         </md-button>
@@ -4227,7 +4227,7 @@
       <div flex="50"
            layout="row"
            layout-align="center center">
-        <md-button ng-disabled="!currentStatus.can_approve_edits"
+        <md-button ng-disabled="currentStatus.started_by.length === 0"
                    ng-click="ViewChanges()"
                    class="md-primary md-raised">
           View Changes
@@ -4237,7 +4237,7 @@
                    class="md-warn md-raised">
           Approve All Changes
         </md-button>
-        <md-button ng-show="currentStatus.edits_approved_by.length > 0 && currentStatus.finplus_updated_by.length === 0"
+        <md-button ng-show="currentStatus.edits_approved_by.length > 0"
                    ng-click="CancelApproval()"
                    class="md-warn md-raised">
           Cancel Approval
@@ -4283,8 +4283,8 @@
 
         <md-input-container flex="55">
           <label>Select Pay Run</label>
-          <md-select ng-disabled="!currentStatus.can_update_finplus"
-                     ng-model="postPayrun"
+          <!--ng-disabled="!currentStatus.can_update_finplus"-->
+          <md-select ng-model="postPayrun"
                      multiple="false"
                      md-on-close="selectPayRun()"
                      aria-label="Select the target payrun">
@@ -4302,7 +4302,7 @@
           Refresh Pay Runs
         </md-button>
         <md-button ng-click="PostTimestoreData()"
-                   ng-disabled="!currentStatus.can_update_finplus || (!postPayrun || postPayrun.length === 0)"
+                   ng-disabled="!currentStatus.can_update_finplus || !postPayrun"
                    class="md-primary md-raised">
           Post to Finplus
         </md-button>
