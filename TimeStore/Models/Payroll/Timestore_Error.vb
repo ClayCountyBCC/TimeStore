@@ -23,7 +23,7 @@
           employee_id
           ,pay_period_ending
           ,error_text 
-          FROM Timestore_Errors
+        FROM Timestore_Errors
         WHERE
           pay_period_ending = @pay_period_ending
         ORDER BY employee_id;"

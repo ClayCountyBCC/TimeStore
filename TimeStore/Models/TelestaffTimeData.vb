@@ -121,12 +121,18 @@ SELECT
   ,RMT.RscMaster_EmployeeID_Ch
   ,ST.rsc_no_in
   ,ST.staffing_calendar_da
-  ,ST.staffing_start_dt
-  ,ST.staffing_end_dt
+
+--  ,DATEADD(HOUR, -4, ST.staffing_start_dt) staffing_start_dt
+--  ,DATEADD(HOUR, -4, ST.staffing_end_dt) staffing_end_dt
+  ,ST_EST.staffing_start_dt_est staffing_start_dt
+  ,ST_EST.staffing_end_dt_est staffing_end_dt
   ,ISNULL(ST.Staffing_Detail_Ch, '') staffing_detail
+--  ,( CAST(DATEDIFF(minute
+--                   ,ST.Staffing_Start_Dt
+--                   ,ST.Staffing_End_Dt) AS DECIMAL(10, 2)) / 60 ) Staffing_Hours
   ,( CAST(DATEDIFF(minute
-                   ,ST.Staffing_Start_Dt
-                   ,ST.Staffing_End_Dt) AS DECIMAL(10, 2)) / 60 ) Staffing_Hours
+                   ,ST_EST.staffing_start_dt_est
+                   ,ST_EST.staffing_end_dt_est) AS DECIMAL(10, 2)) / 60 ) Staffing_Hours
   ,CASE
      WHEN ST.staffing_request_state = 1
      THEN ISNULL(ST.Staffing_Note_VC, '')
@@ -180,6 +186,7 @@ SELECT
   -- END is_fixed
 FROM
   Staffing_Tbl ST
+  INNER JOIN vw_staffing_tbl_est ST_EST ON ST.staffing_no_in = ST_EST.staffing_no_in
   LEFT OUTER JOIN Resource_Tbl R ON ST.rsc_no_in = R.rsc_no_in
   LEFT OUTER JOIN Resource_Master_Tbl RMT ON R.RscMaster_No_In = RMT.RscMaster_No_In
   LEFT OUTER JOIN wstat_cde_tbl W ON ST.wstat_no_in = W.wstat_no_in

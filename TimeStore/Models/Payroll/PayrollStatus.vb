@@ -274,6 +274,8 @@ Namespace Models
         SET
           edits_approved_on=NULL
           ,edits_approved_by=NULL
+          ,finplus_updated_on=NULL
+          ,finplus_updated_by=NULL
         WHERE 
           pay_period_ending=@pay_period_ending;"
       Exec_Query(query, dp, ConnectionStringType.Timestore)
@@ -856,7 +858,8 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
           FROM
             Saved_Time
           WHERE
-            pay_period_ending = @pay_period_ending;
+            pay_period_ending = @pay_period_ending
+            AND paycode NOT IN ('095');
 
 
         INSERT INTO TimeStore.[dbo].[Payroll_Changes]

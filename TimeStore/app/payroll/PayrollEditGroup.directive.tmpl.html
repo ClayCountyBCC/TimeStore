@@ -23,8 +23,7 @@
       <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
       <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
 
-      <md-button ng-show="allowEdit"
-                 ng-click="ShowEdit($event)"
+      <md-button ng-click="ShowEdit($event)"
                  class="md-primary md-raised hide-print">
         Edit
       </md-button>

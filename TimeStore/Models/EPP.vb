@@ -1584,8 +1584,14 @@
               TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "You can only bank a maximum of 32 hours of Comp Time."))
             End If
         End Select
+      End If
 
+      If e.TelestaffProfileType = TelestaffProfileType.Field AndAlso e.EmployeeData.HoursNeededForOvertime = 80 Then
+        TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee is set up as 80 hour employee in Finplus, but is a 106 hour employee in Telestaff."))
+      End If
 
+      If e.TelestaffProfileType = TelestaffProfileType.Office AndAlso e.EmployeeData.HoursNeededForOvertime = 106 Then
+        TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionWarning, "Employee is set up as 106 hour employee in Finplus, but is an 80 hour employee in Telestaff."))
       End If
 
       If _term_hours.TotalHours > 0 Then
