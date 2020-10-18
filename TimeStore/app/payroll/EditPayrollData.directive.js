@@ -140,12 +140,13 @@
         {
           case 'A':
             $scope.disableamount = false;
+            $scope.disablehours = false;
+            $scope.disablepayrate = false;
             break;
 
           default:
             switch ($scope.pd.paycode_detail.pay_type)
             {
-              case 'A':
               case 'P':
                 $scope.disableamount = false;
                 break;
