@@ -56138,6 +56138,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           switch (d.pay_type)
           {
             case 'A':
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 0; // locked
+              $scope.pd.amount = 0; // this will be variable 
+              break;
+
             case 'P':
               $scope.pd.payrate = 0; // locked
               $scope.pd.hours = 1; // locked

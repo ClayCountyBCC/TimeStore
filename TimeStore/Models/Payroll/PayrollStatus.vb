@@ -133,7 +133,7 @@ Namespace Models
       sbQuery.AppendLine("BEGIN TRY")
       sbQuery.AppendLine(CapturePayratesQuery(Target, IncludeBenefits))
       sbQuery.AppendLine(CaptureLeaveBanksQuery(Target))
-      sbQuery.AppendLine(SetupPayrollChanges())
+      sbQuery.AppendLine(SetupPayrollChanges(Target))
       sbQuery.AppendLine(CreateNewPayrollStatus())
       sbQuery.AppendLine("END TRY")
       sbQuery.AppendLine("BEGIN CATCH")
@@ -830,8 +830,14 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
       Return query
     End Function
 
-    Public Shared Function SetupPayrollChanges() As String
-
+    Public Shared Function SetupPayrollChanges(Target As DatabaseTarget) As String
+      Dim db As String = ""
+      Select Case Target
+        Case DatabaseTarget.Finplus_Training
+          db = "trnfinplus51"
+        Case DatabaseTarget.Finplus_Production
+          db = "finplus51"
+      End Select
       Dim query As String = $"
         INSERT INTO TimeStore.[dbo].[Payroll_Changes]
         (
@@ -856,7 +862,9 @@ FROM CLAYBCCFINDB.{db}.[dbo].[payroll]
             ,[orgn]
             ,[classify]
           FROM
-            Saved_Time
+            Saved_Time S
+            INNER JOIN CLAYBCCFINDB.{db}.[dbo].[person] P ON S.employee_id = P.empl_no
+              AND P.term_date IS NULL
           WHERE
             pay_period_ending = @pay_period_ending
             AND paycode NOT IN ('095');
