@@ -272,16 +272,18 @@ Namespace Models
     End Sub
 
     Public Shared Function Check_Access_To_EmployeeId(AccessBy As Integer, AccessTo As Integer) As Boolean
+      If AccessBy = AccessTo Then Return True
       Dim tca As Timecard_Access = GetTimeCardAccess(AccessBy)
       Return tca.Check_Access_To_EmployeeId(AccessTo)
     End Function
 
-    Public Shared Function Check_Access_To_Paystub(AccessBy As Integer) As Boolean
+    Public Shared Function Check_Access_To_Paystub(AccessBy As Integer, AccessTo As Integer) As Boolean
+      If AccessBy = AccessTo Then Return True
       Dim tca As Timecard_Access = GetTimeCardAccess(AccessBy)
       If tca.PayrollAccess > 0 Then Return True
       Dim employee_data = GetCachedEmployeeDataFromFinplusAsDictionary()
       If Not employee_data.ContainsKey(AccessBy) Then Return False
-      Return employee_data(AccessBy).Department = "0103" AndAlso tca.Access_Type = Access_Types.All_Access
+      Return employee_data(AccessBy).Department = "0103" AndAlso tca.Raw_Access_Type = Access_Types.All_Access
     End Function
 
     Public Function Check_Access_To_EmployeeId(AccessToEID As Integer) As Boolean

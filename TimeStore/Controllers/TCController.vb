@@ -29,7 +29,7 @@ Namespace Controllers
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
 #If DEBUG Then
-      'UserName = "reyese"
+      UserName = "reyese"
 #End If
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
 
@@ -85,7 +85,7 @@ Namespace Controllers
       Dim jnr As New JsonNetResult
       Try
         Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
-        If Timecard_Access.Check_Access_To_Paystub(eidToUse) Then eidToUse = EmployeeId
+        If Timecard_Access.Check_Access_To_Paystub(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         'If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         Dim paystub_list As List(Of Paystub.PaystubList) = Paystub.PaystubList.Get_Paystubs_By_Employee(eidToUse)
         jnr.Data = paystub_list
@@ -103,7 +103,7 @@ Namespace Controllers
       Dim jnr As New JsonNetResult
       Try
         Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
-        If Timecard_Access.Check_Access_To_Paystub(eidToUse) Then eidToUse = EmployeeId
+        If Timecard_Access.Check_Access_To_Paystub(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         'If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         Dim current_paystub As Paystub.Paystub = Paystub.Paystub.Get_Paystub(eidToUse, CheckNumber)
         jnr.Data = current_paystub
