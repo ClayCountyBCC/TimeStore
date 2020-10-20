@@ -43,6 +43,17 @@ Public Module ModuleDataAccess
     End Try
   End Function
 
+  Public Function IsProduction() As Boolean
+    Select Case Environment.MachineName.ToUpper
+      Case "CLAYBCCIIS01"
+        Return True
+      Case "CLAYBCCDV10", "MISSL01"
+        Return False
+      Case Else
+        Return False
+    End Select
+  End Function
+
   Public Function GetCS(cst As ConnectionStringType) As String
     ' This function will return a specific connectionstring based on the machine it's currently running on
     ' MSIL03, CLAYBCCDV10 = Development / Testing
@@ -104,8 +115,6 @@ Public Module ModuleDataAccess
     End Select
   End Function
 
-
-
   'Public Function GetADEmployeeData() As List(Of AD_EmployeeData)
   '  Dim key As String = "employee_ad_data"
   '  Dim adl As List(Of AD_EmployeeData) = myCache.GetItem(key)
@@ -117,6 +126,15 @@ Public Module ModuleDataAccess
       .AbsoluteExpiration = Now.AddHours(12)
     }
     Dim key As String = "employeedata" ' & PayPeriodStart.ToShortDateString
+    Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
+    Return fdl
+  End Function
+
+  Public Function GetCachedEmployeeDataFromFinplusTraining() As List(Of FinanceData)
+    Dim CIP As New CacheItemPolicy With {
+      .AbsoluteExpiration = Now.AddHours(12)
+    }
+    Dim key As String = "employeedata_training" ' & PayPeriodStart.ToShortDateString
     Dim fdl As List(Of FinanceData) = myCache.GetItem(key, CIP)
     Return fdl
   End Function
@@ -200,6 +218,8 @@ Public Module ModuleDataAccess
         PAY.lv4_bal, 
         PAY.lv5_cd, 
         PAY.lv5_bal, 
+        PAY.lv6_cd, 
+        PAY.lv6_bal, 
         P.empl_type, 
         P.term_date 
       FROM employee E 
@@ -241,6 +261,78 @@ Public Module ModuleDataAccess
       Return Nothing
     End Try
   End Function
+
+  Public Function GetAllEmployeeDataFromFinPlusTraining() As List(Of FinanceData)
+    ' This pulls the employee data from Pentamation for the list of departments 
+    'Dim sbQuery As New StringBuilder, 
+    Dim dbc As New Tools.DB(GetCS(ConnectionStringType.FinplusTraining), toolsAppId, toolsDBError)
+    Dim query As String = "
+      USE trnfinplus51;
+      SELECT 
+        E.hire_date, 
+        E.empl_no, 
+        LTRIM(RTRIM(E.l_name)) AS l_name, 
+        LTRIM(RTRIM(E.f_name)) AS f_name, 
+        E.home_orgn AS department, 
+        E.birthdate, C.title, 
+        D.desc_x AS department_name, 
+        PR.classify, P.part_time, 
+        PR.rate, 
+        PR.pay_hours, 
+        PAY.lv1_cd, 
+        PAY.lv1_bal, 
+        PAY.lv2_cd, 
+        PAY.lv2_bal, 
+        PAY.lv3_cd, 
+        PAY.lv3_bal, 
+        PAY.lv4_cd, 
+        PAY.lv4_bal, 
+        PAY.lv5_cd, 
+        PAY.lv5_bal, 
+        PAY.lv6_cd, 
+        PAY.lv6_bal,
+        P.empl_type, 
+        P.term_date 
+      FROM employee E 
+      INNER JOIN person P ON E.empl_no=P.empl_no 
+      INNER JOIN payrate PR ON E.empl_no=PR.empl_no 
+      INNER JOIN clstable C on PR.classify = C.class_cd
+      INNER JOIN payroll PAY ON E.empl_no = PAY.empl_no 
+      INNER JOIN dept D ON E.home_orgn=D.code 
+      WHERE 
+        PR.pay_cd IN ('001', '002') 
+        AND (PR.rate_no = 1) 
+      ORDER BY E.l_name ASC, E.f_name ASC"
+    'With sbQuery ' This humongous sql query was pulled from the telestaff report system and then tweaked.
+    '  .AppendLine("USE finplus50;")
+    '  .AppendLine("SELECT E.hire_date, E.empl_no, LTRIM(RTRIM(E.l_name)) AS l_name, LTRIM(RTRIM(E.f_name)) AS f_name, ")
+    '  .AppendLine("E.home_orgn AS department, E.birthdate, C.title, D.desc_x AS department_name, PR.classify, P.part_time, ")
+    '  .AppendLine("PR.rate, PR.pay_hours, PAY.lv1_cd, PAY.lv1_bal, PAY.lv2_cd, PAY.lv2_bal, PAY.lv3_cd, PAY.lv3_bal, PAY.lv4_cd, PAY.lv4_bal, ")
+    '  .AppendLine("PAY.lv5_cd, PAY.lv5_bal, P.empl_type, P.term_date FROM employee E INNER JOIN person P ON E.empl_no=P.empl_no ")
+    '  .AppendLine("INNER JOIN payrate PR ON E.empl_no=PR.empl_no INNER JOIN clstable C on PR.classify = C.class_cd ")
+    '  .AppendLine("INNER JOIN payroll PAY ON E.empl_no = PAY.empl_no INNER JOIN dept D ON E.home_orgn=D.code WHERE PR.pay_cd IN ('001', '002') ")
+    '  .Append("AND (PR.rate_no = 1) ")
+    '  '.Append("AND (P.term_date IS NULL OR P.term_date >= DATEADD(mm,-3, GETDATE())) ")
+    '  'If DepartmentList.Length > 0 Then
+    '  '    .Append(" AND E.home_orgn IN (").Append(DepartmentList).Append(")")
+    '  'End If
+    '  'If EmployeeID.Length > 0 Then
+    '  '    .Append(" AND E.empl_no = '").Append(EmployeeID).Append("'")
+    '  'End If
+    '  .Append(" ORDER BY E.l_name ASC, E.f_name ASC")
+    'End With
+    Dim ds As DataSet = dbc.Get_Dataset(query)
+    'Dim tb As DataSet = GetTimeBankData(StartDate)
+    Try
+      'Dim tmp As List(Of FinanceData) = (From dr In ds.Tables(0).AsEnumerable Select New FinanceData(dr)).ToList
+      'tmp = (From dr In ds.Tables(0).AsEnumerable() Select GetEmployeePayPeriodByDataRow(dr)).ToList
+      Return (From dr In ds.Tables(0).AsEnumerable Select New FinanceData(dr)).ToList
+    Catch ex As Exception
+      Log(ex)
+      Return Nothing
+    End Try
+  End Function
+
 
   Public Function GetDepartmentListFromFinPlus() As List(Of FinplusDepartment)
     ' This pulls the employee data from Pentamation for the list of departments 
@@ -462,37 +554,91 @@ WHERE access_type >= " & accessType
     Dim dbc As New Tools.DB(GetCS(ConnectionStringType.Timestore), toolsAppId, toolsDBError)
 
     'Dim query As String = "USE Timestore; SELECT * FROM Saved_Time WHERE pay_period_ending='" & PayPeriodEnding.ToShortDateString & "';"
-    Dim sbQ As New StringBuilder
-    With sbQ
-      .AppendLine("USE TimeStore;")
-      .AppendLine("SELECT ISNULL(A.data_type, CASE WHEN ST.orgn IN ('1703', '2103') THEN ") ' Removed 2102
-      .AppendLine(" 'telestaff' ELSE 'timecard' END) AS data_type, ISNULL(A.access_type, 1) AS access_type, ")
-      .AppendLine("ISNULL(A2.access_type, ISNULL(A.access_type, 1)) AS initial_approval_employeeid_access_type, ")
-      .AppendLine("ISNULL(A.reports_to, 0) AS reports_to, ST.pay_period_ending, ST.employee_id, ST.paycode, ")
-      .AppendLine("ST.payrate, ST.hours, ST.amount, ST.orgn, ST.classify, ST.date_added, ST.date_updated, ")
-      .AppendLine("ST.initial_approval_username, ST.initial_approval_employeeid, ST.initial_approval_machine_name, ")
-      .AppendLine("ST.initial_approval_ip_address, ST.initial_approval_date, ")
-      .AppendLine("ST.final_approval_username, ST.final_approval_employeeid, ST.final_approval_machine_name, ")
-      .AppendLine("ST.final_approval_ip_address, ST.final_approval_date ")
-      .AppendLine("FROM Saved_Time ST ")
-      .AppendLine("LEFT OUTER JOIN Access A ON ST.employee_id = A.employee_id ")
-      .AppendLine("LEFT OUTER JOIN Access A2 ON ST.initial_approval_employeeid = A2.employee_id ")
-      .Append("WHERE ST.pay_period_ending = '").Append(PayPeriodEnding.ToShortDateString).Append("' ")
-    End With
+    Dim query As String = $"
+      USE TimeStore;
+
+      SELECT
+        ISNULL(A.data_type
+               ,CASE
+                  WHEN ST.orgn IN ( '1703', '2103' )
+                  THEN 'telestaff'
+                  ELSE 'timecard'
+                END) AS data_type
+        ,ISNULL(A.access_type
+                ,1) AS access_type
+        ,ISNULL(A2.access_type
+                ,ISNULL(A.access_type
+                        ,1)) AS initial_approval_employeeid_access_type
+        ,ISNULL(A.reports_to
+                ,0) AS reports_to
+        ,ST.pay_period_ending
+        ,ST.employee_id
+        ,ST.paycode
+        ,ST.payrate
+        ,ST.project_code
+        ,ST.hours
+        ,ST.amount
+        ,ST.orgn
+        ,ST.classify
+        ,ST.date_added
+        ,ST.date_updated
+        ,ST.initial_approval_username
+        ,ST.initial_approval_employeeid
+        ,ST.initial_approval_machine_name
+        ,ST.initial_approval_ip_address
+        ,ST.initial_approval_date
+        ,ST.final_approval_username
+        ,ST.final_approval_employeeid
+        ,ST.final_approval_machine_name
+        ,ST.final_approval_ip_address
+        ,ST.final_approval_date
+      FROM
+        Saved_Time ST
+        LEFT OUTER JOIN Access A ON ST.employee_id = A.employee_id
+        LEFT OUTER JOIN Access A2 ON ST.initial_approval_employeeid = A2.employee_id
+      WHERE
+        ST.pay_period_ending = '{PayPeriodEnding.ToShortDateString}' "
+
+    'Dim sbQ As New StringBuilder
+    'With sbQ
+    '  .AppendLine("USE TimeStore;")
+    '  .AppendLine("SELECT ISNULL(A.data_type, CASE WHEN ST.orgn IN ('1703', '2103') THEN ") ' Removed 2102
+    '  .AppendLine(" 'telestaff' ELSE 'timecard' END) AS data_type, ISNULL(A.access_type, 1) AS access_type, ")
+    '  .AppendLine("ISNULL(A2.access_type, ISNULL(A.access_type, 1)) AS initial_approval_employeeid_access_type, ")
+    '  .AppendLine("ISNULL(A.reports_to, 0) AS reports_to, ST.pay_period_ending, ST.employee_id, ST.paycode, ")
+    '  .AppendLine("ST.payrate, ST.hours, ST.amount, ST.orgn, ST.classify, ST.date_added, ST.date_updated, ")
+    '  .AppendLine("ST.initial_approval_username, ST.initial_approval_employeeid, ST.initial_approval_machine_name, ")
+    '  .AppendLine("ST.initial_approval_ip_address, ST.initial_approval_date, ")
+    '  .AppendLine("ST.final_approval_username, ST.final_approval_employeeid, ST.final_approval_machine_name, ")
+    '  .AppendLine("ST.final_approval_ip_address, ST.final_approval_date ")
+    '  .AppendLine("FROM Saved_Time ST ")
+    '  .AppendLine("LEFT OUTER JOIN Access A ON ST.employee_id = A.employee_id ")
+    '  .AppendLine("LEFT OUTER JOIN Access A2 ON ST.initial_approval_employeeid = A2.employee_id ")
+    '  .Append("WHERE ST.pay_period_ending = '").Append(PayPeriodEnding.ToShortDateString).Append("' ")
+    'End With
     Try
-      Dim ds As DataSet = dbc.Get_Dataset(sbQ.ToString)
-      Dim TTD As List(Of Saved_Timecard_Data) = (From d In ds.Tables(0).AsEnumerable Select New Saved_Timecard_Data With {
-                          .Approved = Set_Approval_Level(d), .DepartmentNumber = d("orgn"),
-                          .EmployeeId = d("employee_id"), .Hours = d("hours"), .Classify = d("classify"),
-                          .PayCode = d("paycode"), .PayPeriodEnding = d("pay_period_ending"), .PayRate = d("payrate"),
-                          .AccessType = d("access_type"), .DataType = d("data_type"), .ReportsTo = d("reports_to"),
-                          .Initial_Approval_By_EmployeeID = IsNull(d("initial_approval_employeeid"), 0),
-                          .Initial_Approval_Date = IsNull(d("initial_approval_date"), Date.MinValue),
-                          .Initial_Approval_By_Name = Get_Employee_Name(.Initial_Approval_By_EmployeeID),
-                          .Final_Approval_By_EmployeeID = IsNull(d("final_approval_employeeid"), 0),
-                          .Final_Approval_Date = IsNull(d("final_approval_date"), Date.MinValue),
-                          .Final_Approval_By_Name = Get_Employee_Name(.Final_Approval_By_EmployeeID),
-                          .Initial_Approval_EmployeeID_AccessType = d("initial_approval_employeeid_access_type")}).ToList
+      Dim ds As DataSet = dbc.Get_Dataset(query)
+      Dim TTD As List(Of Saved_Timecard_Data) = (From d In ds.Tables(0).AsEnumerable
+                                                 Select New Saved_Timecard_Data With {
+                                                   .Approved = Set_Approval_Level(d),
+                                                   .DepartmentNumber = d("orgn"),
+                                                   .EmployeeId = d("employee_id"),
+                                                   .ProjectCode = d("project_code"),
+                                                   .Hours = d("hours"),
+                                                   .Classify = d("classify"),
+                                                   .PayCode = d("paycode"),
+                                                   .PayPeriodEnding = d("pay_period_ending"),
+                                                   .PayRate = d("payrate"),
+                                                   .AccessType = d("access_type"),
+                                                   .DataType = d("data_type"),
+                                                   .ReportsTo = d("reports_to"),
+                                                   .Initial_Approval_By_EmployeeID = IsNull(d("initial_approval_employeeid"), 0),
+                                                   .Initial_Approval_Date = IsNull(d("initial_approval_date"), Date.MinValue),
+                                                   .Initial_Approval_By_Name = Get_Employee_Name(.Initial_Approval_By_EmployeeID),
+                                                   .Final_Approval_By_EmployeeID = IsNull(d("final_approval_employeeid"), 0),
+                                                   .Final_Approval_Date = IsNull(d("final_approval_date"), Date.MinValue),
+                                                   .Final_Approval_By_Name = Get_Employee_Name(.Final_Approval_By_EmployeeID),
+                                                   .Initial_Approval_EmployeeID_AccessType = d("initial_approval_employeeid_access_type")}).ToList
       Return TTD
     Catch ex As Exception
       Log(ex)
@@ -841,9 +987,9 @@ WHERE access_type >= " & accessType
           End If
           Dim tmpNotes As List(Of Note) = (From n In notes Where n.EmployeeID = e.EmployeeId Select n).ToList
           If tmpStd.Count > 0 Then
-            gtc.Add(New GenericTimecard(New TC_EPP(tmpTC, e, PayPeriodStart, tmpCTE), tmpStd, tmpNotes, allowDataSave))
+            gtc.Add(New GenericTimecard(New TC_New_EPP(tmpTC, e, PayPeriodStart, tmpCTE), tmpStd, tmpNotes, allowDataSave))
           Else
-            gtc.Add(New GenericTimecard(New TC_EPP(tmpTC, e, PayPeriodStart), allowDataSave))
+            gtc.Add(New GenericTimecard(New TC_New_EPP(tmpTC, e, PayPeriodStart), allowDataSave))
           End If
         Catch ex As Exception
           Log(ex)
@@ -880,6 +1026,8 @@ SELECT
   SUM([110]) AS [110],
   SUM([046]) AS [046],
   SUM([100]) AS [100],
+  SUM([118]) AS [118],
+  SUM([119]) AS [119],
   SUM([120]) AS [120],
   SUM([121]) AS [121],
   SUM([230]) AS [230],
@@ -923,6 +1071,8 @@ FROM (
     [131],
     [134],
     [120],
+    [118],
+    [119],
     [122],
     [124],
     [006],
@@ -942,13 +1092,13 @@ FROM (
       S.orgn,
       S.pay_period_ending,
       S2.TotalHours 
-    FROM Saved_Time S 
+    FROM Payroll_Changes S 
     LEFT OUTER JOIN CLAYBCCFINDB.finplus51.dbo.person P ON S.employee_id = P.empl_no
     INNER JOIN (
       SELECT 
         employee_id, 
         SUM(hours) AS TotalHours 
-      FROM Saved_Time 
+      FROM Payroll_Changes
       WHERE pay_period_ending='{ppEnd.ToShortDateString}'
       GROUP BY employee_id
     ) AS S2 ON S2.employee_id = S.employee_id 
@@ -959,7 +1109,7 @@ FROM (
       AND S.pay_period_ending='{ppEnd.ToShortDateString}'
   ) AS ST 
 PIVOT (	SUM(hours) 
-  FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [121], [123], [230], [231], [232],  
+  FOR paycode IN ([002], [046], [090], [095], [100], [101], [110],[111], [118], [119], [121], [123], [230], [231], [232],  
       		[130], [131], [134], [120], [122], [124], [006], [007], [777], [299], [300], [301], [302], [303]) 
   ) AS PivotTable) AS T1 
 GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
@@ -1345,7 +1495,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
     Try
       ds = dbts.Get_Dataset(TimestoreQuery.ToString, P)
       For Each d In ds.Tables(0).Rows
-        d("payrate") = GetPayrate(d("paycode"), d("payrate"))
+        'd("payrate") = GetPayrate(d("paycode"), d("payrate"))
         d("classify") = GetClassification(d("employee_id"), f, d("classify"))
       Next
       Return ds
@@ -1478,6 +1628,7 @@ ORDER BY home_orgn, empl_no
   Public Function Save_Hours(EmployeeID As Integer,
                              PayPeriodEnding As Date,
                              PayCode As String,
+                             ProjectCode As String,
                              Hours As Double,
                              Payrate As Double,
                              Department As String,
@@ -1485,15 +1636,17 @@ ORDER BY home_orgn, empl_no
 
     'Dim deleted As Boolean = Delete_Hours(EmployeeID, PayPeriodEnding, PayCode, Payrate)
     ' Here we're going to insert their time data into the database.
+    Dim RealPayrate = Math.Round(GetPayrate(PayCode, Payrate), 5)
     Dim dp = New DynamicParameters()
     dp.Add("@EmployeeId", EmployeeID)
     dp.Add("@PayPeriodEnding", PayPeriodEnding)
     dp.Add("@PayCode", PayCode)
+    dp.Add("@ProjectCode", ProjectCode)
     dp.Add("@Hours", Hours)
-    dp.Add("@Amount", 0)
+    dp.Add("@Amount", Math.Round(RealPayrate, 5) * Hours)
     dp.Add("@Orgn", Department)
     dp.Add("@Classify", Classify)
-    dp.Add("@PayRate", Math.Round(Payrate, 5))
+    dp.Add("@PayRate", RealPayrate)
 
     Dim sql As String = "
       SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -1505,11 +1658,12 @@ ORDER BY home_orgn, empl_no
           employee_id=@EmployeeId AND
           pay_period_ending = @PayPeriodEnding AND 
           paycode = @PayCode AND 
-          Payrate = @PayRate;
+          payrate = @PayRate AND
+          project_code = @ProjectCode;
 
-        INSERT INTO Saved_Time (employee_id, pay_period_ending, PayCode, Hours,
+        INSERT INTO Saved_Time (employee_id, pay_period_ending, paycode, project_code, hours,
           Payrate, amount, orgn, Classify) VALUES 
-        (@EmployeeId, @PayPeriodEnding, @PayCode, @Hours, @PayRate, @Amount, @Orgn, @Classify);
+        (@EmployeeId, @PayPeriodEnding, @PayCode, @ProjectCode, @Hours, @PayRate, @Amount, @Orgn, @Classify);
 
       COMMIT TRANSACTION UpdateData;"
     Return Exec_Query(sql, dp, ConnectionStringType.Timestore) > 0
@@ -1620,7 +1774,7 @@ ORDER BY home_orgn, empl_no
     If tc.HolidaysInPPD.Length > 0 Then
 
       If BankedHolidayHours > 0 Then
-        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "122", BankedHolidayHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
+        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "122", "", BankedHolidayHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
           Return False
         Else
           Add_Timestore_Note(tc.employeeID, tc.payPeriodStart.AddDays(13), "Elected to add " & BankedHolidayHours.ToString & " to the Holiday Hour Bank for the holiday in this pay period.", UpdateBy)
@@ -1628,7 +1782,7 @@ ORDER BY home_orgn, empl_no
       End If
 
       If PaidHolidayHours > 0 Then
-        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "134", PaidHolidayHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
+        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "134", "", PaidHolidayHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
           Return False
         Else
           Add_Timestore_Note(tc.employeeID, tc.payPeriodStart.AddDays(13), "Elected to be paid for " & PaidHolidayHours.ToString & " hours at pay rate " & holidayPayrate.ToString & " for the holiday in this pay period.", UpdateBy)
@@ -1643,7 +1797,7 @@ ORDER BY home_orgn, empl_no
       ' Comparing this code to the code below shows how ridiculous the original
       ' idea was.
       If IneligibleHours > 0 Then
-        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "800", IneligibleHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
+        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "800", "", IneligibleHours, holidayPayrate, tc.departmentNumber, tc.classify) Then
           Return False
         Else
           Add_Timestore_Note(tc.employeeID, tc.payPeriodStart.AddDays(13), "Marked Ineligible for " & IneligibleHours.ToString & " hours at for the holiday in this pay period. These hours will not be paid or banked.", UpdateBy)
@@ -1724,7 +1878,7 @@ ORDER BY home_orgn, empl_no
         Return False
       Else
         ' 8/9/2015 changed from using tc.holidayincrement to holidaybankedhourspaid
-        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "124",
+        If Not Save_Hours(tc.employeeID, tc.payPeriodStart.AddDays(13), "124", "",
                           HolidayBankHoursPaid, holidayPayrate, tc.departmentNumber, tc.classify) Then
           Return False
         Else

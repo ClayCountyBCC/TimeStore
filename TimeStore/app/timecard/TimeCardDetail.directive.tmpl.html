@@ -100,6 +100,9 @@
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
+           layout-align="center center"
+           layout="row"
+           layout-wrap
            flex="100">
         <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
@@ -167,6 +170,25 @@
              ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
           You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
+        <div flex="90"
+             layout-align="center center"
+             layout="row">
+          <ul>
+            <li>
+              If you are interested in changing your tax withholding for this pay period, please access the form here (<a href="images/2020%20W4.pdf">2020 W4.pdf</a>).
+            </li>
+            <li>
+              You will be required to complete a second form to revert to the original tax withholding status.
+            </li>
+            <li>
+              This form must be completed and returned to HR before {{TaxWitholdingCutoff}} for it to be effective this pay period.
+            </li>
+            <li>
+              Questions can be directed to Human Resources at <a href="mailto:bcchr@claycountygov.com">bcchr@claycountygov.com</a>.
+            </li>
+          </ul>            
+        </div>
+
         <div layout="row"
              layout-align="center center"
              flex="100">

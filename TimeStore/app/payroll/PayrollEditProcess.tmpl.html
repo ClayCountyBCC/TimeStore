@@ -1,0 +1,70 @@
+﻿<script type="text/ng-template" id="PayrollEdit.tmpl.html">
+  
+    <md-progress-linear ng-if="loading"
+                        flex="100"
+                        md-mode="indeterminate">
+    </md-progress-linear>
+    <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+              layout="row"
+              layout-align="start center"
+              flex="100">
+      <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Department Name / Number
+        </label>
+        <input type="text"
+               ng-model="filter_department"
+               ng-model-options="{ debounce: 300}"
+               ng-change="applyFilters()"
+               class="md-input short" />
+      </md-input-container>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Employee Name / Number
+        </label>
+        <input type="text"
+               class="md-input short"
+               ng-model-options="{ debounce: 300}"
+               ng-model="filter_employee"
+               ng-change="applyFilters()" />
+      </md-input-container>
+      <md-input-container flex="20">
+        <label>
+          Filter By Error
+        </label>
+        <md-select ng-change="applyFilters()"
+                   aria-label="Filter by Error"
+                   ng-model="filter_error_message">
+          <md-option ng-value="''">
+            None
+          </md-option>
+          <md-option ng-repeat="m in error_messages"
+                     ng-value="m">
+            {{m}}
+          </md-option>
+        </md-select>
+      </md-input-container>
+      <span flex></span>
+      <md-button ng-click="returnToOverallProcess()"
+                 class="md-button md-raised md-primary">Return to Process</md-button>
+    </fieldset>
+    <!--<div>
+      Sort by Department, employee name
+      Group rows by Employee name
+      Filter by has errors, has specific error,
+      has unmarked error (you can mark an error to show that it does not require fixing.)
+
+    </div>-->
+
+
+    <payroll-edit-group ng-repeat="pd in filtered_payroll_edits track by pd.employee.EmployeeId"
+                        ped="pd"
+                        paycodes="paycodeslist"
+                        projectcodes="project_codes"
+                        flex="100">
+    </payroll-edit-group>
+
+</script>

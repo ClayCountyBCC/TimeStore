@@ -1,0 +1,237 @@
+﻿<script type="text/ng-template" id="PayrollEditDialog.tmpl.html">
+  <md-dialog aria-label="Edit Time">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex="30">{{edit_data.employee.DepartmentName}} ({{edit_data.employee.Department}}) </h2>
+        <h2 flex="20" style="padding-left: 1em;">{{edit_data.employee.EmployeeName}} ({{edit_data.employee.EmployeeId}})</h2>
+        <h2 flex="10">{{ edit_data.employee.isFulltime ? 'Full time' : 'Part time';}}</h2>
+        <h2 flex="10">{{ edit_data.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-svg-src="images/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+        </md-button>
+      </div>
+
+    </md-toolbar>
+    <md-dialog-content>
+      <md-tabs md-dynamic-height
+               md-border-bottom>
+        <md-tab label="Payroll Changes">
+          <div layout="row"
+               layout-wrap
+               style="padding: .5em .5em .5em .5em;"
+               flex="100">
+            <!-- Show tabs for Current Payroll Data and Base Data  -->
+            <div layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <edit-payroll-data ng-repeat="pcd in edit_data.payroll_change_data track by $index"
+                                 pd="pcd"
+                                 employee="edit_data.employee"
+                                 payrates="edit_data.finplus_payrates"
+                                 paycodes="paycodes"
+                                 projectcodes="project_codes"
+                                 remove="RemoveDeleted()"
+                                 validate="ValidateChanges()"
+                                 flex="100">
+              </edit-payroll-data>
+              <edit-payroll-data ng-repeat="m in edit_data.messages track by $index"
+                                 messageonly="true"
+                                 message="m"
+                                 flex="100">
+              </edit-payroll-data>
+              <div layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <md-button ng-click="AddPayrollChange()"
+                           class="md-warn md-raised">
+                  Add
+                </md-button>
+                <md-button ng-click="RevertAllChanges()"
+                           class="md-raised">
+                  Revert All Changes
+                </md-button>
+              </div>
+              <edit-payroll-data flex="100"
+                                 totalonly="true"
+                                 totalhours="GetTotalHours(edit_data.payroll_change_data)"
+                                 totalamount="GetTotalAmount(edit_data.payroll_change_data)">
+
+              </edit-payroll-data>
+            </div>
+
+            <div ng-if="validation_errors.length > 0"
+                 class="ErrorText"
+                 style="margin-top: 1em; margin-bottom: 1em;"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+              Error: {{ validation_errors }}
+            </div>
+
+            <div style="margin-top: .5em;"
+                 layout-align="center start"
+                 layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <div layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="AddJustification()"
+                             class="md-primary md-raised">
+                    Add Justification
+                  </md-button>
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="20">
+                  <md-button ng-click="SaveJustifications();"
+                             ng-show="edit_data.justifications.length > 0"
+                             class="md-primary md-raised">
+                    Save Justifications
+                  </md-button>
+                </div>
+                <div style="padding-left: 1em; padding-right: 1em;"
+                     layout="row"
+                     layout-align="start center"
+                     flex="70">
+                  {{edit_data.justifications.length === 0 ? "No Justifications have been added." : "Justifications"}}
+                </div>
+              </div>
+              <div ng-repeat="j in edit_data.justifications track by $index"
+                   layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="DeleteJustification(j.id);"
+                             class="md-warn md-raised">
+                    Delete
+                  </md-button>
+
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="90">
+                  <textarea rows="6"
+                            flex="100"
+                            ng-model="j.justification"></textarea>
+                </div>
+              </div>
+            </div>
+
+
+
+          </div>
+        </md-tab>
+        <md-tab label="Base Timestore Data">
+          <div style="padding: 1em 1em 1em 1em;"
+               flex="100">
+            <payroll-data showheader="true"></payroll-data>
+            <payroll-data ng-repeat="pcd in edit_data.base_payroll_data track by $index"
+                          pd="pcd"
+                          flex="100">
+            </payroll-data>
+            <payroll-data flex="100"
+                          totalonly="true"
+                          totalhours="GetTotalHours(edit_data.base_payroll_data)"
+                          totalamount="GetTotalAmount(edit_data.base_payroll_data)">
+
+            </payroll-data>
+          </div>
+        </md-tab>
+        <md-tab label="Default / Past Pay">
+          <div layout="row"
+               layout-align="start center"
+               flex="100"
+               layout-wrap
+               style="padding: 1em 1em 1em 1em;">
+
+
+            <md-input-container flex="60">
+              <label>Show Default Info</label>
+              <md-select ng-model="defaultview"
+                         ng-change="UpdateView()">
+                <md-option value="default">
+                  Default Pay
+                </md-option>
+                <md-option ng-repeat="ps in edit_data.paystub_data"
+                           ng-value="ps.check_number">
+                  Check # {{ps.check_number}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <div layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                Pay Code
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Hours
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Payrate
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Amount
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Classify
+              </span>
+            </div>
+            <div ng-repeat="d in default_display track by $index"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.paycode}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.hours}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.payrate}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.amount}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.classify}}
+              </span>
+            </div>
+
+          </div>
+          
+        </md-tab>
+      </md-tabs>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="cancel()"
+                 class="md-raised">
+        Cancel
+      </md-button>
+      <md-button ng-disabled="validation_errors.length > 0"
+                 ng-click="hide()"
+                 class="md-primary md-raised">
+        Save
+      </md-button>
+    </md-dialog-actions>
+  </md-dialog>
+  </script>

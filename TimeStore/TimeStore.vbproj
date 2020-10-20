@@ -177,6 +177,8 @@
       <DependentUpon>AddTimeView.controller.tmpl.html</DependentUpon>
     </Content>
     <Content Include="app\addtime\addtimedialogtmp.html" />
+    <Content Include="app\addtime\DisasterHours.directive.js" />
+    <Content Include="app\addtime\DisasterHours.directive.tmpl.html" />
     <Content Include="app\addtime\HoursDisplay.directive.js" />
     <Content Include="app\approval\Approval.tmpl.min.html">
       <DependentUpon>Approval.controller.tmpl.html</DependentUpon>
@@ -216,6 +218,20 @@
     <Content Include="app\main\DefaultController.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.js" />
     <Content Include="app\notapproved\TimecardNotApproved.controller.tmpl.html" />
+    <Content Include="app\payroll\EditPayrollData.directive.js" />
+    <Content Include="app\payroll\EditPayrollData.directive.tmpl.html" />
+    <Content Include="app\payroll\PayrollData.directive.js" />
+    <Content Include="app\payroll\PayrollData.directive.tmpl.html" />
+    <Content Include="app\payroll\PayrollEditDialog.controller.js" />
+    <Content Include="app\payroll\PayrollEditDialog.tmpl.html" />
+    <Content Include="app\payroll\PayrollEditGroup.directive.js" />
+    <Content Include="app\payroll\PayrollEditGroup.directive.tmpl.html" />
+    <Content Include="app\payroll\PayrollEditProcess.Controller.js" />
+    <Content Include="app\payroll\PayrollEditProcess.tmpl.html" />
+    <Content Include="app\payroll\PayrollOverallProcess.Controller.js" />
+    <Content Include="app\payroll\PayrollOverallProcess.tmpl.html" />
+    <Content Include="app\payroll\PayrollReviewProcess.Controller.js" />
+    <Content Include="app\payroll\PayrollReviewProcess.tmpl.html" />
     <Content Include="app\paystub\PaystubView.controller.tmpl.html" />
     <Content Include="app\paystub\PaystubView.controller.js" />
     <Content Include="app\signatureview\TimeCardSignatureView.tmpl.min.html">
@@ -342,6 +358,7 @@
     <None Include="compilerconfig.json.defaults">
       <DependentUpon>compilerconfig.json</DependentUpon>
     </None>
+    <Content Include="images\2020 W4.pdf" />
     <None Include="My Project\PublishProfiles\DeployFolder.pubxml" />
     <None Include="My Project\PublishProfiles\DV10.pubxml" />
     <Content Include="images\ClayCountySeal-128b.png">
@@ -358,6 +375,7 @@
     <Content Include="images\ic_alarm_black_48dp_2x.png" />
     <Content Include="images\ic_cake_24px.svg" />
     <Content Include="images\ic_clear_24px.svg" />
+    <Content Include="images\ic_close_24px.svg" />
     <Content Include="images\ic_collections_bookmark_24px.svg" />
     <Content Include="images\ic_done_24px.svg" />
     <Content Include="images\ic_file_download_24px.svg" />
@@ -429,6 +447,7 @@
     <Compile Include="App_Start\WebApiConfig.vb" />
     <Compile Include="Controllers\AdminController.vb" />
     <Compile Include="Controllers\MainController.vb" />
+    <Compile Include="Controllers\PayrollController.vb" />
     <Compile Include="Controllers\PubWorksController.vb" />
     <Compile Include="Controllers\ReportsController.vb" />
     <Compile Include="Controllers\TCController.vb" />
@@ -441,12 +460,15 @@
     <Compile Include="Models\DisasterDate.vb" />
     <Compile Include="Models\DisasterEventRules.vb" />
     <Compile Include="Models\DisasterPeriod.vb" />
+    <Compile Include="Models\Disaster\DisasterWorkHours.vb" />
+    <Compile Include="Models\Disaster\EventsByWorkDate.vb" />
     <Compile Include="Models\Employee_Data.vb" />
     <Compile Include="Models\Enums.vb" />
     <Compile Include="Models\EPP.vb" />
     <Compile Include="Models\ErrorLog.vb" />
     <Compile Include="Models\FinanceData.vb" />
     <Compile Include="Models\FinplusDepartment.vb" />
+    <Compile Include="Models\FinplusProjectCodes.vb" />
     <Compile Include="Models\GenericTimecard.vb" />
     <Compile Include="Models\GenericTimeData.vb" />
     <Compile Include="Models\GroupedHours.vb" />
@@ -460,6 +482,15 @@
     <Compile Include="Models\Namedday.vb" />
     <Compile Include="Models\Note.vb" />
     <Compile Include="Models\PayPeriodList.vb" />
+    <Compile Include="Models\Payroll\LeaveBalance.vb" />
+    <Compile Include="Models\Payroll\Paycode.vb" />
+    <Compile Include="Models\Payroll\PayrollChangeComparison.vb" />
+    <Compile Include="Models\Payroll\PayrollData.vb" />
+    <Compile Include="Models\Payroll\PayrollEditData.vb" />
+    <Compile Include="Models\Payroll\PayrollChangeJustification.vb" />
+    <Compile Include="Models\Payroll\PayrollModule.vb" />
+    <Compile Include="Models\Payroll\PayrollStatus.vb" />
+    <Compile Include="Models\Payroll\Timestore_Error.vb" />
     <Compile Include="Models\Paystub\Paystub.vb" />
     <Compile Include="Models\Paystub\PaystubDeductions.vb" />
     <Compile Include="Models\Paystub\PaystubEarnings.vb" />
@@ -471,6 +502,7 @@
     <Compile Include="Models\Saved_Timestore_Data.vb" />
     <Compile Include="Models\Saved_Timestore_Data_To_Approve.vb" />
     <Compile Include="Models\TC_EPP.vb" />
+    <Compile Include="Models\TC_New_EPP.vb" />
     <Compile Include="Models\TelestaffTimeData.vb" />
     <Compile Include="Models\EmployeeOutput.vb" />
     <Compile Include="Models\Telestaff_Profile_Info.vb" />
@@ -479,9 +511,11 @@
     <Compile Include="Models\TimecardTimeException.vb" />
     <Compile Include="Models\Timecard_Access.vb" />
     <Compile Include="Models\Timeclock_Data.vb" />
+    <Compile Include="Models\TimeDefinition.vb" />
     <Compile Include="Models\TimeExceptions.vb" />
     <Compile Include="Models\MockEmployeePayPeriodData.vb" />
     <Compile Include="App_Code\ModuleMain.vb" />
+    <Compile Include="Models\TimeSegment.vb" />
     <Compile Include="Models\Timestore_Field.vb" />
     <Compile Include="Models\Timestore_Field_With_Hours.vb" />
     <Compile Include="Models\Hours_Approve_Display.vb" />

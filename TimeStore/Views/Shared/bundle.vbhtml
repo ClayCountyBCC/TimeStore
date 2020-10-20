@@ -16,24 +16,31 @@
       </md-autocomplete>
 
       <div flex="100" class="md-whiteframe-z1" layout-wrap layout="row" layout-align="start center">
-        <md-select aria-label="Select Access Level"
-                   flex="90" id="AccessTypes"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Raw_Access_Type">
-          <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
-          <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
-            {{ al }}
-          </md-option>
-        </md-select>
-        <md-select aria-label="Select Data Type"
-                   flex="90" id="dataTypeList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.Data_Type">
-          <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
-          <md-option ng-value="dt" ng-repeat="dt in dataTypes">
-            {{ dt }}
-          </md-option>
-        </md-select>
+        <md-input-container flex="100">
+          <label>Access Level</label>
+          <md-select aria-label="Select Access Level"
+                     flex="90"
+                     id="AccessTypes"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Raw_Access_Type">
+            <md-select-label>Employee Access Level {{ accessLevels[timecardAccess.Raw_Access_Type] }}</md-select-label>
+            <md-option ng-repeat="al in accessLevels" ng-value="{{$index}}">
+              {{ al }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Data Type</label>
+          <md-select aria-label="Select Data Type"
+                     flex="90" id="dataTypeList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.Data_Type">
+            <md-select-label>Employee Data Location {{timecardAccess.Data_Type}}</md-select-label>
+            <md-option ng-value="dt" ng-repeat="dt in dataTypes">
+              {{ dt }}
+            </md-option>
+          </md-select>
+        </md-input-container>
 
         <md-checkbox flex="100"
                      id="BackendReportAccess"
@@ -56,27 +63,44 @@
           Can this user change Timestore Access?
         </md-checkbox>
         <md-divider flex="100"></md-divider>
-        <md-select aria-label="Select Reports To"
-                   flex="90"
-                   id="reportsToList"
-                   ng-disabled="employee === null"
-                   ng-model="timecardAccess.ReportsTo">
-          <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
-          <md-option ng-value="0">No Specific User</md-option>
-          <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
-            {{ emp.EmployeeDisplay }}
-          </md-option>
-        </md-select>
-        <md-divider flex="100"></md-divider>
-        <div flex="100" layout="row" layout-padding layout-align="end center">
-          <span flex></span>
-          <md-button ng-disabled="employee === null"
-                     class="md-primary md-raised md-whiteframe-z1"
-                     ng-click="saveTimecardAccess()">
-            SAVE User Access
-          </md-button>
-        </div>
-      </div>
+        <md-input-container flex="100">
+          <label>Reports To</label>
+          <md-select aria-label="Select Reports To"
+                     flex="90"
+                     id="reportsToList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.ReportsTo">
+            <md-select-label>User Reports to:  {{ GetEmployeeDisplay() }}</md-select-label>
+            <md-option ng-value="0">No Specific User</md-option>
+            <md-option ng-value="{{emp.EmployeeID}}" ng-repeat="emp in reportsToList | orderBy:'EmployeeDisplay'">
+              {{ emp.EmployeeDisplay }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="100">
+          <label>Payroll Access</label>
+          <md-select flex="90"
+                     aria-label="Select Payroll Access"
+                     id="payrollAccessList"
+                     ng-disabled="employee === null"
+                     ng-model="timecardAccess.PayrollAccess">
+            <md-option ng-value="$index" ng-repeat="pra in payrollAccess track by $index">
+              {{ pra }}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+
+          <md-divider flex="100"></md-divider>
+          <div flex="100" layout="row" layout-padding layout-align="end center">
+            <span flex></span>
+            <md-button ng-disabled="employee === null"
+                       class="md-primary md-raised md-whiteframe-z1"
+                       ng-click="saveTimecardAccess()">
+              SAVE User Access
+            </md-button>
+          </div>
+</div>
 
     </div>
 
@@ -123,8 +147,9 @@
 
             <md-checkbox ng-disabled="timecardAccess.viewAll || employee === null || timecardAccess.Raw_Access_Type < 2 || dept.disabled"
                          ng-model="dept.selected"
+                         aria-label="{{dept.DepartmentDisplay}}"
                          name="chk-{{dept.DepartmentNumber}}">
-              
+
             </md-checkbox>
             <div>
               {{dept.DepartmentDisplay}}
@@ -273,7 +298,6 @@
           <hours-display tctd="TCTD" hours="TCTD.WorkHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.BreakCreditHours"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.TotalHours"></hours-display>
-
         </div>
 
         <div ng-if="showDisaster && TCTD.WorkHours.value > 0 && isCurrentPPD"
@@ -290,7 +314,7 @@
           </p>
           <md-input-container class="md-input-has-value"
                               flex="40">
-            <label>Are any of the hours worked related to {{ TCTD.DisasterName }}?</label>
+            <label>Are any of the hours worked for special events?</label>
             <md-radio-group ng-change="DisasterHoursChoice()"
                             flex="100"
                             layout="row"
@@ -302,6 +326,9 @@
               </md-radio-button>
               <md-radio-button ng-value="false" aria-label="No">
                 No
+                <md-tooltip md-direction="top">
+                  If you choose No here, any information you've entered into the special events section will be removed.
+                </md-tooltip>
               </md-radio-button>
             </md-radio-group>
           </md-input-container>
@@ -324,7 +351,7 @@
            layout-align="start center">
         <span flex="5"></span>
         <h5>
-          Show / Hide -- Disaster hours worked related to {{ TCTD.DisasterName }}
+          Show / Hide -- Special Event hours worked
         </h5>
       </div>
 
@@ -332,127 +359,149 @@
            style="margin-top: .5em;"
            layout="row"
            layout-align="center center"
-           layout-wrap
-           layout-padding
+           layout-wrap           
            flex="100">
 
-        <md-input-container class="md-input-has-value"
-                            flex="40">
-          <label>Are you normally scheduled to work on this date?</label>
-          <md-radio-group ng-change="NormallyScheduledChoice()"
-                          flex="100"
-                          layout="row"
-                          layout-align="space-around center"
-                          ng-model="NormallyScheduled"
-                          class="smaller">
-            <md-radio-button ng-value="true" aria-label="Yes">
-              Yes
-            </md-radio-button>
-            <md-radio-button ng-value="false" aria-label="No">
-              No
-            </md-radio-button>
-          </md-radio-group>
-        </md-input-container>
-
-        <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
-                            class="md-input-has-value"
-                            flex="60">
-          <label>Select the number of hours you normally work on this date</label>
-          <md-select ng-change="NormallyScheduledHoursSelected()"                     
-                     ng-model="TCTD.DisasterNormalScheduledHours">
-            <md-option ng-value="-1">Please Select</md-option>
-            <!--<md-option ng-value="1">1 hour</md-option>-->
-            <md-option ng-repeat="h in normallyScheduledHours track by $index"
-                       ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
-          </md-select>
-        </md-input-container>
-        <div ng-show="!ShowDisasterNormallyScheduledHours"
-             flex="60">
-
-        </div>
-        <p ng-if="normallyScheduledHoursError.length > 0"
-           flex="100"
-           layout="row"
-           class="warn">
-          {{ normallyScheduledHoursError }}
-        </p>
-
-        <md-input-container flex="40">
-          <label>Disaster Hours Worked</label>
-          <md-select md-on-close="calculateTotalHours()"
-                     flex="100"
-                     multiple
-                     ng-model="TCTD.disasterSelectedTimes"
-                     placeholder="Disaster Hours Worked"
-                     class="bigpaddingbottom">
-            <md-option ng-repeat="t in fullTimeList track by t.index"
-                       ng-value="t.index">
-              <span class="md-text">
-                {{t.display}}
-              </span>
-            </md-option>
-          </md-select>
-        </md-input-container>
-        <div layout="column"
-             layout-align="center center"
-             layout-gt-md="row"
-             layout-align-gt-md="space-around center"
-             layout-wrap
-             flex="55">
-          <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
-                     class="md-primary md-raised">
-            Copy Work Hours
-          </md-button>
-          <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
-        </div>
-        <div layout-padding
+        <div flex="100"
              layout="row"
+             layout-align="center center"
              layout-wrap
-             flex="100">
-          <p ng-if="disasterTimeError.length > 0"
+             layout-padding>
+
+
+          <md-input-container class="md-input-has-value"
+                              flex="40">
+            <label>Are you normally scheduled to work on this date?</label>
+            <md-radio-group ng-change="NormallyScheduledChoice()"
+                            flex="100"
+                            layout="row"
+                            layout-align="space-around center"
+                            ng-model="NormallyScheduled"
+                            class="smaller">
+              <md-radio-button ng-value="true" aria-label="Yes">
+                Yes
+              </md-radio-button>
+              <md-radio-button ng-value="false" aria-label="No">
+                No
+              </md-radio-button>
+            </md-radio-group>
+          </md-input-container>
+
+          <md-input-container ng-show="ShowDisasterNormallyScheduledHours"
+                              class="md-input-has-value"
+                              flex="60">
+            <label>Select the number of hours you normally work on this date</label>
+            <md-select ng-change="NormallyScheduledHoursSelected()"
+                       ng-model="TCTD.DisasterNormalScheduledHours">
+              <md-option ng-value="-1">Please Select</md-option>              
+              <md-option ng-repeat="h in normallyScheduledHours track by $index"
+                         ng-value="h">{{ h.toFixed(2)  }} hours</md-option>
+            </md-select>
+          </md-input-container>
+          <div ng-show="!ShowDisasterNormallyScheduledHours"
+               flex="60">
+
+          </div>
+          <p ng-if="normallyScheduledHoursError.length > 0"
              flex="100"
              layout="row"
              class="warn">
-            {{ disasterTimeError }}
+            {{ normallyScheduledHoursError }}
           </p>
-          <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
-          <md-input-container flex="40">
-            <label>Disaster Work Type</label>
-            <md-select md-on-close="checkDisasterWorkType()"
-                       flex="100"
-                       ng-model="TCTD.DisasterWorkType"
-                       placeholder="Disaster Work Type"
-                       class="bigpaddingbottom">
-              <md-option value="Debris Pickup">
-                Debris Pickup
-              </md-option>
-              <md-option value="Debris Monitoring">
-                Debris Monitoring
-              </md-option>
-              <md-option value="Call Center">
-                Call Center
-              </md-option>
-              <md-option value="Working in EOC">
-                Working in EOC
-              </md-option>
-              <md-option value="Building Repair">
-                Building Repair
-              </md-option>
-              <md-option value="Road Repair">
-                Road Repair
-              </md-option>
-              <md-option value="Other Repair">
-                Other Repair
-              </md-option>
-              <md-option value="Prep for Storm">
-                Prep for Storm
-              </md-option>
-              <md-option value="Not Listed">
-                Not Listed
-              </md-option>
-            </md-select>
-          </md-input-container>
         </div>
+        <!--event: "=",
+        fulltimelist: "<",
+        eventerror: "=",
+        validate: "&",
+        calculate: "&"-->
+        <div flex="100"
+             layout="row"
+             layout-align="center center"
+             layout-wrap>
+
+
+          <disaster-hours flex="100"
+                          ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                          event="ee"
+                          fulltimelist="fullTimeList"                          
+                          calc="calculateTotalHours()"></disaster-hours>
+        </div>
+        <!--<md-input-container flex="40">
+    <label>Disaster Hours Worked</label>
+    <md-select md-on-close="calculateTotalHours()"
+               flex="100"
+               multiple
+               ng-model="TCTD.disasterSelectedTimes"
+               placeholder="Disaster Hours Worked"
+               class="bigpaddingbottom">
+      <md-option ng-repeat="t in fullTimeList track by t.index"
+                 ng-value="t.index">
+        <span class="md-text">
+          {{t.display}}
+        </span>
+      </md-option>
+    </md-select>
+  </md-input-container>
+  <div layout="column"
+       layout-align="center center"
+       layout-gt-md="row"
+       layout-align-gt-md="space-around center"
+       layout-wrap
+       flex="55">
+    <md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+               class="md-primary md-raised">
+      Copy Work Hours
+    </md-button>
+    <hours-display tctd="TCTD" hours="TCTD.DisasterWorkHours"></hours-display>
+  </div>
+  <div layout-padding
+       layout="row"
+       layout-wrap
+       flex="100">
+    <p ng-if="disasterTimeError.length > 0"
+       flex="100"
+       layout="row"
+       class="warn">
+      {{ disasterTimeError }}
+    </p>
+    <p>The section above titled "Enter your time worked" is should be filled out normally to reflect your shift start/end times and time selected for lunch. The section titled "Disaster Hours" is used to document and track the hours you worked within those hours towards the disaster. </p>
+    <md-input-container flex="40">
+      <label>Disaster Work Type</label>
+      <md-select md-on-close="checkDisasterWorkType()"
+                 flex="100"
+                 ng-model="TCTD.DisasterWorkType"
+                 placeholder="Disaster Work Type"
+                 class="bigpaddingbottom">
+        <md-option value="Debris Pickup">
+          Debris Pickup
+        </md-option>
+        <md-option value="Debris Monitoring">
+          Debris Monitoring
+        </md-option>
+        <md-option value="Call Center">
+          Call Center
+        </md-option>
+        <md-option value="Working in EOC">
+          Working in EOC
+        </md-option>
+        <md-option value="Building Repair">
+          Building Repair
+        </md-option>
+        <md-option value="Road Repair">
+          Road Repair
+        </md-option>
+        <md-option value="Other Repair">
+          Other Repair
+        </md-option>
+        <md-option value="Prep for Storm">
+          Prep for Storm
+        </md-option>
+        <md-option value="Not Listed">
+          Not Listed
+        </md-option>
+      </md-select>
+    </md-input-container>
+  </div>-->
       </div>
     </div>
 
@@ -610,7 +659,18 @@
           <hours-display tctd="TCTD" hours="TCTD.AdminJuryDuty" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminMilitaryLeave" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminWorkersComp" calc="calculateTotalHours()"></hours-display>
-          <hours-display tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <hours-display ng-show="TCTD.AdminDisaster.value > 0" tctd="TCTD" hours="TCTD.AdminDisaster" calc="calculateTotalHours()"></hours-display>
+          <md-input-container ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
+                              class="shortpaddingbottom shortInput">
+            <label class="longerLabel"
+                   style="width: auto;">{{ee.event_name}} Admin Hours</label>
+            <input ng-model="ee.disaster_work_hours.DisasterAdminHours"
+                   type="number"
+                   min="0"
+                   max="24"
+                   step=".25" 
+                   ng-change="calculateTotalHours()" />
+          </md-input-container>
           <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
 
@@ -1147,6 +1207,7 @@
   </div>
 </script>
 <script type="text/ng-template" id="DateSelect.tmpl.html">
+
   <div layout="row"
        layout-align="start center"
        layout-wrap
@@ -2570,6 +2631,9 @@
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">
       <div style="margin-top: .5em;"
+           layout-align="center center"
+           layout="row"
+           layout-wrap
            flex="100">
         <div ng-if="ctrl.timecard.HolidaysInPPD.length > 0"
              flex="100"
@@ -2637,6 +2701,25 @@
              ng-if="ctrl.timecard.bankedHoliday < ctrl.timecard.holidayIncrement">
           You must have {{ ctrl.timecard.holidayIncrement }} hours of banked holiday time to request a pay out.
         </div>
+        <div flex="90"
+             layout-align="center center"
+             layout="row">
+          <ul>
+            <li>
+              If you are interested in changing your tax withholding for this pay period, please access the form here (<a href="images/2020%20W4.pdf">2020 W4.pdf</a>).
+            </li>
+            <li>
+              You will be required to complete a second form to revert to the original tax withholding status.
+            </li>
+            <li>
+              This form must be completed and returned to HR before {{TaxWitholdingCutoff}} for it to be effective this pay period.
+            </li>
+            <li>
+              Questions can be directed to Human Resources at <a href="mailto:bcchr@claycountygov.com">bcchr@claycountygov.com</a>.
+            </li>
+          </ul>            
+        </div>
+
         <div layout="row"
              layout-align="center center"
              flex="100">
@@ -2672,73 +2755,82 @@
 <script type="text/ng-template" id="TimeCardHeader.tmpl.html">
 
     <div class="md-whiteframe-z1" ng-cloak>
-        <md-grid-list ng-cloak
-                      md-cols="3"
-                      md-cols-md="2"
-                      md-cols-sm="1"
-                      md-gutter="8px"
-                      md-row-height="28px">
+      <md-grid-list ng-cloak
+                    md-cols="3"
+                    md-cols-md="2"
+                    md-cols-sm="1"
+                    md-gutter="8px"
+                    md-row-height="28px">
 
-            <md-grid-tile md-rowspan="2"
-                          md-colspan="1"
-                          md-rowspan-md="4"
-                          md-rowspan-sm="1"
-                          md-colspan-md="1"
-                          md-colspan-sm="1">
+        <md-grid-tile md-rowspan="2"
+                      md-colspan="1"
+                      md-rowspan-md="4"
+                      md-rowspan-sm="1"
+                      md-colspan-md="1"
+                      md-colspan-sm="1">
 
-                <div layout="row"
-                     layout-align="center center"
-                     layout-wrap>
-                    <h4>
-                        {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
-                    </h4>
-                </div>
-            </md-grid-tile>
+          <div layout="row"
+               layout-align="center center"
+               layout-wrap>
+            <h4>
+              {{ ::timecard.employeeName }} ( {{ ::timecard.employeeID }} )
+            </h4>
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.title }} ( {{ ::timecard.classify }} )
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.title }} ( {{ ::timecard.classify }} )
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ ::timecard.department }} ( {{ ::timecard.departmentNumber }} )
+          </div>
+        </md-grid-tile>
 
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    <span>
-                        Payrate {{ ::timecard.shortPayrate}} {{ ::timecard.exemptStatus }}
-                        <md-tooltip md-direction="right">
-                            {{ ::timecard.Payrate }}
-                        </md-tooltip>
-                    </span>
-                </div>
-            </md-grid-tile>
-            <md-grid-tile md-rowspan="1"
-                          md-colspan="1">
-                <div layout="row"
-                     flex="100"
-                     layout-align="center center"
-                     layout-wrap>
-                    {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
-                </div>
-            </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            <md-button class="md-primary"
+                       style="text-decoration: underline;"
+                       ng-click="showPayrate = !showPayrate;">
+              {{ showPayrate ? 'Hide' : 'Show' }} Payrate
+            </md-button>
+            <span style="margin-right: .5em;"
+                  ng-show="showPayrate">
+              Payrate {{ ::timecard.shortPayrate }}
+              <md-tooltip md-direction="right">
+                ${{  ::timecard.Payrate }}
+              </md-tooltip>
+            </span>
+            <span>
+              {{ ::timecard.exemptStatus }}
+            </span>
+          </div>
+        </md-grid-tile>
+        <md-grid-tile md-rowspan="1"
+                      md-colspan="1">
+          <div layout="row"
+               flex="100"
+               layout-align="center center"
+               layout-wrap>
+            {{ timecard.fullTimeStatus }} {{ ' Scheduled Hours ' + timecard.scheduledHours }}
+          </div>
+        </md-grid-tile>
 
-        </md-grid-list>
+      </md-grid-list>
 
         <md-grid-list ng-if="shortheader === false"
                       md-cols="4"
@@ -2948,7 +3040,7 @@
                  flex="100"
                  layout="row"
                  layout-align="center center"
-                 ng-repeat="wl in dl"
+                 ng-repeat="wl in dl track by $index"
                  layout-wrap>
             <div flex="100"
                  layout="row"
@@ -3512,6 +3604,19 @@
       <div layout="row"
            layout-align="end center"
            flex="100">
+        <md-button aria-label="Print Paystub"
+                   onclick="window.print();"                   
+                   class="md-button md-accent md-raised">
+          Print
+          <md-icon>
+            <svg class="fabWhite"
+                 xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none" /><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>
+          </md-icon>
+
+          <md-tooltip md-direction="bottom">
+            Print the paystub being viewed
+          </md-tooltip>
+        </md-button>
         <md-button ng-click="returnToTimeStore()"
                    class="md-raised md-primary">
           Return to TimeStore
@@ -3964,3 +4069,1691 @@
 
   </div>
 </script>
+
+<script type="text/ng-template" id="PayrollOverall.tmpl.html">
+
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         class="md-whiteframe-z1">
+      <date-selector title="Pay Period Ending:"
+                     label="Select Pay Period"
+                     datetype="ppd"
+                     flex="100">
+      </date-selector>
+    </div>
+
+    <div style="margin-top: 3em;"
+         layout="row"
+         layout-align="start center"
+         class="md-whiteframe-z1"
+         layout-wrap
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Set up Payroll Process
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="space-around center">
+        <md-input-container flex="35">
+          <label>Target Database</label>
+          <md-select ng-disabled="!currentStatus.can_start"
+                     ng-model="currentStatus.target_db"
+                     multiple="false"
+                     aria-label="Select the target Database">
+            <md-option value="0">
+              Production (finplus51)
+            </md-option>
+            <md-option value="1">
+              Training (trnfinplus51)
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="40"
+                            class="md-input-has-value"
+                            layout="row"
+                            layout-align="space-around center"
+                            layout-wrap>
+          <label>
+            Include Pay Benefits (pay_group S)
+          </label>
+          <md-radio-group ng-model="currentStatus.include_benefits"
+                          ng-disabled="!currentStatus.can_start"
+                          layout="row"
+                          layout-align="center center"
+                          layout-wrap>
+            <md-radio-button ng-value="true">
+              Yes (Default)
+            </md-radio-button>
+            <md-radio-button ng-value="false">
+              No
+              <md-tooltip>
+                This should probably be answered no if this is the third paycheck that will be paid this month.
+              </md-tooltip>
+            </md-radio-button>
+          </md-radio-group>
+        </md-input-container>
+        <md-button class="md-primary md-raised"
+                   ng-click="StartPayroll()"
+                   ng-show="currentStatus.can_start && !StartOrResetInProgress">
+          Start
+        </md-button>
+        <md-button class="md-primary md-raised"
+                   ng-click="ResetPayroll()"
+                   ng-show="currentStatus.can_reset && !StartOrResetInProgress">
+          Reset Data
+          <md-tooltip>
+            This button should only be used when you know the data in Finplus has been changed since this process was originally started.
+          </md-tooltip>
+        </md-button>
+        <md-progress-circular ng-if="StartOrResetInProgress"
+                              md-mode="indeterminate">
+        </md-progress-circular>
+      </div>
+      <div flex="100">
+        <p style="padding-left: 1em;"
+           ng-if="currentStatus.started_by.length > 0">
+          Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
+        </p>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          View / Edit Timestore / Finplus Data
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-click="ViewEdits()"
+                   ng-disabled="currentStatus.started_by.length === 0"
+                   class="md-primary md-raised">
+          View Edits
+        </md-button>
+        <md-button ng-disabled="!currentStatus.can_edit || currentStatus.edits_completed_by.length > 0"
+                   ng-click="EditsCompleted()"
+                   class="md-warn md-raised">
+          Mark Edits Completed
+        </md-button>
+        <md-button ng-show="currentStatus.edits_completed_by.length > 0 && currentStatus.edits_approved_by.length === 0"
+                   ng-click="MarkEditsIncomplete()"
+                   class="md-warn md-raised">
+          Mark Edits Incomplete
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.edits_completed_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Completed by {{ currentStatus.edits_completed_by }} on {{ currentStatus.edits_completed_on_display }}
+        </p>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Approve Timestore Payroll changes
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="currentStatus.started_by.length === 0"
+                   ng-click="ViewChanges()"
+                   class="md-primary md-raised">
+          View Changes
+        </md-button>
+        <md-button ng-click="ChangesApproved()"
+                   ng-disabled="currentStatus.edits_completed_by.length === 0 || currentStatus.edits_approved_by.length > 0"
+                   class="md-warn md-raised">
+          Approve All Changes
+        </md-button>
+        <md-button ng-show="currentStatus.edits_approved_by.length > 0"
+                   ng-click="CancelApproval()"
+                   class="md-warn md-raised">
+          Cancel Approval
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.edits_approved_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Approved by {{ currentStatus.edits_approved_by }} on {{ currentStatus.edits_approved_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
+          </li>
+          <li>
+            This is done by the Finance director or their designee
+          </li>
+          <li>
+            This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
+          </li>
+        </ol>-->
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Post Timestore Data / Changes to Finplus
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-wrap
+           layout-align="center center">
+
+        <md-input-container flex="55">
+          <label>Select Pay Run</label>
+          <!--ng-disabled="!currentStatus.can_update_finplus"-->
+          <md-select ng-model="postPayrun"
+                     multiple="false"
+                     md-on-close="selectPayRun()"
+                     aria-label="Select the target payrun">
+            <md-option ng-value="">
+              No payrun
+            </md-option>
+            <md-option ng-repeat="p in payruns track by $index"
+                       ng-value="p">
+              {{p}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-button ng-click="GetPayruns()"
+                   class="md-warn md-raised">
+          Refresh Pay Runs
+        </md-button>
+        <md-button ng-click="PostTimestoreData()"
+                   ng-disabled="!currentStatus.can_update_finplus || !postPayrun"
+                   class="md-primary md-raised">
+          Post to Finplus
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.finplus_updated_by.length > 0"
+           style="padding-left: 1em;">
+          Data Posted to Finplus by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
+        </p>
+        <p ng-if="payruns.length === 0 && currentStatus.can_update_finplus">
+          No pay runs were found in Finplus.  It doesn't look like the pay roll has been started there.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+
+</script>
+<script type="text/ng-template" id="PayrollEdit.tmpl.html">
+  
+    <md-progress-linear ng-if="loading"
+                        flex="100"
+                        md-mode="indeterminate">
+    </md-progress-linear>
+    <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+              layout="row"
+              layout-align="start center"
+              flex="100">
+      <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Department Name / Number
+        </label>
+        <input type="text"
+               ng-model="filter_department"
+               ng-model-options="{ debounce: 300}"
+               ng-change="applyFilters()"
+               class="md-input short" />
+      </md-input-container>
+      <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                          flex="30">
+        <label>
+          Employee Name / Number
+        </label>
+        <input type="text"
+               class="md-input short"
+               ng-model-options="{ debounce: 300}"
+               ng-model="filter_employee"
+               ng-change="applyFilters()" />
+      </md-input-container>
+      <md-input-container flex="20">
+        <label>
+          Filter By Error
+        </label>
+        <md-select ng-change="applyFilters()"
+                   aria-label="Filter by Error"
+                   ng-model="filter_error_message">
+          <md-option ng-value="''">
+            None
+          </md-option>
+          <md-option ng-repeat="m in error_messages"
+                     ng-value="m">
+            {{m}}
+          </md-option>
+        </md-select>
+      </md-input-container>
+      <span flex></span>
+      <md-button ng-click="returnToOverallProcess()"
+                 class="md-button md-raised md-primary">Return to Process</md-button>
+    </fieldset>
+    <!--<div>
+      Sort by Department, employee name
+      Group rows by Employee name
+      Filter by has errors, has specific error,
+      has unmarked error (you can mark an error to show that it does not require fixing.)
+
+    </div>-->
+
+
+    <payroll-edit-group ng-repeat="pd in filtered_payroll_edits track by pd.employee.EmployeeId"
+                        ped="pd"
+                        paycodes="paycodeslist"
+                        projectcodes="project_codes"
+                        flex="100">
+    </payroll-edit-group>
+
+</script>
+
+<script type="text/ng-template" id="PayrollReview.tmpl.html">
+  <md-progress-linear ng-if="loading"
+                      flex="100"
+                      md-mode="indeterminate">
+  </md-progress-linear>
+  <fieldset style="border: 1px solid #cccccc; background-color: #efefef;"
+            layout="row"
+            layout-align="start center"
+            class="hide-print"
+            flex="100">
+    <legend style="padding-left: 1em; padding-right: 1em;">Filters</legend>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Department Name / Number
+      </label>
+      <input type="text"
+             ng-model="filter_department"
+             ng-model-options="{ debounce: 300}"
+             ng-change="applyFilters()"
+             class="md-input short" />
+    </md-input-container>
+    <md-input-container style="margin-bottom: -1em; margin-top: .5em;"
+                        flex="30">
+      <label>
+        Employee Name / Number
+      </label>
+      <input type="text"
+             class="md-input short"
+             ng-model-options="{ debounce: 300}"
+             ng-model="filter_employee"
+             ng-change="applyFilters()" />
+    </md-input-container>
+    <md-checkbox ng-change="applyFilters()"
+                 ng-model="changes_only" 
+                 aria-label="Show Changes Only?">
+      Show Changes Only?
+    </md-checkbox>
+    <span flex></span>
+    <md-button ng-click="returnToOverallProcess()"
+               class="md-button md-raised md-primary">Return to Process</md-button>
+  </fieldset>
+
+  <div ng-repeat="ped in filtered_payroll_edits track by ped.employee.EmployeeId"
+       id="reviewgroup{{ped.employee.EmployeeId}}"
+       layout="row"
+       layout-wrap
+       style="background-color: #efefef;"
+       flex="100">
+    <div style="padding-left: 1em; padding-right: 1em; height: 2em;"
+         class="my-accent"
+         layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="100">
+
+      <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
+      <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
+      <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
+    </div>
+    <div style="padding-top: 1em; padding-bottom: 1em;"
+         flex="100">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th colspan=2 style="width: 30%;"></th>
+            <th colspan=2 style="width: 10%; text-align: center;">Hours</th>
+            <th colspan=2 style="width: 20%; text-align: center;">Pay Rate</th>
+            <th colspan=2 style="width: 10%; text-align: center;">Amount</th>
+            <th colspan=2 style="width: 10%; text-align: center;">Classify</th>
+            <th colspan=2 style="width: 20%; text-align: center;">Project Code</th>
+          </tr>
+          <tr>
+            <th style="width: 25%;">Pay Code</th>
+            <th style="width: 5%; text-align: right;">Status</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 10%; text-align: right;">Before</th>
+            <th style="width: 10%; text-align: right;">After</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 5%; text-align: right;">Before</th>
+            <th style="width: 5%; text-align: right;">After</th>
+            <th style="width: 10%; text-align: right;">Before</th>
+            <th style="width: 10%; text-align: right; padding-right: .5em;">After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="c in ped.comparisons track by $index"
+              style="background-color: {{c.status === 'Same' ? 'White' : '#ffffE0'}};">
+            <td style="padding-left: .5em;">
+              {{ GetPaycode(c) }}
+            </td>
+            <td style="text-align: right;">{{c.status}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.hours.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.hours.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.payrate : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.payrate : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.amount.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.amount.toFixed(2) : 0}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.classify : ''}}</td>
+            <td style="text-align: right;">{{c.changed ? c.changed.classify : ''}}</td>
+            <td style="text-align: right;">{{c.original ? c.original.project_code : ''}}</td>
+            <td style="text-align: right; padding-right: .5em;">{{c.changed ? c.changed.project_code : ''}}</td>
+          </tr>
+
+        </tbody>
+        <tfoot style="border-top: 2px solid black;">
+          <tr>
+            <td style="text-align: left; padding-left: .5em;" colspan="2">Totals</td>
+            <td style="text-align: right;">{{GetTotalOriginalHours(ped.comparisons)}}</td>
+            <td style="text-align: right;">{{GetTotalChangedHours(ped.comparisons)}}</td>
+            <td colspan="2"></td>
+            <td style="text-align: right;">{{GetTotalOriginalAmount(ped.comparisons)}}</td>
+            <td style="text-align: right;">{{GetTotalChangedAmount(ped.comparisons)}}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <table ng-if="ped.justifications.length > 0"
+             style="width: 100%; border-collapse: collapse; margin-top: 1em;">
+        <thead>
+          <tr>
+            <th style="text-align: center;">Justifications</th>
+          </tr>
+        </thead>
+          <tbody>
+            <tr ng-repeat="j in ped.justifications">
+              <td>
+                <div style="width: 100%; white-space: pre-wrap; border: 1px solid black;">
+                  {{j.justification}}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+
+</script>
+
+
+<script type="text/ng-template" id="PaystubView.controller.tmpl.html">
+
+ <link rel="stylesheet" href="css/paystubPrint.css" />
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         layout="row"
+         id="paystubSelector"
+         ng-show="paystubList.length > 0"
+         layout-align="center center">
+
+      <md-input-container flex="25">
+        <label>Select a Check</label>
+        <md-select ng-model="checkNumber"
+                   multiple="false"
+                   md-on-close="selectCheck()"
+                   aria-label="Select A Check">
+          <md-option ng-repeat="p in filtered_paystub_list track by $index"
+                     ng-value="p.check_number">
+            <span style="text-align: center;">
+              {{ FormatDate(p.check_date) }} - {{ p.check_number }} {{ p.is_voided ? '(VOIDED)' : ''}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <md-input-container flex="25">
+        <label>Filter Pay Stubs by Year</label>
+        <md-select ng-model="filter_year"
+                   multiple="false"
+                   md-on-close="selectYear()"
+                   aria-label="Select A Year">
+          <md-option value="">
+            Show All
+          </md-option>
+          <md-option ng-repeat="p in paystub_years track by $index"
+                     ng-value="p">
+            <span style="text-align: center;">
+              {{ p }}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <div layout="row"
+           layout-align="end center"
+           flex="100">
+        <md-button aria-label="Print Paystub"
+                   onclick="window.print();"                   
+                   class="md-button md-accent md-raised">
+          Print
+          <md-icon>
+            <svg class="fabWhite"
+                 xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none" /><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg>
+          </md-icon>
+
+          <md-tooltip md-direction="bottom">
+            Print the paystub being viewed
+          </md-tooltip>
+        </md-button>
+        <md-button ng-click="returnToTimeStore()"
+                   class="md-raised md-primary">
+          Return to TimeStore
+        </md-button>
+      </div>
+    </div>
+
+    <div id="paystubDetailedView"
+         flex="90"
+         layout="row"
+         ng-show="currentPaystub !== null"
+         layout-align="center center"
+         layout-wrap>
+
+
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Employee Name
+            </th>
+            <th style="width: 50%; text-align: left; padding-left: 1em;">
+              Department
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.employee_name}}
+            </td>
+            <td style="text-align: left; padding-left: 1em;">
+              {{currentPaystub.department}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Paystub Information
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>YTD Gross</th>
+            <th>Current Earnings</th>
+            <th>Pay Period Ending</th>
+            <th>Pay Date</th>
+            <th>Stub No</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+            <td>{{currentPaystub.total_earnings_amount}}</td>
+            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+            <td>{{currentPaystub.formatted_pay_date}}</td>
+            <td>{{currentPaystub.check_number}}</td>
+          </tr>
+          <tr ng-show="currentPaystub.is_voided">
+            <td colspan="5" style="text-align: center; font-weight: bold; color: red; font-size: x-large;">
+              CHECK IS VOIDED
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Earnings
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Earnings</th>
+            <th>Hours</th>
+            <th>Payrate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="e in currentPaystub.earnings">
+            <td>{{e.pay_code_name}}</td>
+            <td>{{e.hours.toFixed(2).toString()}}</td>
+            <td>{{e.payrate}}</td>
+            <td>{{e.amount}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_hours }}
+            </td>
+            <td></td>
+            <td>
+              {{ currentPaystub.total_earnings_amount }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Leave
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Leave</th>
+            <th>Balance</th>
+            <th>Taken YTD</th>
+            <th>Earned YTD</th>
+            <th>Accrual Rate</th>
+            <th>Bank Maximum</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="l in currentPaystub.leave">
+            <td>{{l.leave_code_name}}</td>
+            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+            <td>{{l.leave_earned.toFixed(2).toString()}}</td>
+            <td>{{l.calculated_accrual_rate.toFixed(2)}} hours/ppd</td>
+            <td>{{l.bank_maximum > 9000 ? '' : l.bank_maximum.toString()}}</td>
+          </tr>
+        </tbody>
+
+      </table>
+
+      <div style="margin-top: 1em;"
+           layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex="100">
+        Deductions
+      </div>
+      <table class="paystub_table md-whiteframe-z1">
+        <thead>
+          <tr>
+            <th>Deductions</th>
+            <th>Amount</th>
+            <th>YTD Deduct</th>
+            <th>Contribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="d in currentPaystub.deductions">
+            <td>{{d.ded_code_full_name}}</td>
+            <td>{{d.amount.toFixed(2).toString()}}</td>
+            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+            <td>{{d.contributions.toFixed(2).toString()}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>
+              {{currentPaystub.total_deductions_amount}}
+            </td>
+            <td>
+              {{currentPaystub.total_deductions_year_to_date}}
+            </td>
+            <td>
+              {{currentPaystub.total_contributions}}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+
+
+    </div>
+
+    <div flex="90"
+         layout="row"
+         ng-show="currentPaystub === null"
+         layout-align="center center"
+         layout-wrap>
+      No check data was found, or an error was encountered.  Please try again, and contact MIS if the problem continues.
+    </div>
+
+    <div id="paystubPrintView"
+         flex="100">
+      <table style="width: 100%;">
+        <tbody>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr>
+                    <td style="width: 40%;">
+                      <p style="padding-left: 2em; text-align: left;">
+                        <strong>BOARD OF COUNTY COMMISSIONERS</strong><br />
+                        STATE OF FLORIDA - CLAY COUNTY<br />
+                        P.O. BOX 988<br />
+                        GREEN COVE SPRINGS, FLORIDA 32043-0988<br />
+                        PAYROLL CHECK
+                      </p>
+                    </td>
+                    <td style="width: 20%; padding: 0 0 0 0; margin: 0;">
+                      <div style="height: 100%; max-height: 128px; max-width: 128px;">
+                        <img style="object-fit: contain; object-position: 50% 50%;  width: 100%; height: 100%;"
+                             src="images/ClayCountySeal-258b.png" />
+                      </div>
+                    </td>
+                    <td style="width: 40%;">
+                      <table id="paystubHeader_right"
+                             style="width: 100%;">
+                        <thead>
+                          <tr>
+                            <td style="width: 20%;"></td>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB DATE</th>
+                            <th style="width: 30%; border-bottom: none; text-align: center;">STUB NO.</th>
+                            <td style="width: 20%;"></td>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td></td>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                            <td>{{currentPaystub.check_number}}</td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-left: 4em; text-align: left;"
+                        colspan="3">
+                      <p>
+                        {{currentPaystub.department}}<br />
+                        {{currentPaystub.employee_name}}<br />
+                        {{currentPaystub.address_line_1}}<br />
+                        {{currentPaystub.address_line_2 }}<br ng-show="currentPaystub.address_line_2.length > 0" />
+                        {{currentPaystub.address_line_3}}<br />
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%;">
+                <tbody>
+                  <tr ng-show="currentPaystub.is_voided">
+                    <td colspan="2" style="text-align: center; font-weight: bold; font-size: x-large;">
+                      CHECK IS VOIDED
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: left;">
+                      CLAY COUNTY BOARD OF COMMISSIONERS
+                    </td>
+                    <td style="text-align: right;">
+                      {{currentPaystub.employee_name}}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: center; font-size: smaller;"
+                        colspan="2">
+                      STATEMENT OF EARNINGS AND DEDUCTIONS
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table style="width: 100%; border: 2px solid black;">
+                <tbody>
+                  <tr>
+                    <td style="width: 30%; vertical-align: top; padding-right: 0;">
+                      <table style="width: 100%; border-spacing: 0;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Earnings
+                            </th>
+                            <th style="width: 20%;">
+                              Hours
+                            </th>
+                            <th style="width: 40%;">
+                              Amount
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="e in currentPaystub.earnings">
+                            <td>{{e.pay_code_short_name}}</td>
+                            <td>{{e.hours.toFixed(2).toString()}}</td>
+                            <td>{{e.amount}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td></td>
+                            <td>
+                              {{ currentPaystub.total_earnings_hours }}
+                            </td>
+                            <td>
+                              {{ currentPaystub.total_earnings_amount }}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      <table style="width: 100%; margin-top: 1em;">
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">
+                              Leave
+                            </th>
+                            <th style="width: 20%;">
+                              Balance
+                            </th>
+                            <th style="width: 40%;">
+                              Taken YTD
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="l in currentPaystub.leave">
+                            <td>{{l.leave_code_short_name}}</td>
+                            <td>{{l.leave_balance.toFixed(2).toString()}}</td>
+                            <td>{{l.leave_taken.toFixed(2).toString()}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                    <td style="width: 50%; vertical-align: top; border-left: 1px solid black; padding-right: 0;">
+
+                      <table style="width: 100%; border-spacing: 0;">
+                        <thead>
+                          <tr>
+                            <th>Deductions</th>
+                            <th>Amount</th>
+                            <th>YTD Deduct</th>
+                            <th>Contribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="d in currentPaystub.deductions">
+                            <td>{{d.ded_code_short_name}}</td>
+                            <td>{{d.amount.toFixed(2).toString()}}</td>
+                            <td>{{d.year_to_date_deductions.toFixed(2).toString()}}</td>
+                            <td>{{d.contributions.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                            <td style="height: 22px;"></td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td>
+                              Total
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_amount}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_deductions_year_to_date}}
+                            </td>
+                            <td>
+                              {{currentPaystub.total_contributions}}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+
+
+                    </td>
+                    <td style="width: 20%; vertical-align: top; border-left: 1px solid black;">
+                      <table style="width: 100%;">
+                        <tbody>
+                          <tr>
+                            <th>YTD Gross</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.year_to_date_gross.toFixed(2).toString()}}</td>
+                          </tr>
+                          <tr>
+                            <th>Current Earnings</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.total_earnings_amount}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Period Ending</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_period_ending}}</td>
+                          </tr>
+                          <tr>
+                            <th>Pay Date</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.formatted_pay_date}}</td>
+                          </tr>
+                          <tr>
+                            <th>Stub No</th>
+                          </tr>
+                          <tr>
+                            <td>{{currentPaystub.check_number}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</script>
+
+<script type="text/ng-template" id="DisasterHours.directive.tmpl.html">
+
+
+  <div layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">
+    <div style="margin-top: .75em; margin-bottom: .75em;"
+         class="short-toolbar my-primary"
+         flex="100"
+         layout="row"
+         layout-align="center center">
+      <span flex="5"></span>
+      <h5>
+        Work Hours For {{event.event_name}}
+      </h5>
+    </div>
+    <div layout="row"
+         flex="35"
+         layout-padding
+         layout-align="center center">
+      <md-input-container flex="100">
+        <label>Hours Worked on {{event.event_name}}</label>
+        <md-select md-on-close="calc()"
+                   flex="80"
+                   multiple
+                   ng-model="event.disaster_work_hours.DisasterSelectedTimes"
+                   placeholder="Hours Worked on {{event.event_name}}"
+                   class="bigpaddingbottom">
+          <md-option ng-repeat="t in fulltimelist track by t.index"
+                     ng-value="t.index">
+            <span class="md-text">
+              {{t.display}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+    </div>
+
+    <div layout="row"
+         layout-align="center center"
+         layout-gt-md="row"
+         layout-align-gt-md="space-around center"
+         layout-wrap
+         flex="65">
+      <!--<md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+                 class="md-primary md-raised">
+        Copy Work Hours
+      </md-button>-->
+      <md-input-container class="shortpaddingbottom shortInput">
+        <label class="longerLabel"
+               style="width: auto;">Hours Worked</label>
+        <input ng-model="event.disaster_work_hours.DisasterWorkHours"
+               type="number"
+               ng-disabled="true" />
+      </md-input-container>
+      <div layout="row"
+           layout-align="center center"
+           layout-padding
+           flex="40">
+        <md-input-container flex="100">
+          <label>Disaster Work Type</label>
+          <md-select md-on-close="calc()"
+                     flex="100"
+                     ng-model="event.disaster_work_hours.DisasterWorkType"
+                     placeholder="Work Type for {{event.event_name}}"
+                     class="bigpaddingbottom">
+            <md-option value="">
+              Select Work Type
+            </md-option>
+            <md-option value="Debris Pickup">
+              Debris Pickup
+            </md-option>
+            <md-option value="Debris Monitoring">
+              Debris Monitoring
+            </md-option>
+            <md-option value="Call Center">
+              Call Center
+            </md-option>
+            <md-option value="Working in EOC">
+              Working in EOC
+            </md-option>
+            <md-option value="Building Repair">
+              Building Repair
+            </md-option>
+            <md-option value="Road Repair">
+              Road Repair
+            </md-option>
+            <md-option value="Other Repair">
+              Other Repair
+            </md-option>
+            <md-option value="Prep for Storm">
+              Prep for Storm
+            </md-option>
+            <md-option value="Not Listed">
+              Not Listed
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+    </div>
+    <div ng-show="event.disaster_work_hours.DisasterTimesError.length > 0"
+         layout-padding
+         layout="row"
+         layout-wrap
+         flex="100">
+      <p style="margin-top: .5em;"
+         flex="100"
+         layout="row"
+         class="warn">
+        {{ event.disaster_work_hours.DisasterTimesError }}
+      </p>     
+      
+    </div>
+  </div>
+
+</script>
+<script type="text/ng-template" id="PayrollData.directive.tmpl.html">
+
+  <div ng-if="showheader"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+    <span style="text-align: left;"
+          flex="25">
+      Pay Code
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Hours
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Pay Rate
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Amount
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      Classify
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      Project Code
+    </span>
+  </div>
+  <hr ng-if="showheader"
+      flex="100" />
+  <div ng-if="!showheader && !messageonly && !totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      {{pd.paycode_detail.title}} ({{pd.paycode}})
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{pd.hours.toFixed(2)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.payrate.toFixed(5)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.amount.toFixed(2)}}
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      {{pd.classify}}
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      {{pd.project_code}}
+    </span>
+  </div>
+  <div style="border-top: 1px dotted #040404; margin-top: .25em;"
+       ng-if="totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      TOTAL
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalhours}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{totalamount}}
+    </span>
+    <span style="text-align: center;"
+          flex="35">
+      
+    </span>
+  </div>
+  <div ng-if="!showheader && !messageonly"
+       ng-repeat="m in pd.messages track by $index"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ m }}
+    </div>
+  </div>
+  <div ng-if="messageonly"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ message }}
+    </div>
+  </div>
+
+</script>
+<script type="text/ng-template" id="EditPayrollData.directive.tmpl.html">
+
+  <div ng-if="showheader"
+       layout="row"
+       layout-align="space-between center"
+       flex="100">
+    <span flex="5">
+
+    </span>
+    <span style="text-align: left;"
+          flex="30">
+      Pay Code
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Hours
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Pay Rate
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Amount
+    </span>
+    <span style="text-align: center;"
+          flex="10">
+      Classify
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      Project Code
+    </span>
+  </div>
+
+  <hr ng-if="showheader"
+      flex="100" />
+
+  <div ng-if="!showheader && !messageonly && !totalonly"
+       layout="row"
+       layout-align="start start"
+       flex="100">
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="10">
+      <md-button ng-click="DeleteData()"
+                 class="md-button md-primary md-raised">
+        DELETE
+      </md-button>
+    </div>
+
+    <md-input-container flex="25">
+      <label>Pay Code</label>
+      <md-select class=""
+                 ng-change="UpdatePaycodeDetail()"
+                 ng-model="pd.paycode">
+        <md-option ng-repeat="pc in paycodes track by pc.pay_code"
+                   ng-value="pc.pay_code">
+          {{pc.title}} ({{pc.pay_code}})
+        </md-option>
+      </md-select>
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Hours</label>
+      <input ng-disabled="disablehours"
+             style="text-align: right;"
+             ng-model="pd.hours"
+             ng-change="RecalculateAmount()"
+             type="number"
+             step=".25" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Payrate</label>
+      <input ng-disabled="disablepayrate"
+             style="text-align: right;"
+             ng-model="pd.payrate"
+             ng-change="RecalculateAmount()"
+             type="number"
+             step="any" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Amount</label>
+      <input ng-disabled="disableamount"
+             style="text-align: right;"
+             ng-model="pd.amount"
+             type="number"
+             step="any" />
+    </md-input-container>
+
+    <md-input-container flex="10">
+      <label>Classify</label>
+      <input style="text-align: right;"
+             ng-model="pd.classify"
+             maxlength="4"
+             type="text" />
+    </md-input-container>
+
+    <md-input-container flex="15">
+      <label>Project Code</label>
+      <md-select ng-change="validate()"
+                 ng-model="pd.project_code">
+        <md-option ng-value="''">None</md-option>
+        <md-option ng-repeat="pc in projectcodes track by pc.project_code"
+                   ng-value="pc.project_code">{{pc.project_code}}</md-option>
+      </md-select>
+
+    </md-input-container>
+
+    <!--<md-input-container flex="10">
+    <label>Project Code</label>
+    <input style="text-align: right;"
+           ng-model="pd.project_code"
+           maxlength="8"
+           type="text" />
+  </md-input-container>-->
+
+  </div>
+  <div style="border-top: 1px dotted #040404; margin-top: .25em;"
+       ng-if="totalonly"
+       layout="row"
+       layout-align="start start"
+       layout-wrap
+       flex="100">
+    <span flex="10">
+
+    </span>
+    <span style="text-align: right;"
+          flex="25">
+      TOTAL
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalhours}}
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalamount}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+    </span>
+  </div>
+  <div ng-if="!showheader && !messageonly"
+       ng-repeat="m in pd.messages track by $index"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ m }}
+    </div>
+  </div>
+  <div ng-if="messageonly"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ message }}
+    </div>
+  </div>
+
+</script>
+<script type="text/ng-template" id="PayrollEditGroup.directive.tmpl.html">
+
+  <div id="editgroup{{ped.employee.EmployeeId}}"
+       layout="row"
+       layout-wrap
+       style="background-color: #efefef;"
+       flex="100">
+    <div style="padding-left: 1em; padding-right: 1em;"
+         class="my-accent"
+         layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="100">
+
+      <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
+      <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
+      <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
+
+      <md-button ng-click="ShowEdit($event)"
+                 class="md-primary md-raised hide-print">
+        Edit
+      </md-button>
+    </div>
+    <div style="padding: 1em 1em 1em 1em;"
+         flex="100">
+      <payroll-data showheader="true"></payroll-data>
+      <payroll-data ng-repeat="pcd in ped.payroll_change_data track by $index"
+                    pd="pcd"
+                    flex="100">
+      </payroll-data>
+      <payroll-data ng-repeat="m in ped.messages track by $index"
+                    messageonly="true"
+                    message="m"
+                    flex="100">
+      </payroll-data>
+      <payroll-data flex="100"
+                    totalonly="true"
+                    totalhours="GetTotalHours(ped.payroll_change_data)"
+                    totalamount="GetTotalAmount(ped.payroll_change_data)">
+
+      </payroll-data>
+    </div>
+
+  </div>
+  
+</script>
+<script type="text/ng-template" id="PayrollEditDialog.tmpl.html">
+  <md-dialog aria-label="Edit Time">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex="30">{{edit_data.employee.DepartmentName}} ({{edit_data.employee.Department}}) </h2>
+        <h2 flex="20" style="padding-left: 1em;">{{edit_data.employee.EmployeeName}} ({{edit_data.employee.EmployeeId}})</h2>
+        <h2 flex="10">{{ edit_data.employee.isFulltime ? 'Full time' : 'Part time';}}</h2>
+        <h2 flex="10">{{ edit_data.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-svg-src="images/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+        </md-button>
+      </div>
+
+    </md-toolbar>
+    <md-dialog-content>
+      <md-tabs md-dynamic-height
+               md-border-bottom>
+        <md-tab label="Payroll Changes">
+          <div layout="row"
+               layout-wrap
+               style="padding: .5em .5em .5em .5em;"
+               flex="100">
+            <!-- Show tabs for Current Payroll Data and Base Data  -->
+            <div layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <edit-payroll-data ng-repeat="pcd in edit_data.payroll_change_data track by $index"
+                                 pd="pcd"
+                                 employee="edit_data.employee"
+                                 payrates="edit_data.finplus_payrates"
+                                 paycodes="paycodes"
+                                 projectcodes="project_codes"
+                                 remove="RemoveDeleted()"
+                                 validate="ValidateChanges()"
+                                 flex="100">
+              </edit-payroll-data>
+              <edit-payroll-data ng-repeat="m in edit_data.messages track by $index"
+                                 messageonly="true"
+                                 message="m"
+                                 flex="100">
+              </edit-payroll-data>
+              <div layout="row"
+                   layout-align="start center"
+                   flex="100">
+                <md-button ng-click="AddPayrollChange()"
+                           class="md-warn md-raised">
+                  Add
+                </md-button>
+                <md-button ng-click="RevertAllChanges()"
+                           class="md-raised">
+                  Revert All Changes
+                </md-button>
+              </div>
+              <edit-payroll-data flex="100"
+                                 totalonly="true"
+                                 totalhours="GetTotalHours(edit_data.payroll_change_data)"
+                                 totalamount="GetTotalAmount(edit_data.payroll_change_data)">
+
+              </edit-payroll-data>
+            </div>
+
+            <div ng-if="validation_errors.length > 0"
+                 class="ErrorText"
+                 style="margin-top: 1em; margin-bottom: 1em;"
+                 layout="row"
+                 layout-align="start center"
+                 flex="100">
+              Error: {{ validation_errors }}
+            </div>
+
+            <div style="margin-top: .5em;"
+                 layout-align="center start"
+                 layout="row"
+                 layout-wrap
+                 flex="100">
+
+              <div layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="AddJustification()"
+                             class="md-primary md-raised">
+                    Add Justification
+                  </md-button>
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="20">
+                  <md-button ng-click="SaveJustifications();"
+                             ng-show="edit_data.justifications.length > 0"
+                             class="md-primary md-raised">
+                    Save Justifications
+                  </md-button>
+                </div>
+                <div style="padding-left: 1em; padding-right: 1em;"
+                     layout="row"
+                     layout-align="start center"
+                     flex="70">
+                  {{edit_data.justifications.length === 0 ? "No Justifications have been added." : "Justifications"}}
+                </div>
+              </div>
+              <div ng-repeat="j in edit_data.justifications track by $index"
+                   layout="row"
+                   flex="100">
+                <div layout="row"
+                     layout-align="start center"
+                     flex="10">
+                  <md-button ng-click="DeleteJustification(j.id);"
+                             class="md-warn md-raised">
+                    Delete
+                  </md-button>
+
+                </div>
+                <div layout="row"
+                     layout-align="start center"
+                     flex="90">
+                  <textarea rows="6"
+                            flex="100"
+                            ng-model="j.justification"></textarea>
+                </div>
+              </div>
+            </div>
+
+
+
+          </div>
+        </md-tab>
+        <md-tab label="Base Timestore Data">
+          <div style="padding: 1em 1em 1em 1em;"
+               flex="100">
+            <payroll-data showheader="true"></payroll-data>
+            <payroll-data ng-repeat="pcd in edit_data.base_payroll_data track by $index"
+                          pd="pcd"
+                          flex="100">
+            </payroll-data>
+            <payroll-data flex="100"
+                          totalonly="true"
+                          totalhours="GetTotalHours(edit_data.base_payroll_data)"
+                          totalamount="GetTotalAmount(edit_data.base_payroll_data)">
+
+            </payroll-data>
+          </div>
+        </md-tab>
+        <md-tab label="Default / Past Pay">
+          <div layout="row"
+               layout-align="start center"
+               flex="100"
+               layout-wrap
+               style="padding: 1em 1em 1em 1em;">
+
+
+            <md-input-container flex="60">
+              <label>Show Default Info</label>
+              <md-select ng-model="defaultview"
+                         ng-change="UpdateView()">
+                <md-option value="default">
+                  Default Pay
+                </md-option>
+                <md-option ng-repeat="ps in edit_data.paystub_data"
+                           ng-value="ps.check_number">
+                  Check # {{ps.check_number}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <div layout="row"
+                 layout-align="center center"
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                Pay Code
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Hours
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Payrate
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Amount
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                Classify
+              </span>
+            </div>
+            <div ng-repeat="d in default_display track by $index"
+                 layout="row"
+                 layout-align="center center"
+                 layout-wrap
+                 flex="100">
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.paycode}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.hours}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.payrate}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.amount}}
+              </span>
+              <span style="text-align: right;"
+                    flex="20">
+                {{d.classify}}
+              </span>
+            </div>
+
+          </div>
+          
+        </md-tab>
+      </md-tabs>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <span flex></span>
+      <md-button ng-click="cancel()"
+                 class="md-raised">
+        Cancel
+      </md-button>
+      <md-button ng-disabled="validation_errors.length > 0"
+                 ng-click="hide()"
+                 class="md-primary md-raised">
+        Save
+      </md-button>
+    </md-dialog-actions>
+  </md-dialog>
+  </script>

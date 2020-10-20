@@ -20,13 +20,14 @@ Namespace Models
     Property DisasterWorkTimes As String = ""
     Property DisasterWorkHours As Double = 0
     Property DisasterWorkType As String = ""
+    Property DisasterWorkHoursList As New List(Of DisasterWorkHours)
     Property DisasterNormalScheduledHours As Double = -1
     ' DisasterNormalScheduledHours expectations as follows:
     ' -1 = no choice was made
     ' 0 = I was not supposed to work that day
     ' > 0 I was supposed to work.
-    Property DisasterWorkTimesByRule As Dictionary(Of Integer, List(Of TimeSpan)) = New Dictionary(Of Integer, List(Of TimeSpan))
-    Property DisasterWorkHoursByRule As Dictionary(Of Integer, Double) = New Dictionary(Of Integer, Double)
+    'Property DisasterWorkTimesByRule As Dictionary(Of Integer, List(Of TimeSpan)) = New Dictionary(Of Integer, List(Of TimeSpan))
+    'Property DisasterWorkHoursByRule As Dictionary(Of Integer, Double) = New Dictionary(Of Integer, Double)
     'Property DisasterRule As Integer = 0
     Property BreakCreditHours As Double = 0
     Property HolidayHours As Double = 0
@@ -61,9 +62,11 @@ Namespace Models
     Property OutOfClass As Boolean = False
     ReadOnly Property Total_Non_Working_Hours As Double
       Get
-        Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed + AdminHours +
+        Dim NewAdminDisaster = (From dwh In DisasterWorkHoursList
+                                Select dwh.DisasterAdminHours).Sum
+        Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed +
           AdminBereavement + AdminDisaster + AdminWorkersComp + AdminJuryDuty + AdminMilitaryLeave +
-          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours
+          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours + NewAdminDisaster
       End Get
     End Property
 
@@ -76,12 +79,12 @@ Namespace Models
     End Function
 
     Public Sub New()
-      DisasterWorkHoursByRule(0) = 0
-      DisasterWorkHoursByRule(1) = 0
-      DisasterWorkHoursByRule(2) = 0
-      DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
-      DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
-      DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
+      'DisasterWorkHoursByRule(0) = 0
+      'DisasterWorkHoursByRule(1) = 0
+      'DisasterWorkHoursByRule(2) = 0
+      'DisasterWorkTimesByRule(0) = New List(Of TimeSpan)()
+      'DisasterWorkTimesByRule(1) = New List(Of TimeSpan)()
+      'DisasterWorkTimesByRule(2) = New List(Of TimeSpan)()
     End Sub
 
     Public Sub New(STD As Saved_TimeStore_Data)
@@ -105,10 +108,11 @@ Namespace Models
       WorkDate = STD.work_date
       WorkHours = STD.work_hours
       WorkTimes = STD.work_times
-      DisasterName = STD.disaster_name
+      'DisasterName = STD.disaster_name
       DisasterWorkHours = STD.disaster_work_hours
       DisasterWorkTimes = STD.disaster_work_times
       DisasterWorkType = STD.disaster_work_type
+      DisasterWorkHoursList = STD.disaster_work_hours_list
       DisasterNormalScheduledHours = STD.disaster_normal_scheduled_hours
       OutOfClass = STD.out_of_class
     End Sub
@@ -261,6 +265,7 @@ Namespace Models
 
       Dim std As New Saved_TimeStore_Data(Me, tca)
       Dim dt As DataTable = PopulateData()
+      Dim dt_dwh As DataTable = Models.DisasterWorkHours.PopulateDisasterWorkHours(DisasterWorkHoursList)
 
       Dim dp As New DynamicParameters()
 
@@ -291,6 +296,7 @@ Namespace Models
       dp.Add("@by_ip_address", std.by_ip_address)
       dp.Add("@result", dbType:=DbType.Int32, direction:=ParameterDirection.Output)
       dp.Add("@HTA", dt.AsTableValuedParameter("HoursToApproveData"))
+      dp.Add("@DWH", dt_dwh.AsTableValuedParameter("DisasterWorkHours"))
 
       Try
 
@@ -379,6 +385,17 @@ Namespace Models
         dt.Rows.Add(19, "", AdminDisaster)
       End If
       Return dt
+    End Function
+
+    Public Shared Function GetDisasterWorkHoursListByWeekAndPeriod(Week As Integer, PeriodId As Integer, TCTD As TimecardTimeData) As List(Of DisasterWorkHours)
+      If PeriodId = 0 Then
+        Return TCTD.DisasterWorkHoursList
+      Else
+        Return (From d In TCTD.DisasterWorkHoursList
+                Where d.DisasterPeriodId = PeriodId
+                Select d).ToList()
+      End If
+
     End Function
 
   End Class

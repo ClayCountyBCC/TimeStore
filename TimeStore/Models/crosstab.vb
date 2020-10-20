@@ -17,6 +17,8 @@
     Property pc101 As Double = 0
     Property pc110 As Double = 0
     Property pc111 As Double = 0
+    Property pc118 As Double = 0
+    Property pc119 As Double = 0
     Property pc120 As Double = 0
     Property pc121 As Double = 0
     Property pc122 As Double = 0
@@ -100,6 +102,17 @@
         If pc111 = 0 Then Return "" Else Return String.Format("{0:N2}", pc111)
       End Get
     End Property
+    ReadOnly Property pc118_d As String
+      Get
+        If pc120 = 0 Then Return "" Else Return String.Format("{0:N2}", pc118)
+      End Get
+    End Property
+    ReadOnly Property pc119_d As String
+      Get
+        If pc121 = 0 Then Return "" Else Return String.Format("{0:N2}", pc119)
+      End Get
+    End Property
+
     ReadOnly Property pc120_d As String
       Get
         If pc120 = 0 Then Return "" Else Return String.Format("{0:N2}", pc120)
@@ -207,6 +220,8 @@
       pc101 = IsNull(d("101"), 0)
       pc110 = IsNull(d("110"), 0)
       pc111 = IsNull(d("111"), 0)
+      pc118 = IsNull(d("118"), 0)
+      pc119 = IsNull(d("119"), 0)
       pc120 = IsNull(d("120"), 0)
       pc121 = IsNull(d("121"), 0)
       pc122 = IsNull(d("122"), 0)
@@ -252,6 +267,8 @@
       pc101 = IsNull(d("101"), 0)
       pc110 = IsNull(d("110"), 0)
       pc111 = IsNull(d("111"), 0)
+      pc118 = IsNull(d("118"), 0)
+      pc119 = IsNull(d("119"), 0)
       pc120 = IsNull(d("120"), 0)
       pc121 = IsNull(d("121"), 0)
       pc122 = IsNull(d("122"), 0)

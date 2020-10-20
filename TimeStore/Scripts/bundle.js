@@ -48526,6 +48526,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           controller: 'FinanceToolsController',
           templateUrl: 'FinanceTools.tmpl.html' //'app/financetools/FinanceTools.tmpl.html',
         })
+        .when('/PayrollOverall/ppd/:payPeriod', {
+          controller: 'PayrollOverallController',
+          templateUrl: 'PayrollOverall.tmpl.html' 
+        })
+        .when('/PayrollEdit/ppd/:payPeriod', {
+          controller: 'PayrollEditController',
+          templateUrl: 'PayrollEdit.tmpl.html'
+        })
+        .when('/PayrollReview/ppd/:payPeriod', {
+          controller: 'PayrollReviewController',
+          templateUrl: 'PayrollReview.tmpl.html'
+        })
         .when('/LeaveCalendar/', {
           controller: 'CalendarViewController',
           templateUrl: 'CalendarView.controller.tmpl.html',
@@ -48838,6 +48850,18 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           .format("YYYYMMDD");
       }
 
+      function checkNewPayPeriod()
+      {
+        // this function will return true if it is the first Wednesday, Thursday, or Friday of 
+        // a new pay period.
+        var pps = moment(getPayPeriodStart(), "YYYYMMDD");
+        var wednesday = pps.format("YYYYMMDD");
+        var thursday = moment(getPayPeriodStart(), "YYYYMMDD").add(1, "days").format("YYYYMMDD");
+        var friday = moment(getPayPeriodStart(), "YYYYMMDD").add(2, "days").format("YYYYMMDD");        
+        var today = moment().startOf("day").format("YYYYMMDD");
+        return today === wednesday || today === thursday || today === friday;
+      }
+
       var getGenericTimeData = function (startDate, endDate, fieldsToDisplay)
       {
         var x = {
@@ -49025,6 +49049,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
+
+
       var getUnapproved = function (ppdIndex)
       {
         var p = { ppdIndex: ppdIndex };
@@ -49177,6 +49203,216 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       };
 
+      var getPayrollStatus = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetStatus?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var startPayroll = function (pay_period_ending, include_benefits, target_db)
+      {
+        return $http
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString() + "&TargetDB=" + target_db, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var resetPayroll = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var getPayrollEdits = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/PayrollEdits?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPaycodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Paycodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getCheckPay = function (employee_id, check_number)
+      {
+        return $http
+          .get("API/Payroll/GetCheck?EmployeeId=" + employee_id + "&CheckNumber=" + check_number, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postPayrollChanges = function (pay_period_ending, employee_id, changes)
+      {
+        return $http
+          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, changes,
+            {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPayrollEditsByEmployee = function (pay_period_ending, employee_id)
+      {
+        return $http
+          .get("API/Payroll/PayrollEditsByEmployee?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, 
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
+
+      var saveJustifications = function (pay_period_ending, employee_id, justifications)
+      {
+        return $http
+          .post("API/Payroll/SaveJustifications?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id.toString(), justifications,
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var deleteJustification = function (pay_period_ending, justification_id)
+      {
+        return $http
+          .get("API/Payroll/DeleteJustification?PayPeriodEnding=" + + pay_period_ending + "&id=" + justification_id, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getProjectCodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetProjectCodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var changesApproved = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/ChangesApproved?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var editsCompleted = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/EditsCompleted?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var editsInComplete = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/EditsInComplete?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var cancelApproval = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/CancelApproval?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPayruns = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetPayruns?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postTimestoreData = function (pay_period_ending, payrun)
+      {
+        return $http
+          .get("API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=" + pay_period_ending + "&Payrun=" + payrun, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
         getPayStubByEmployee: getPayStubByEmployee,
@@ -49218,7 +49454,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         saveCompTimeEarned: saveCompTimeEarned,
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
-        getBirthdays: getBirthdays
+        getBirthdays: getBirthdays,
+        checkNewPayPeriod: checkNewPayPeriod,
+        getPayrollStatus: getPayrollStatus,
+        startPayroll: startPayroll,
+        resetPayroll: resetPayroll,
+        getPayrollEdits: getPayrollEdits,
+        getPaycodes: getPaycodes,
+        getCheckPay: getCheckPay,
+        postPayrollChanges: postPayrollChanges,
+        deleteJustification: deleteJustification,
+        saveJustifications: saveJustifications,
+        getProjectCodes: getProjectCodes,
+        editsCompleted: editsCompleted,
+        changesApproved: changesApproved,
+        editsInComplete: editsInComplete,
+        cancelApproval: cancelApproval,
+        getPayruns: getPayruns,
+        postTimestoreData: postTimestoreData,
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee
       };
     }
   ]);
@@ -49293,6 +49547,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           goIncentives: goIncentives,
           goAccessChange: goAccessChange,
           goFinanceTools: goFinanceTools,
+          goPayrollOverallProcess: goPayrollOverallProcess,
+          goPayrollEditProcess: goPayrollEditProcess,
+          goPayrollReviewProcess: goPayrollReviewProcess,
           goTimecardApprovals: goTimecardApprovals,
           goLeaveApprovals: goLeaveApprovals,
           goAddTime: goAddTime,
@@ -49379,6 +49636,42 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           go('/FinanceTools/');
           //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollOverallProcess(ppd)
+        {
+          if (!ppd)
+          {
+            // let's add some logic here.
+            // If the current date is the current pay period start
+            // or the current pay period start + 1 or 2 days (ie: that Wednesday, Thursday, or Friday)
+            // then let's load the previous pay period.
+            if (timestoredata.checkNewPayPeriod())
+            {
+              var previousPPE = moment(timestoredata.getPayPeriodEnd(), "YYYYMMDD").add(-14, "days").format("YYYYMMDD");
+              go('/PayrollOverall/ppd/' + previousPPE);
+            }
+            else
+            {
+              go('/PayrollOverall/ppd/' + timestoredata.getPayPeriodEnd());
+            }
+            
+          }
+          else
+          {
+            go('/PayrollOverall/ppd/' + ppd);
+          }
+          //$window.location.href = '#/FinanceTools';
+        }
+
+        function goPayrollEditProcess(ppd)
+        {
+          go('/PayrollEdit/ppd/' + ppd);
+        }
+
+        function goPayrollReviewProcess(ppd)
+        {
+          go('/PayrollReview/ppd/' + ppd);
         }
 
         function goAccessChange()
@@ -49560,13 +49853,13 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           }
         }
         LoadLunchTime(tctd);
-        console.log('tctd', tctd);
+        console.log('loadSavedTCTD tctd', tctd);
         return tctd;
       }
 
       function LoadLunchTime(tctd)
       {
-        console.log("LoadLunchTime");
+        //console.log("LoadLunchTime");
         tctd.SelectedLunchTime = null;
         tctd.LastSelectedLunchTime = null;
         if (
@@ -49591,10 +49884,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function processRawTCTD(rawtctd, tctd)
       {
+        console.log('processRawTCTD', rawtctd);
         loadRawTCTDHours(rawtctd, tctd);
         tctd.Comment = rawtctd.Comment;
-        tctd.DisasterName = rawtctd.DisasterName;
-        tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        //tctd.DisasterName = rawtctd.DisasterName;
+        //tctd.DisasterPeriodType = rawtctd.DisasterPeriodType;
+        tctd.DisasterWorkHoursList = rawtctd.DisasterWorkHoursList;
         tctd.DisasterWorkType = rawtctd.DisasterWorkType;
         tctd.DisasterNormalScheduledHours = rawtctd.DisasterNormalScheduledHours;
         tctd.OutOfClass = rawtctd.OutOfClass;
@@ -49607,8 +49902,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         processTimecardWorkTimes(
           tctd,
           rawtctd.WorkTimes,
-          rawtctd.OnCallWorkTimes,
-          rawtctd.DisasterWorkTimes
+          rawtctd.OnCallWorkTimes
         );
       }
 
@@ -49655,6 +49949,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function checkAdmin(rawtctd)
       {
+        
+        let newAdminDisaster = rawtctd.DisasterWorkHoursList.reduce(function (j, current) { return { DisasterAdminHours: j.DisasterAdminHours + current.DisasterAdminHours }; }, 0);
+        let adminDisasterValue = newAdminDisaster.DisasterAdminHours;
         return (
           rawtctd.AdminBereavement +
           rawtctd.AdminDisaster +
@@ -49662,11 +49959,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           rawtctd.AdminJuryDuty +
           rawtctd.AdminMilitaryLeave +
           rawtctd.AdminOther +
-          rawtctd.AdminWorkersComp
+          rawtctd.AdminWorkersComp + 
+          adminDisasterValue
         );
       }
 
-      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime, disasterWorkTime)
+      function processTimecardWorkTimes(tctd, workTime, OnCallWorkTime)
       {
         var sT = [];
         var t = [];
@@ -49708,42 +50006,82 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           tctd.OnCallSelectedTimesDisplay = OnCallWorkTime;
         }
 
-
-        if (disasterWorkTime.length === 0)
+        console.log("fix disaster work times in processTimecardWorkTimes")
+        
+        for (let ee = 0; ee < tctd.DisasterWorkHoursList.length; ee++)
         {
-          tctd.disasterWorkTimes = "";
-          tctd.disasterSelectedTimes = [];
-          tctd.disasterSelectedTimesDisplay = "";
-        } else
-        {
-          t = disasterWorkTime.split("-");
-          sT = [];
-          for (ii = 0; ii < t.length; ii++)
+          let dwh = tctd.DisasterWorkHoursList[ee];
+          if (dwh.DisasterWorkTimes.length === 0)
           {
-            sT.push(tl.indexOf(t[ii].trim()));
+            dwh.DisasterSelectedTimes = [];
+            dwh.DisasterSelectedTimesDisplay = "";
           }
-          tctd.disasterWorkTimes = sT.join(" ");
-          tctd.disasterSelectedTimes = sT;
-          tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
-        }
+          else
+          {
+            t = dwh.DisasterWorkTimes.split("-");
+            sT = [];
+            for (ii = 0; ii < t.length; ii++)
+            {
+              sT.push(tl.indexOf(t[ii].trim()));
+            }
+            dwh.DisasterWorkTimes = sT.join(" ");
+            dwh.DisasterSelectedTimes = sT;
+            dwh.DisasterSelectedTimesDisplay = dwh.DisasterWorkTimes;
+          }
+          // load the saved data into the EventsByWorkDate
+          for (let ff = 0; ff < tctd.EventsByWorkDate.length; ff++)
+          {
+            let ewd = tctd.EventsByWorkDate[ff];
+            if (ewd.event_id === dwh.DisasterPeriodId)
+            {
+              let dwh_ewd = ewd.disaster_work_hours;
+              dwh_ewd.DisasterSelectedTimes = dwh.DisasterSelectedTimes;
+              dwh_ewd.DisasterSelectedTimesDisplay = dwh.DisasterSelectedTimesDisplay;
+              dwh_ewd.DisasterWorkHours = dwh.DisasterWorkHours;
+              dwh_ewd.WorkHoursId = dwh.WorkHoursId;
+              dwh_ewd.DisasterWorkType = dwh.DisasterWorkType;
+              dwh_ewd.DisasterAdminHours = dwh.DisasterAdminHours;
+            }
+          }
 
-       
+        }
+        // Original Disaster Work Times handling logic
+        // replaced on 8/21/2020
+        //if (disasterWorkTime.length === 0)
+        //{
+        //  tctd.disasterWorkTimes = "";
+        //  tctd.disasterSelectedTimes = [];
+        //  tctd.disasterSelectedTimesDisplay = "";
+        //} else
+        //{
+        //  t = disasterWorkTime.split("-");
+        //  sT = [];
+        //  for (ii = 0; ii < t.length; ii++)
+        //  {
+        //    sT.push(tl.indexOf(t[ii].trim()));
+        //  }
+        //  tctd.disasterWorkTimes = sT.join(" ");
+        //  tctd.disasterSelectedTimes = sT;
+        //  tctd.disasterSelectedTimesDisplay = OnCallWorkTime;
+        //}
+
+
       }
 
       function calculateWithinFirstNinetyDays(hireDate, workDate)
       {
-        
+
         var wd = moment(workDate, "M/D/YYYY");
         var hd = moment(hireDate);
         return wd.diff(hd, "days") > 90;
-        
+
         // this function returns true if the person's hire date is more than
         // 90 days away from the work date.
       }
 
       function resetTCTD(tc, workDate)
       {
-        console.log("reset tctd", workDate, tc);
+        console.log("reset tctd function with workdate and timecard", workDate, tc);
         // resetTCTD provides a 0'd out TCTD that conforms to the user's min/max / visibility for their classification
         var isExempt = tc.exemptStatus === "Exempt";
         populateConstants(isExempt, tc.classify);
@@ -49752,28 +50090,35 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           tc.hireDate,
           workDate
         );
-
-        var DisasterNameToUse = "";        
+        let events = [];
+        let disaster_work_hours_list = [];
+        //var DisasterNameToUse = "";        
         var wd = moment(workDate, "M/D/YYYY");
-        if (tc.Disaster_Periods.length > 0)
+
+        if (tc.Events_By_WorkDate.length > 0)
         {
-          for (var i = 0; i < tc.Disaster_Periods.length; i++)
-          {
-            var disaster_period = tc.Disaster_Periods[i];
-            if (DisasterNameToUse.length === 0)
+          let wd_short_date = wd.format("M/D/YYYY");
+          events = tc.Events_By_WorkDate.filter(
+            function (j)
             {
-              var wd_test = wd.toDate();
-              var start = new Date(disaster_period.StartDate);
-              var end = new Date(disaster_period.EndDate);              
-              if (wd_test >= start && wd_test <= end)
-              {
-                DisasterNameToUse = disaster_period.Name;
-              }
-              //if (wd.isBetween(disaster_period.StartDate, disaster_period.EndDate, 'day'))
-              //{
-              //  DisasterNameToUse = disaster_period.Name;
-              //}
-            }
+              var test = moment(new Date(j.work_date)).format("M/D/YYYY");
+              return test === wd_short_date;
+            });
+          for (let i = 0; i < events.length; i++)
+          {
+            let event = events[i];
+            event.disaster_work_hours =
+            {
+              WorkHoursId: -1,
+              DisasterPeriodId: event.event_id,
+              DisasterSelectedTimes: [],
+              DisasterSelectedTimesDisplay: "",
+              DisasterTimesError: "",
+              DisasterWorkTimes: "",
+              DisasterWorkHours: 0,
+              DisasterAdminHours: 0,
+              DisasterWorkType: ""
+            };
           }
         }
 
@@ -49784,8 +50129,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           WorkTimes: "",
           WorkHours: getDefaultHoursNoMax("Hours Worked"),
           DisasterWorkTimes: "",
-          DisasterName: DisasterNameToUse,
+          EventsByWorkDate: events,
+          //DisasterName: DisasterNameToUse,
           DisasterNormalScheduledHours: -1,
+          DisasterWorkHoursList: disaster_work_hours_list,
           //DisasterPeriodType: 0,
           DisasterWorkHours: getDefaultHoursNoMax("Disaster Hours"),
           DisasterWorkType: "",
@@ -49840,6 +50187,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           disasterSelectedTimesDisplay: "",
           disasterSelectedTimes: []
         };
+        console.log('fully reset tctd', tctd);
         return tctd;
       }
 
@@ -49855,7 +50203,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           DisasterWorkTimes: tctd.disasterSelectedTimesDisplay,
           DisasterWorkHours: getValue(tctd.DisasterWorkHours.value),
           DisasterWorkType: tctd.DisasterWorkType,
-          DisasterName: "",
+          EventsByWorkDate: tctd.EventsByWorkDate,
+          DisasterWorkHoursList: tctd.DisasterWorkHoursList,
+          //DisasterName: "",
           DisasterNormalScheduledHours: tctd.DisasterNormalScheduledHours,
           BreakCreditHours: getValue(tctd.BreakCreditHours.value),
           HolidayHours: getValue(tctd.HolidayHours.value),
@@ -49902,6 +50252,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminDisaster.value);
+        for (let i = 0; i < tctd.EventsByWorkDate.length; i++)
+        {
+          th += getValue(tctd.EventsByWorkDate[i].disaster_work_hours.DisasterAdminHours);
+        }
         th += getValue(tctd.AdminJuryDuty.value);
         th += getValue(tctd.AdminMilitaryLeave.value);
         th += getValue(tctd.AdminWorkersComp.value);
@@ -50034,11 +50388,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       function getNormallyScheduledHours()
       {
         var hours = [];
-        for (var i = 1.25; i < 12.25; i += .25)
+        for (var i = 4; i < 12.25; i += .25)
         {
           hours.push(i);
         }
-        console.log('normally scheduled hours', hours);
         return hours;
       }
 
@@ -50364,52 +50717,117 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       function calcDisasterWorkHours(tctd)
       {
-        tctd.DisasterWorkHours.value = 0;
-        tctd.disasterSelectedTimesDisplay = "";
-        tctd.DisasterWorkTimes = "";        
-        if (tctd.disasterSelectedTimes === undefined)
-        {
-          return;
-        }
-        var times = tctd.disasterSelectedTimes;
-        tctd.disasterSelectedTimesDisplay = "";
+        // Replaced on 8/20/2020
+        //tctd.DisasterWorkHours.value = 0;
+        //tctd.disasterSelectedTimesDisplay = "";
+        //tctd.DisasterWorkTimes = "";        
+        //if (tctd.disasterSelectedTimes === undefined)
+        //{
+        //  return;
+        //}
+        //var times = tctd.disasterSelectedTimes;
+        //tctd.disasterSelectedTimesDisplay = "";
 
-        var timeList = getTimeList();
-        if (times.length === 0)
+        //var timeList = getTimeList();
+        //if (times.length === 0)
+        //{
+        //  return;
+        //}
+        //var timeDisplay = "";
+        //var workHours = 0;
+        //var st = times.sort(function (a, b)
+        //{
+        //  return a - b;
+        //});
+        //var length = st.length - st.length % 2;
+        //if (length > 1)
+        //{
+        //  for (var i = 0; i < length; i += 2)
+        //  {
+        //    workHours += (st[i + 1] - st[i]) / 4;
+        //    if (timeDisplay.length > 0)
+        //    {
+        //      timeDisplay += " - ";
+        //    }
+        //    timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+        //  }
+        //}
+        //if (st.length % 2 === 1)
+        //{
+        //  if (timeDisplay.length > 0)
+        //  {
+        //    timeDisplay += " - ";
+        //  }
+        //  timeDisplay += timeList[st[st.length - 1]];
+        //}
+        //tctd.DisasterWorkTimes = times.join(" ");
+        //tctd.DisasterWorkHours.value = workHours;
+        //tctd.disasterSelectedTimesDisplay = timeDisplay;
+        for (let ewd = 0; ewd < tctd.EventsByWorkDate.length; ewd++)
         {
-          return;
-        }
-        var timeDisplay = "";
-        var workHours = 0;
-        var st = times.sort(function (a, b)
-        {
-          return a - b;
-        });
-        var length = st.length - st.length % 2;
-        if (length > 1)
-        {
-          for (var i = 0; i < length; i += 2)
+          let dwh = tctd.EventsByWorkDate[ewd].disaster_work_hours;
+          dwh.DisasterWorkHours = 0;
+          dwh.DisasterSelectedTimesDisplay = "";
+          dwh.DisasterWorkTimes = "";
+          let timeList = getTimeList();
+          let times = dwh.DisasterSelectedTimes;
+
+          if (dwh.DisasterSelectedTimes !== undefined && timeList.length > 0 && times.length > 0)
           {
-            workHours += (st[i + 1] - st[i]) / 4;
-            if (timeDisplay.length > 0)
+            let display = "";
+            let workhours = 0;
+
+            // we sort the times now because our calculation depends on them being in 
+            // order from 0 to 79
+            let sorted_times = times.sort(function (a, b) { return a - b; });
+
+            let length = sorted_times.length - sorted_times.length % 2;
+            if (length > 1)
             {
-              timeDisplay += " - ";
+              for (let i = 0; i < length; i += 2)
+              {
+                workhours += (sorted_times[i + 1] - sorted_times[i]) / 4;
+                if (display.length > 0)
+                {
+                  display += " - ";
+                }
+                display += timeList[sorted_times[i]] + " - " + timeList[sorted_times[i + 1]];
+              }
             }
-            timeDisplay += timeList[st[i]] + " - " + timeList[st[i + 1]];
+            if (sorted_times.length % 2 === 1)
+            {
+              if (display.length > 0)
+              {
+                display += " - ";
+              }
+              display += timeList[sorted_times[sorted_times.length - 1]];
+            }
+            dwh.DisasterWorkTimes = display;//times.join(" ");
+            dwh.DisasterWorkHours = workhours;
+            dwh.DisasterSelectedTimesDisplay = display;
           }
         }
-        if (st.length % 2 === 1)
+
+        // now we'll copy those to the tctd.DisasterWorkHoursList array
+        tctd.DisasterWorkHoursList.splice(0,tctd.DisasterWorkHoursList.length); // empty the array
+        for (let ee = 0; ee < tctd.EventsByWorkDate.length; ee++)
         {
-          if (timeDisplay.length > 0)
+          let ewd = tctd.EventsByWorkDate[ee];
+          let dwh = ewd.disaster_work_hours;
+          if (dwh.DisasterWorkHours > 0 || dwh.DisasterAdminHours > 0)
           {
-            timeDisplay += " - ";
+            let new_dwh = {
+              WorkHoursId: dwh.WorkHoursId,
+              DisasterPeriodId: dwh.DisasterPeriodId,
+              DisasterWorkHours: dwh.DisasterWorkHours,
+              DisasterWorkType: dwh.DisasterWorkType,
+              DisasterWorkTimes: dwh.DisasterWorkTimes ? dwh.DisasterWorkTimes : "",
+              DisasterAdminHours: dwh.DisasterAdminHours
+            };
+            tctd.DisasterWorkHoursList.push(new_dwh);
           }
-          timeDisplay += timeList[st[st.length - 1]];
         }
-        tctd.DisasterWorkTimes = times.join(" ");
-        tctd.DisasterWorkHours.value = workHours;
-        tctd.disasterSelectedTimesDisplay = timeDisplay;
-        
+
       }
 
       function handleBreakCredit(tctd)
@@ -51073,6 +51491,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       timestoreNav.goFinanceTools();
     };
 
+    $scope.viewPayrollProcess = function ()
+    {
+      $mdSidenav('adminRight').toggle();
+      timestoreNav.goPayrollOverallProcess();
+    };
+
     $scope.viewFinalApprovals = function ()
     {
       $mdSidenav('approvalRight').toggle();
@@ -51129,6 +51553,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.accessLevels = ["None", "User Only", "Dept Level 1", "Dept Level 2",
       "Dept Level 3", "Dept Level 4", "Dept Level 5", "All"];
 
+    $scope.payrollAccess = ["None", "Can Edit", "Can Approve"];
 
 
     $scope.toastPosition = {
@@ -51262,7 +51687,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         BackendReportsAccess: $scope.timecardAccess.Backend_Reports_Access,
         DepartmentsToApprove: getSelectedDepartmentList(),
         DataType: $scope.timecardAccess.Data_Type,
-        CanChangeAccess: $scope.timecardAccess.CanChangeAccess
+        CanChangeAccess: $scope.timecardAccess.CanChangeAccess,
+        PayrollAccess: $scope.timecardAccess.PayrollAccess
       };
       console.log('raw Timecard Access', rawTCA);
       timestoredata.saveAccess(rawTCA).then(function (data) {
@@ -51529,21 +51955,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     
     populateTimeLists();
     updateBanksUsed();
-    
+    //$scope.DisasterHoursRelated    
     $scope.toggleOnCall = $scope.TCTD.OnCallTotalHours.value > 0;
-    $scope.DisasterHoursRelated = $scope.TCTD.DisasterWorkHours.value === 0 ? null : true;    
-    $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
+    var forceDisasterShow = $scope.TCTD.EventsByWorkDate.filter(function (j) { return j.disaster_work_hours.DisasterWorkHours > 0; }).length > 0;
+    console.log('force disaster show', forceDisasterShow);
+    $scope.DisasterHoursRelated = forceDisasterShow ? true : null;    
+    $scope.showDisaster = $scope.TCTD.EventsByWorkDate.length > 0;
+    $scope.ExpandDisasterHours = $scope.showDisaster && $scope.TCTD.WorkHours.value > 0 && $scope.DisasterHoursRelated;
+    
     // changed on 8/31/2019
     //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0 ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     //$scope.ShowDisasterWarning = $scope.TCTD.DisasterName.length > 0; // ? $scope.TCTD.DisasterPeriodType === 1 : $scope.timecard.DisasterPeriodType_Display === 1;
     //$scope.showDisaster = $scope.DisasterHoursRelated ? true : false;
-    $scope.showDisaster = $scope.TCTD.DisasterName.length > 0;
+    //$scope.showDisaster = $scope.TCTD.DisasterName.length > 0;
     //$scope.TCTD.DisasterNormalScheduledHours values are as follows:
     // -1 if the value has not yet been saved
     // 0 if they are not normally scheduled on this day
     // > 0 if they are normally scheduled
     $scope.NormallyScheduled = null;
-
+    
     if ($scope.TCTD.DisasterNormalScheduledHours === 0)
     {
       $scope.NormallyScheduled = false;
@@ -51653,10 +52083,27 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
     $scope.DisasterHoursChoice = function ()
     {
+      console.log("Don't forget to clear the disaster hours entered if No is chosen.");
       $scope.ExpandDisasterHours = $scope.DisasterHoursRelated;
-      checkForErrors();
-      if ($scope.DisasterHoursRelated === false && $scope.errorList.length === 0)
+      if (!$scope.DisasterHoursRelated)
       {
+        // let's clear any saved disaster hours information
+        $scope.TCTD.DisasterWorkHoursList.splice(0, $scope.TCTD.DisasterWorkHoursList.length); // empty the array
+        $scope.TCTD.DisasterNormalScheduledHours = null;
+        for (let ee = 0; ee < $scope.TCTD.EventsByWorkDate.length; ee++)
+        {
+          let dwh = $scope.TCTD.EventsByWorkDate[ee].disaster_work_hours;          
+          dwh.DisasterSelectedTimes.splice(0, dwh.DisasterSelectedTimes.length)
+          dwh.DisasterselectedTimesDisplay = "";
+          dwh.DisasterWorkHours = 0;
+          dwh.DisasterWorkTimes = "";
+          dwh.DisasterWorkType = "";
+        }
+      }
+      checkForErrors();
+      if (!$scope.DisasterHoursRelated && $scope.errorList.length === 0)
+      {
+
         $scope.calculateTotalHours();
       }
     };
@@ -51696,8 +52143,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
       if ($scope.DisasterHoursRelated === null)
       {
-        $scope.disasterChoiceError = "You must select whether or not any of the work hours entered are for the disaster indicated. Your time has not yet been saved.";
-        $scope.errorList.push("You must select whether or not any of the work hours entered are for the disaster indicated.");
+        $scope.disasterChoiceError = "You must select whether any of the work hours entered are for any special events. Your time has not yet been saved.";
+        $scope.errorList.push("You must select whether any of the work hours entered are for any special events. Your time has not yet been saved.");
         return;
       }
 
@@ -51710,64 +52157,145 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         return;
       }
 
-      if ($scope.NormallyScheduled && $scope.TCTD.DisasterNormalScheduledHours.toString() === "-1")
+      if ($scope.NormallyScheduled && ($scope.TCTD.DisasterNormalScheduledHours === null || $scope.TCTD.DisasterNormalScheduledHours.toString() === "-1"))
       {
         $scope.normallyScheduledHoursError = "You must select how many hours you normally work on this date.";
         $scope.errorList.push("You must select how many hours you normally work on this date.");
         return;
       }
 
-      if ($scope.TCTD.DisasterWorkHours.value === 0)
+      let ewd = $scope.TCTD.EventsByWorkDate;
+      let total_disaster_work_hours = 0;
+
+      for (let ee = 0; ee < ewd.length; ee++)
       {
-        $scope.normallyScheduledHoursError = "You must add your hours worked for the disaster to the Disaster Hours Worked selection.";
-        $scope.errorList.push("You must add the hours worked for the disaster to the Disaster Hours Worked selection.");
-        return;
+        let special_event = ewd[ee];
+        let dwh = special_event.disaster_work_hours;
+
+        // reset error message
+        dwh.DisasterTimesError = "";
+
+        total_disaster_work_hours += dwh.DisasterWorkHours;
+
+        if (dwh.DisasterWorkHours === 0 && total_disaster_work_hours === 0 && ee === ewd.length - 1)
+        {
+          $scope.normallyScheduledHoursError = "You must add your hours worked for any special events to the section below.";
+          $scope.errorList.push("You must add your hours worked for any special events to the specific event section.");
+          return;
+        }
+
+        // let's make sure these disaster hours don't overlap the regular hours worked
+        if (!HoursWorkedMustOverlap($scope.TCTD.selectedTimes, dwh.DisasterSelectedTimes))
+        {
+          dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " must overlap your regular hours worked.";
+          $scope.errorList.push(dwh.DisasterTimesError);
+          return;
+        }
+
+        // now we need to make sure that the disaster hours don't overlap other disaster hours
+        if (ewd.length > 1)
+        {
+          for (let ff = 0; ff < ewd.length; ff++)
+          {
+            if (ff !== ee)
+            {
+              let special_event_ff = ewd[ff];
+              let dwh_ff = special_event_ff.disaster_work_hours;
+              if (!HoursWorkedMustNotOverlap(dwh.DisasterSelectedTimes, dwh_ff.DisasterSelectedTimes))
+              {
+                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                $scope.errorList.push(dwh.DisasterTimesError);
+                return;
+              }
+              if (!HoursWorkedMustNotOverlap(dwh_ff.DisasterSelectedTimes, dwh.DisasterSelectedTimes))
+              {
+                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                $scope.errorList.push(dwh.DisasterTimesError);
+                return;
+              }
+            }
+          }
+        }
+
+        // Check that a disaster work type was selected
+        if (dwh.DisasterWorkHours > 0)
+        {
+          if (dwh.DisasterWorkType.length === 0)
+          {
+            dwh.DisasterTimesError = "You must select the type of work you did for " + special_event.event_name + ".";
+            $scope.errorList.push(dwh.DisasterTimesError);
+            return;
+          }
+          if (dwh.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
+          {
+            dwh.DisasterTimesError = "Please enter a comment that indicates the type of work you did for " + special_event.event_name + ".";
+            $scope.errorList.push(dwh.DisasterTimesError);
+            return;
+          }
+        }
+        else
+        {
+          dwh.DisasterWorkType = "";
+        }
       }
 
+    }
 
-      var dst = $scope.TCTD.disasterSelectedTimes;
-      var wst = $scope.TCTD.selectedTimes;
-      var dLength = dst.length - dst.length % 2;
-      var wLength = wst.length - wst.length % 2;
-      for (var i = 0; i < dLength; i += 2)
+
+    function HoursWorkedMustOverlap(a, b)
+    {
+      // this function will return true if all array elements overlap, and false if any don't
+      let bLength = b.length - b.length % 2; // this ensures we're only working with a mod 2 array length
+      let aLength = a.length - a.length % 2;
+      for (let i = 0; i < bLength; i += 2)
       {
-        var dStart = dst[i];
-        var dEnd = dst[i + 1];
-        var found = false;
-        for (var j = 0; j < wLength; j += 2)
+        let bStart = b[i];
+        let bEnd = b[i + 1];
+        let found = false;
+        for (let j = 0; j < aLength; j += 2)
         {
-          var wStart = wst[j];
-          var wEnd = wst[j + 1];
-          var dStartGood = dStart >= wStart && dStart <= wEnd;
-          var dEndGood = dEnd >= wStart && dEnd <= wEnd;
-          found = dStartGood && dEndGood;
-          if (dStartGood || dEndGood)
+          let aStart = a[j];
+          let aEnd = a[j + 1];
+          let bStartGood = bStart >= aStart && bStart <= aEnd;
+          let bEndGood = bEnd >= aStart && bEnd <= aEnd;
+          found = bStartGood && bEndGood;
+          if (bStartGood || bEndGood)
           {
             break;
           }
         }
         if (!found)
         {
-          $scope.disasterTimeError = "Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.";
-          $scope.errorList.push("Your hours worked and your disaster hours must overlap. You cannot have any disaster hours outside of your hours worked.");
-          return;
+          return false;
         }
       }
-      if ($scope.TCTD.DisasterWorkHours.value > 0) // && $scope.TCTD.Comment.length === 0
-      {
-        if ($scope.TCTD.DisasterWorkType === "")
-        {
-          $scope.disasterTimeError = "You must select the type of work you did for the Disaster.";
-          $scope.errorList.push($scope.disasterTimeError);
-          return;
-        }
-        if ($scope.TCTD.DisasterWorkType === "Not Listed" && $scope.TCTD.Comment.length === 0)
-        {
-          $scope.disasterTimeError = "Please enter a comment that indicates the type of work you did for the disaster.";
-          $scope.errorList.push($scope.disasterTimeError);
-        }
-      }
+      return true;
     }
+
+    function HoursWorkedMustNotOverlap(a, b)
+    {
+      // this function will return true if any array elements do NOT overlap, and false if they do
+      let bLength = b.length - b.length % 2; // this ensures we're only working with a mod 2 array length
+      let aLength = a.length - a.length % 2;
+      for (let i = 0; i < bLength; i += 2)
+      {
+        let bStart = b[i];
+        let bEnd = b[i + 1];
+        for (let j = 0; j < aLength; j += 2)
+        {
+          let aStart = a[j];
+          let aEnd = a[j + 1];
+          let bStartGood = bStart >= aStart && bStart < aEnd;
+          let bEndGood = bEnd > aStart && bEnd <= aEnd;
+          if (bStartGood || bEndGood)
+          {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
 
     function checkForErrors()
     {
@@ -52062,6 +52590,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         $scope.timecard,
         $scope.workDate
       );
+      $scope.NormallyScheduled = null;
+      $scope.ExpandDisasterHours = false;
+      $scope.warningList = [];
+      $scope.errorList = [];
     };
 
     function handleExemptShiftDuration()
@@ -52128,19 +52660,26 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       $scope.toggleOnCall = !$scope.toggleOnCall;
     };
 
-    $scope.checkDisasterWorkType = function ()
-    {
-      // this function is run after a disaster work type is selected.
-      // the comment is only required if they chose "Not Listed" as the option.
-      checkForErrors();
-      if ($scope.errorList.length === 0)
-      {
-        $scope.saveTCTD();
-      }
-    };
+    //$scope.checkDisasterWorkType = function ()
+    //{
+    //  // this function is run after a disaster work type is selected.
+    //  // the comment is only required if they chose "Not Listed" as the option.
+    //  checkForErrors();
+    //  if ($scope.errorList.length === 0)
+    //  {
+    //    $scope.saveTCTD();
+    //  }
+    //};
 
     $scope.calculateTotalHours = function ()
     {
+      if ($scope.showDisaster &&
+        !$scope.ExpandDisasterHours &&
+        $scope.TCTD.WorkHours.value > 0 &&
+        $scope.DisasterHoursRelated)
+      {
+        $scope.ExpandDisasterHours = true;
+      }
       $scope.forceFullTimeList = outsideShortTimes();
       updateLunchTimeList();
       addtimeFunctions.calculateTotalHours(
@@ -54003,7 +54542,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
                 ctrl.showHolidayError = true;
                 for (var j = 0; j < ctl.length; j++)
                 {
-                  if (ctl[j].payCode === '122' || ctl[j].payCode === '134')
+                  if (ctl[j].payCode === '122' || ctl[j].payCode === '800' ||  ctl[j].payCode === '134')
                   {
                     ctrl.showHolidayError = false;
                   }
@@ -54138,6 +54677,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     timestoreNav
   )
   {
+    var ppd = $routeParams.payPeriod;
+    $scope.TaxWitholdingCutoff = moment(ppd, "YYYYMMDD").format("M/D/YYYY") + " 5:00 PM";
     var ctrl = this;
     ctrl.selectedWeekTab = 0;
     //updateLeaveRequests();
@@ -54255,21 +54796,25 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 })();
 
 /* global moment, _ */
-(function () {
-    "use strict";
-    angular.module('timestoreApp')
-        .directive('timecardHeader', function () {
-            return {
-                restrict: 'E',
-                templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
-                scope: {
-                    timecard: '=',
-                    shortheader: '='
-                },
-                controller: function ($scope) {
-                }
-            };
-        });
+(function ()
+{
+  "use strict";
+  angular.module('timestoreApp')
+    .directive('timecardHeader', function ()
+    {
+      return {
+        restrict: 'E',
+        templateUrl: 'TimeCardHeader.tmpl.html', //'app/timecard/TimeCardHeader.tmpl.html',
+        scope: {
+          timecard: '=',
+          shortheader: '='
+        },
+        controller: function ($scope)
+        {
+          $scope.showPayrate = false;
+        }
+      };
+    });
 }());
 /* global moment, _ */
 (function () {
@@ -54772,6 +55317,1260 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           $scope.currentPaystub = paystub;
 
         });
+    }
+
+  }
+
+})();
+/* global moment, _ */
+
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollOverallController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollOverallController]);
+
+
+  function PayrollOverallController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+    
+    console.log('payroll overall process');
+    $scope.payruns = [];
+    $scope.postPayrun = "";
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.StartOrResetInProgress = false;
+    //$scope.showSetUpDetails = false;
+    //$scope.setUpDetails = "";
+    //$scope.setUpCompleted = false;    
+
+    //$scope.showEditDetails = false;
+    //$scope.editDetails = "";
+    //$scope.editCompleted = false;
+
+    //$scope.showChangeDetails = false;
+    //$scope.changeDetails = "";
+    //$scope.changeCompleted = false;
+
+    //$scope.showPostDetails = false;
+    //$scope.postDetails = "";
+    //$scope.postCompleted = false;
+
+    
+    $scope.PostTimestoreData = function ()
+    {
+      $scope.StartOrResetInProgress = true;
+      timestoredata.postTimestoreData($scope.pay_period_ending, $scope.postPayrun)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
+          $scope.StartOrResetInProgress = false;
+        });
+    };
+
+    $scope.ResetPayroll = function ()
+    {
+      $scope.StartOrResetInProgress = true;
+      timestoredata.resetPayroll($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        }, function ()
+        {
+          $scope.StartOrResetInProgress = false;
+        });
+    }
+
+    $scope.EditsCompleted = function ()
+    {
+      timestoredata.editsCompleted($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.GetPayruns = function()
+    {
+      timestoredata.getPayruns($scope.pay_period_ending)
+        .then(function (data)
+        {
+          $scope.payruns = data;
+        })
+    }
+
+    $scope.GetPayruns();
+
+    $scope.ChangesApproved = function ()
+    {
+      timestoredata.changesApproved($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.CancelApproval = function ()
+    {
+      timestoredata.cancelApproval($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.MarkEditsIncomplete = function ()
+    {
+      timestoredata.editsInComplete($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+    $scope.StartPayroll = function ()
+    {
+      $scope.StartOrResetInProgress = true;
+      var target = $scope.currentStatus.target_db;
+      if (target !== "1" && target !== "0")
+      {
+        alert("Missing Target Database selection.");
+        $scope.StartOrResetInProgress = false;
+        return false;
+      }
+      timestoredata.startPayroll($scope.pay_period_ending, $scope.currentStatus.include_benefits, $scope.currentStatus.target_db)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+          $scope.StartOrResetInProgress = false;
+        });
+    }
+
+    $scope.ViewEdits = function ()
+    {
+      timestoreNav.goPayrollEditProcess($routeParams.payPeriod);
+    }
+
+    $scope.ViewChanges = function ()
+    {
+      timestoreNav.goPayrollReviewProcess($routeParams.payPeriod);
+    }
+
+    GetPayrollStatus()
+
+    $scope.selectDatabase = function ()
+    {
+      console.log('selectDatabase', $scope.postDatabase);
+    }
+
+    $scope.selectPayRun = function ()
+    {
+      console.log('selectPayRun');
+    }
+
+    function GetPayrollStatus()
+    {
+      timestoredata.getPayrollStatus($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);          
+        });
+    }
+
+    function HandleCurrentStatus(data)
+    {
+      if (!data)
+      {
+        console.log('payroll status is invalid');
+        return;
+      }
+      $scope.currentStatus = UpdateDisplays(data);
+      console.log('payroll status', $scope.currentStatus);
+    }    
+
+    function UpdateDisplays(data)
+    {
+      data.started_on_display = formatDatetime(data.started_on);
+      data.edits_completed_on_display = formatDatetime(data.edits_completed_on);
+      data.edits_approved_on_display = formatDatetime(data.edits_approved_on);
+      data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
+      return data;
+    }
+
+    function formatDatetime(d)
+    {
+      return d ? new Date(d).toLocaleString('en-us') : "";
+    }
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollEditController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', '$mdDialog', PayrollEditController]);
+
+
+  function PayrollEditController($scope, viewOptions, timestoredata, timestoreNav, $routeParams, $mdDialog)
+  {
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.loading = false;
+    $scope.project_codes = [];
+    $scope.base_payroll_edits = [];
+    $scope.filtered_payroll_edits = [];
+    $scope.filter_employee = "";
+    $scope.filter_department = "";
+    $scope.filter_error_message = "";
+    $scope.error_messages = [];
+    
+    $scope.paycodes = {};
+    $scope.paycodeslist = [];
+    $scope.currentStatus = {};
+    $scope.edit_target = [];
+    // need to get data for this pay period
+    function HandleCurrentStatus(data)
+    {
+      if (!data)
+      {
+        console.log('payroll status is invalid');
+        return;
+      }
+      $scope.currentStatus = UpdateDisplays(data);
+      console.log('payroll status', $scope.currentStatus);
+    }
+
+    $scope.returnToOverallProcess = function ()
+    {
+      timestoreNav.goPayrollOverallProcess($routeParams.payPeriod);
+    }
+
+    function UpdateDisplays(data)
+    {
+      data.started_on_display = formatDatetime(data.started_on);
+      data.edits_completed_on_display = formatDatetime(data.edits_completed_on);
+      data.edits_approved_on_display = formatDatetime(data.edits_approved_on);
+      data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
+      return data;
+    }
+
+    function GetPayrollStatus()
+    {
+      timestoredata.getPayrollStatus($scope.pay_period_ending)
+        .then(function (data)
+        {
+          HandleCurrentStatus(data);
+        });
+    }
+
+
+    function GetProjectCodes()
+    {
+      timestoredata.getProjectCodes($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('project codes', data);
+          $scope.project_codes = data;
+        });
+    }
+
+    function formatDatetime(d)
+    {
+      return d ? new Date(d).toLocaleString('en-us') : "";
+    }
+
+    function getPaycodes()
+    {
+      timestoredata.getPaycodes($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('paycode data', data);
+          $scope.paycodes = data;
+          $scope.paycodeslist = ConvertPaycodeDictionaryToArray(data);
+        });
+    }
+
+    function ConvertPaycodeDictionaryToArray(data)
+    {
+      var list = [];
+      Object.keys(data).forEach(function (k, i)
+      {
+        list.push(data[k]);
+      })
+      //for (const [key, value] of Object.entries(data))
+      //{
+      //  list.push(value);
+      //}
+      list.sort(function (a, b) { return a.pay_code - b.pay_code; })
+      return list;
+    }
+
+    $scope.getPayrollData = function ()
+    {
+      $scope.loading = true;
+      timestoredata.getPayrollEdits($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('payroll data', data);
+          $scope.base_payroll_edits = data;
+          getMessages();
+          $scope.applyFilters();
+          $scope.loading = false;
+        });
+    }
+
+
+    $scope.applyFilters = function ()
+    {
+      let filtered = $scope.base_payroll_edits;
+      if ($scope.filter_employee.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.EmployeeId.toString().indexOf($scope.filter_employee) > -1 ||
+            j.employee.EmployeeName.toUpperCase().indexOf($scope.filter_employee.toUpperCase()) > -1;
+        });
+      }
+
+      if ($scope.filter_department.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.Department.toString().indexOf($scope.filter_department) > -1 ||
+            j.employee.DepartmentName.toUpperCase().indexOf($scope.filter_department.toUpperCase()) > -1;
+        });
+
+      }
+
+      if ($scope.filter_error_message.length > 0)
+      {
+        let m = $scope.filter_error_message.toLowerCase().trim();
+        filtered = filtered.filter(function (j)
+        {
+          return LookForErrorMessage(j, m);
+        });
+      }
+
+      $scope.filtered_payroll_edits = filtered;
+    }
+
+    function LookForErrorMessage(d, m)
+    {
+      //console.log('look for message data', d, m);
+      for (var i = 0; i < d.messages.length; i++)
+      {
+        var em = d.messages[i];
+        if (em.toLowerCase().indexOf(m) > -1) return true;
+      }
+      var pcd = d.payroll_change_data;
+      for (var i = 0; i < pcd.length; i++)
+      {
+        var pcm = pcd[i].messages
+        for (var j = 0; j < pcm.length; j++)
+        {
+
+          if (pcm[j].toLowerCase().indexOf(m) > -1) return true;
+        }
+      }
+      return false;
+    }
+
+    function getMessages()
+    {
+      $scope.fuzzy_messages = [];
+      $scope.error_messages = [];
+      // add some default basic error messages
+      $scope.error_messages.push("Timestore Error: Too many Sick hours used.");
+      $scope.error_messages.push("Timestore Error: Using too many Sick hours");
+      $scope.error_messages.push("Timestore Error: Too many Vacation hours used.");
+      $scope.error_messages.push("Timestore Error: Using too many Vacation hours");
+      $scope.error_messages.push("Timestore Error: Using too many Comp Time Used hours");
+      $scope.error_messages.push("*** TIMECARD RATE NOT = CURRENT RATE");
+      $scope.error_messages.push("Timestore Error: Too many Holiday hours used.")
+
+      $scope.fuzzy_messages.push("Timestore Error: Too many Sick hours used.");
+      $scope.fuzzy_messages.push("Timestore Error: Too many Vacation hours used.");
+      $scope.fuzzy_messages.push("Timestore Error: Using too many Sick hours");
+      $scope.fuzzy_messages.push("Timestore Error: Using too many Vacation hours");
+      $scope.fuzzy_messages.push("Timestore Error: Using too many Comp Time Used hours");
+      $scope.fuzzy_messages.push("*** TIMECARD RATE");
+      $scope.fuzzy_messages.push("Timestore Error: Too many Holiday hours used.")
+      $scope.fuzzy_messages.push("Sick hours banked")
+      
+      for (var i = 0; i < $scope.base_payroll_edits.length; i++)
+      {
+        var pe = $scope.base_payroll_edits[i];
+        for (var j = 0; j < pe.payroll_change_data.length; j++)
+        {
+          var ped = pe.payroll_change_data[j];
+          if (ped.messages.length > 0)
+          {
+            for (var k = 0; k < ped.messages.length; k++)
+            {
+              var m = ped.messages[k];
+
+              var is_fuzzy = false;
+              for (var l = 0; l < $scope.fuzzy_messages.length; l++)
+              {
+                if (m.toLowerCase().indexOf($scope.fuzzy_messages[l].toLowerCase()) > -1)
+                {
+                  is_fuzzy = true;
+                }
+              }
+              if ($scope.error_messages.indexOf(m) === -1 && !is_fuzzy)
+              {
+                $scope.error_messages.push(m);
+              }
+
+
+              //if ($scope.error_messages.indexOf(m) === -1) $scope.error_messages.push(m);
+            }
+          }
+        }
+        for (var j = 0; j < pe.messages.length; j++)
+        {
+          var m = pe.messages[j];
+          var is_fuzzy = false;
+          for (var l = 0; l < $scope.fuzzy_messages.length; l++)
+          {
+            if (m.toLowerCase().indexOf($scope.fuzzy_messages[l].toLowerCase()) > -1)
+            {
+              is_fuzzy = true;
+            }
+          }
+          if ($scope.error_messages.indexOf(m) === -1 && !is_fuzzy)
+          {
+            $scope.error_messages.push(m);
+          }
+        }
+      }
+      $scope.error_messages.sort();//function (a, b) { return a - b; });
+      console.log('error messages list', $scope.error_messages);
+    }
+
+    $scope.getPayrollData();
+    getPaycodes();
+    GetPayrollStatus();
+    GetProjectCodes();
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollReviewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', PayrollReviewController]);
+
+
+  function PayrollReviewController($scope, viewOptions, timestoredata, timestoreNav, $routeParams)
+  {
+    // need to get changes
+    $scope.payPeriod = $routeParams.payPeriod;
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
+
+    $scope.loading = false;
+    $scope.changes_only = true;
+    $scope.base_payroll_edits = [];
+    $scope.filtered_payroll_edits = [];
+    $scope.filter_employee = "";
+    $scope.filter_department = "";
+
+    $scope.GetPaycode = function (c)
+    {
+      if (c.original === null)
+      {
+        return c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')';
+      }
+      return c.original.paycode_detail.title + ' (' + c.original.paycode + ')';
+      //original === null ? c.changed.paycode_detail.title + ' (' + c.changed.paycode + ')' : c.original.paycode_detail.title + ' (' + c.original.paycode + ')'
+    }
+
+    $scope.GetTotalOriginalHours = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.hours : 0); }, 0);
+      return totalHours.toFixed(2);      
+    }
+    $scope.GetTotalChangedHours = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.changed ? v.changed.hours : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+    $scope.GetTotalOriginalAmount = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.original ? v.original.amount : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+    $scope.GetTotalChangedAmount = function (c)
+    {
+      let totalHours = c.reduce(function (j, v) { return j + (v.changed ? v.changed.amount : 0); }, 0);
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalHours = function (paydata)
+    {
+      let totalHours = paydata.reduce(function (j, v) { return j + v.hours; }, 0);
+      //console.log('total hours test', totalHours)
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalAmount = function (paydata)
+    {
+      let totalAmount = paydata.reduce(function (j, v) { return j + v.amount; }, 0);
+      //console.log('total amount test', totalAmount)
+      return totalAmount.toFixed(2);
+
+    }
+
+    $scope.returnToOverallProcess = function ()
+    {
+      timestoreNav.goPayrollOverallProcess($routeParams.payPeriod);
+    }
+
+    $scope.getPayrollData = function ()
+    {
+      $scope.loading = true;
+      timestoredata.getPayrollEdits($scope.pay_period_ending)
+        .then(function (data)
+        {
+          console.log('payroll data', data);
+          $scope.base_payroll_edits = data;
+          $scope.applyFilters();
+          $scope.loading = false;
+        });
+    }
+
+    $scope.applyFilters = function ()
+    {
+      console.log('apply filters');
+      let filtered = $scope.base_payroll_edits;
+      if ($scope.changes_only)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.comparisons.filter(function (c) { return c.has_changed }).length > 0
+        });
+      }
+      if ($scope.filter_employee.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.EmployeeId.toString().indexOf($scope.filter_employee) > -1 ||
+            j.employee.EmployeeName.toUpperCase().indexOf($scope.filter_employee.toUpperCase()) > -1;
+        });
+      }
+
+      if ($scope.filter_department.length > 0)
+      {
+        filtered = filtered.filter(function (j)
+        {
+          return j.employee.Department.toString().indexOf($scope.filter_department) > -1 ||
+            j.employee.DepartmentName.toUpperCase().indexOf($scope.filter_department.toUpperCase()) > -1;
+        });
+
+      }
+      console.log('filtered payroll data', filtered);
+      $scope.filtered_payroll_edits = filtered;
+    }
+
+    $scope.getPayrollData();
+
+  }
+
+})();
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PaystubViewController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', 'paystub_list', '$routeParams', PaystubViewController]);
+
+
+  function PaystubViewController($scope, viewOptions, timestoredata, timestoreNav, paystub_list, $routeParams)
+  {
+    $scope.checkNumber = "";
+    $scope.filter_year = "";
+    $scope.currentPaystub = null;
+    function FilterPaystubList()
+    {
+      //console.log('paystub year', $scope.filter_year);
+      if ($scope.filter_year.length === 0) return $scope.paystubList;
+      
+      var list = $scope.paystubList.filter(function (j) { return j.pay_stub_year.toString() === $scope.filter_year });
+      return list;
+    }
+    //console.log('paystub list', paystub_list);
+    $scope.employeeId = $routeParams.employeeId;
+
+    $scope.paystubList = paystub_list;
+    $scope.filtered_paystub_list = FilterPaystubList();
+    
+    $scope.paystub_years = [];
+    $scope.paystubList.map(function (j)
+    {
+      if ($scope.paystub_years.indexOf(j.pay_stub_year.toString()) === -1)
+      {
+        $scope.paystub_years.push(j.pay_stub_year.toString());
+      }
+    });
+
+    $scope.returnToTimeStore = function ()
+    {
+      timestoreNav.goDefaultEmployee($routeParams.employeeId);
+    };
+
+    if ($routeParams.checkNumber !== undefined && $routeParams.checkNumber !== null)
+    {
+      $scope.checkNumber = $routeParams.checkNumber;
+    }
+    else
+    {
+      $scope.checkNumber = $scope.paystubList[0].check_number;
+    }
+
+    if ($scope.checkNumber.length > 0)
+    {
+      LoadCheck();
+    }
+    else
+    {
+      // Work out no checks here
+    }
+              
+    $scope.FormatDate = function (date)
+    {
+      if (date instanceof Date)
+      {
+        return date.toLocaleDateString('en-us');
+      }
+      var d = new Date(date);
+      return d.toLocaleDateString('en-US');
+    }
+
+    $scope.selectYear = function ()
+    {
+      $scope.filtered_paystub_list = FilterPaystubList();
+    }
+
+    $scope.selectCheck = function ()
+    {
+      LoadCheck();
+    }
+
+    function LoadCheck()
+    {
+      timestoredata.getPayStubByEmployee($scope.employeeId, $scope.checkNumber)
+        .then(function (paystub)
+        {
+          paystub.formatted_pay_period_ending = new Date(paystub.pay_period_ending).toLocaleDateString('en-us');
+          paystub.formatted_pay_date = new Date(paystub.pay_date).toLocaleDateString('en-us');
+          paystub.total_earnings_hours = paystub.earnings.reduce(function (a, b) { return a + b.hours; }, 0).toFixed(2).toString();
+          paystub.total_earnings_amount = paystub.earnings.reduce(function (a, b) { return a + b.amount; }, 0).toFixed(2).toString();
+          paystub.total_deductions_amount = paystub.deductions.reduce(function (a, b) { return a + b.amount }, 0).toFixed(2).toString();
+          paystub.total_deductions_year_to_date = paystub.deductions.reduce(function (a, b) { return a + b.year_to_date_deductions }, 0).toFixed(2).toString();
+          paystub.total_contributions = paystub.deductions.reduce(function (a, b) { return a + b.contributions }, 0).toFixed(2).toString();
+          //console.log('paystub', paystub);
+          $scope.currentPaystub = paystub;
+
+        });
+    }
+
+  }
+
+})();
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("disasterHours", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {          
+          event: "=",
+          fulltimelist: "<",
+          eventerror: "=",
+          calc: "&"
+        },
+        templateUrl: "DisasterHours.directive.tmpl.html",
+        controller: "DisasterHoursDirectiveController"
+      };
+    })
+    .controller("DisasterHoursDirectiveController", ["$scope", DisasterHours]);
+
+  function DisasterHours($scope)
+  {
+    $scope.CheckDisasterWorkType = function ()
+    {
+      console.log('finish checkDisasterWorkType');
+    }
+
+  }
+})();
+
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("payrollData", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {
+          showheader: "<",
+          messageonly: "<",
+          totalonly: "<",
+          message: "<",
+          pd: "=",
+          totalhours: "<",
+          totalamount: "<"
+          //event: "=",
+          //fulltimelist: "<",
+          //eventerror: "=",
+          //calc: "&"
+        },
+        templateUrl: "PayrollData.directive.tmpl.html",
+        controller: "PayrollDataDirectiveController"
+      };
+    })
+    .controller("PayrollDataDirectiveController", ["$scope", PayrollDataController]);
+
+  function PayrollDataController($scope)
+  {
+
+  }
+})();
+
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("editPayrollData", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {
+          employee: "<",
+          finplus_payrates: "<",
+          paycodes: "<",
+          projectcodes: "<",
+          showheader: "<",
+          messageonly: "<",
+          totalonly: "<",
+          message: "<",
+          pd: "=",
+          totalhours: "<",
+          totalamount: "<",
+          validate: "&",
+          remove:"&"
+          //event: "=",
+          //fulltimelist: "<",
+          //eventerror: "=",
+          //calc: "&"
+        },
+        templateUrl: "EditPayrollData.directive.tmpl.html",
+        controller: "EditPayrollDataDirectiveController"
+      };
+    })
+    .controller("EditPayrollDataDirectiveController", ["$scope", EditPayrollDataController]);
+
+
+
+  function EditPayrollDataController($scope)
+  {
+    $scope.disablehours = true;
+    $scope.disablepayrate = true;
+    $scope.disableamount = true;
+
+    $scope.RecalculateAmount = function ()
+    {
+      if ($scope.pd.paycode_detail.pay_type === 'H')
+      {
+        $scope.pd.amount = parseFloat(($scope.pd.hours * $scope.pd.payrate).toFixed(2));
+      }
+      $scope.validate();
+    }
+
+    $scope.UpdatePaycodeDetail = function ()
+    {
+       
+      let pc = $scope.paycodes.filter(function (j) { return j.pay_code === $scope.pd.paycode });
+      if (pc && pc.length > 0)
+      {
+        $scope.pd.paycode_detail = pc[0];
+        let d = $scope.pd.paycode_detail;
+        console.log('update paycode detail', d);
+        UpdateDefaults();
+      }
+      $scope.validate()
+    }
+
+    function UpdateDefaults()
+    {
+      var d = $scope.pd.paycode_detail;
+      let employee_classify = $scope.employee.Classify;
+      $scope.pd.classify = d.default_classify.length > 0 ? d.default_classify : employee_classify;
+      
+      switch (d.time_type)
+      {
+        case 'A':
+          $scope.pd.payrate = 0; // locked
+          $scope.pd.hours = 1; // locked
+          $scope.pd.amount = 0; // this will be variable 
+
+          break;
+
+        default:
+          switch (d.pay_type)
+          {
+            case 'A':
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 0; // locked
+              $scope.pd.amount = 0; // this will be variable 
+              break;
+
+            case 'P':
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 1; // locked
+              $scope.pd.amount = 0; // this will be variable 
+              break;
+
+            case 'H':
+              // use their regular payrate
+              var new_payrate = parseFloat(($scope.employee.Base_Payrate * d.percent_x).toFixed(5));
+              $scope.pd.payrate = new_payrate;
+              if (!$scope.pd.hours)
+              {
+                $scope.pd.hours = 0;
+              }
+              if (!$scope.pd.hours || !$scope.pd.payrate)
+              {
+                $scope.pd.amount = 0; // amount will be hours * payrate
+              }
+              else
+              {
+                $scope.pd.amount = parseFloat(($scope.pd.payrate * $scope.pd.hours).toFixed(2)); // amount will be hours * payrate
+              }
+
+              break;
+
+            case 'U':
+              // default hours to 1
+              // default payrate to 0 
+              // default amount to percent_x
+              $scope.pd.payrate = 0; // locked
+              $scope.pd.hours = 1; // locked
+              $scope.pd.amount = d.percent_x;
+              // all fields except the amount should be locked.
+              break;
+          }
+      }
+      UpdatePayFields();
+
+    }
+
+    function UpdatePayFields()
+    {
+      $scope.disablehours = true;
+      $scope.disablepayrate = true;
+      $scope.disableamount = true;
+     
+      if ($scope.pd && $scope.pd.paycode_detail)
+      {
+        switch ($scope.pd.paycode_detail.time_type)
+        {
+          case 'A':
+            $scope.disableamount = false;
+            $scope.disablehours = false;
+            $scope.disablepayrate = false;
+            break;
+
+          default:
+            switch ($scope.pd.paycode_detail.pay_type)
+            {
+              case 'P':
+                $scope.disableamount = false;
+                break;
+
+              case 'H':
+                $scope.disableamount = false;
+                $scope.disablehours = false;
+                $scope.disablepayrate = false;
+
+                break;
+
+              case 'U':
+                $scope.disableamount = false;
+                break;
+            }
+        }
+      }
+
+    }
+
+    $scope.DeleteData = function ()
+    {
+      $scope.pd.delete = true;
+      $scope.remove();
+    }
+
+    UpdatePayFields();
+  }
+})();
+
+/* global moment, _ */
+(function ()
+{
+  "use strict";
+  angular
+    .module("timestoreApp")
+    .directive("payrollEditGroup", function ()
+    {
+      return {
+        restrict: "E",
+        scope: {       
+          ped: "=",
+          paycodes: "<",
+          projectcodes: "<"
+          //event: "=",
+          //fulltimelist: "<",
+          //eventerror: "=",
+          //calc: "&"
+        },
+        templateUrl: "PayrollEditGroup.directive.tmpl.html",
+        controller: "PayrollEditGroupDirectiveController"
+      };
+    })
+    .controller("PayrollEditGroupDirectiveController", ["$scope", "$routeParams", "timestoredata", "$mdDialog", '$anchorScroll', PayrollEditGroupController]);
+
+  function PayrollEditGroupController($scope, $routeParams, timestoredata, $mdDialog, $anchorScroll)
+  {
+    $scope.payPeriod = $routeParams.payPeriod;
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
+    $scope.storeYOffset = 0;
+    
+    $scope.GetTotalHours = function (paydata)
+    {
+      let totalHours = paydata.reduce(function (j, v) { return j + v.hours;  }, 0);
+      //console.log('total hours test', totalHours)
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalAmount = function (paydata)
+    {
+      let totalAmount = paydata.reduce(function (j, v) { return j + v.amount; }, 0);
+      //console.log('total amount test', totalAmount)
+      return totalAmount.toFixed(2);
+    }
+
+    $scope.ShowEdit = function (ev)
+    {
+      $scope.storeYOffset = $anchorScroll.yOffset;
+      $anchorScroll.yOffset = 0;
+      $anchorScroll();
+      $mdDialog.show({
+        locals: {
+          edit_data: $scope.ped,
+          paycodes: $scope.paycodes,
+          projectcodes: $scope.projectcodes
+        },
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        fullscreen: true,
+        clickOutsideToClose: false,
+        templateUrl: 'PayrollEditDialog.tmpl.html',
+        controller: 'PayrollEditDialogController'
+      }).then(function ()
+      {
+        console.log('after save clicked ped', $scope.ped);
+
+        timestoredata.postPayrollChanges($scope.pay_period_ending, $scope.ped.employee.EmployeeId, $scope.ped.payroll_change_data)
+          .then(function (data)
+          {
+            console.log('postpayrollchange data', data);
+            $scope.ped = data;
+          });
+        document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
+      }, function ()
+        {
+          timestoredata.getPayrollEditsByEmployee($scope.pay_period_ending, $scope.ped.employee.EmployeeId)
+            .then(function (data)
+            {
+              console.log('payroll change cancelled', data);
+              $scope.ped = data;
+            });
+        document.getElementById("editgroup" + $scope.ped.employee.EmployeeId.toString()).scrollIntoView();
+      });
+    }
+
+  }
+})();
+
+(function ()
+{
+  "use strict";
+
+  angular.module('timestoreApp')
+    .controller('PayrollEditDialogController',
+      ['$scope', 'viewOptions', 'timestoredata', 'timestoreNav', '$routeParams', '$mdDialog', 'edit_data', 'paycodes', 'projectcodes', PayrollEditDialogController]);
+
+
+  function PayrollEditDialogController($scope,
+    viewOptions,
+    timestoredata,
+    timestoreNav,
+    $routeParams,
+    $mdDialog,
+    edit_data,
+    paycodes,
+    projectcodes)
+  {
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
+    $scope.validation_errors = "";
+    $scope.edit_data = edit_data;
+    $scope.paycodes = paycodes;
+    $scope.project_codes = projectcodes;
+    $scope.defaultview = "default";
+    $scope.default_display = [];
+    UpdateDefaultDisplay($scope.edit_data.finplus_payrates);
+    console.log('payroll edit dialog edit data', $scope.edit_data);
+    $scope.hide = function ()
+    {
+      // this is the save function
+      $scope.ValidateChanges();
+      $mdDialog.hide();
+    }
+
+    $scope.cancel = function ()
+    {
+      $mdDialog.cancel();
+    }
+
+    $scope.ValidateChanges = function()
+    {
+      let data_changed = $scope.edit_data.payroll_change_data.length !== $scope.edit_data.base_payroll_data.length;
+      $scope.validation_errors = "";
+      // Some rules:
+      // Paycode, Payrate, ProjectCode combinations must be unique to each item in the payroll_changes array
+      for (let i = 0; i < $scope.edit_data.payroll_change_data.length; i++)
+      {
+        let pcdi = $scope.edit_data.payroll_change_data[i];
+        for (let j = 0; j < $scope.edit_data.payroll_change_data.length; j++)
+        {
+          if (i != j)
+          {
+            let pcdj = $scope.edit_data.payroll_change_data[j];
+            if (pcdi.paycode === pcdj.paycode &&
+              pcdi.payrate === pcdj.payrate &&
+              pcdi.project_code === pcdj.project_code)
+            {
+              // houston we have a problem
+              $scope.validation_errors = "You cannot add a row that is has the same paycode, payrate, and project code as another row.  Instead, increase the hours or change the hours of the original row accordingly";
+              return;
+            }
+          }
+        }
+      }
+
+      if (!CheckForSavedJustifications() && !data_changed)
+      {
+        for (let a = 0; a < $scope.edit_data.base_payroll_data.length; a++)
+        {
+          let match_found = false;
+          let pcda = $scope.edit_data.base_payroll_data[a];
+          for (let i = 0; i < $scope.edit_data.payroll_change_data.length; i++)
+          {
+            let pcdi = $scope.edit_data.payroll_change_data[i];
+            if (pcda.paycode === pcdi.paycode &&
+              pcda.hours === pcdi.hours &&
+              pcda.payrate === pcdi.payrate &&
+              pcda.amount === pcdi.amount &&
+              pcda.classify === pcdi.classify &&
+              pcda.project_code === pcdi.project_code)
+            {
+              match_found = true;
+              break;
+            }
+          }
+          if (!match_found)
+          {
+            data_changed = true;
+            break;
+          }
+        }
+
+      }
+
+      if (!CheckForSavedJustifications() && data_changed)
+      {
+        $scope.validation_errors = "If any changes are made, a justification must be added.";
+      }
+    }
+
+    function CheckForSavedJustifications()
+    {
+      if ($scope.edit_data.justifications.length === 0) return false;
+      return $scope.edit_data.justifications.filter(function (j) { return j.id > -1 }).length > 0;
+    }
+
+    $scope.RevertAllChanges = function ()
+    {
+      $scope.edit_data.payroll_change_data.splice(0, $scope.edit_data.payroll_change_data.length);
+      for (var i = 0; i < $scope.edit_data.base_payroll_data; i++)
+      {
+        var e = $scope.edit_data.base_payroll_data[i];
+        $scope.edit_data.payroll_change_data.push(Object.assign({}, e));
+      }
+      //for (let e of $scope.edit_data.base_payroll_data)
+      //{
+      //  $scope.edit_data.payroll_change_data.push(Object.assign({}, e));
+      //}
+      $scope.ValidateChanges()
+    }
+
+    $scope.UpdateView = function ()
+    {
+      if ($scope.defaultview === "default")
+      {
+        UpdateDefaultDisplay($scope.edit_data.finplus_payrates);
+      }
+      else
+      {
+        getCheckData($scope.edit_data.employee.EmployeeId, $scope.defaultview);
+      }
+    }
+
+    $scope.AddPayrollChange = function ()
+    {
+      
+      let e = $scope.edit_data.employee;
+
+      let data = {
+        amount: 0,
+        changed_by: "",
+        changed_on: null,
+        classify: e.Classify,
+        employee_id: e.EmployeeId,
+        hours: 0,
+        messages: [],
+        orgn: e.Department,
+        paycode: "",
+        paycode_detail: {},
+        payrate: e.Base_Payrate,
+        project_code: ""
+      }
+      $scope.edit_data.payroll_change_data.push(data);
+      $scope.ValidateChanges();
+    }
+
+    function UpdateDefaultDisplay(data)
+    {
+      $scope.default_display.splice(0, $scope.default_display.length);
+      for (var i = 0; i < data.length; i++)      
+      {
+        var d = data[i];
+        $scope.default_display.push({
+          paycode: d.paycode,
+          hours: d.hours,
+          payrate: d.payrate,
+          amount: d.amount,
+          classify: d.classify
+        });
+      }
+    }
+
+    function getCheckData(employee_id, check_number)
+    {
+      timestoredata.getCheckPay(employee_id, check_number)
+        .then(function (data)
+        {
+          UpdateDefaultDisplay(data);
+        });
+    }
+
+    $scope.GetTotalHours = function (paydata)
+    {
+      let totalHours = paydata.reduce(function (j, v) { return j + v.hours; }, 0);
+      //console.log('total hours test', totalHours)
+      return totalHours.toFixed(2);
+    }
+
+    $scope.GetTotalAmount = function (paydata)
+    {
+      let totalAmount = paydata.reduce(function (j, v) { return j + v.amount; }, 0);
+      //console.log('total amount test', totalAmount)
+      return totalAmount.toFixed(2);
+    }
+
+    $scope.RemoveDeleted = function ()
+    {
+      let d = $scope.edit_data.payroll_change_data.filter(function (j) { return !j.delete; });
+      $scope.edit_data.payroll_change_data = d;
+      $scope.ValidateChanges();
+    }
+
+    $scope.AddJustification = function ()
+    {
+      var j = {
+        id: ($scope.edit_data.justifications.length + 1) * -1,
+        pay_period_ending: $scope.edit_data.pay_period_ending,
+        employee_id: $scope.edit_data.employee.EmployeeId,
+        justification: "",
+        added_on: new Date(),
+        added_by: ""
+      }
+      console.log('added justification', j);
+      $scope.edit_data.justifications.push(j);
+    }
+
+    $scope.SaveJustifications = function ()
+    {
+      timestoredata.saveJustifications($scope.pay_period_ending, $scope.edit_data.employee.EmployeeId, $scope.edit_data.justifications)
+        .then(function (data)
+        {
+          if (!data) return;
+          $scope.edit_data.justifications = data;
+          $scope.ValidateChanges();
+        }, function ()
+          {
+            $scope.ValidateChanges();
+        })
+      
+    }
+
+    $scope.DeleteJustification = function (id)
+    {
+      if (id < 0)
+      {
+        $scope.edit_data.justifications = $scope.edit_data.justifications.filter(function (j) { return j.id !== id });
+      }
+      else
+      {
+        timestoredata.deleteJustification($scope.pay_period_ending, id)
+          .then(function (data)
+          {
+            if (data)
+            {
+              // lets remove it from the list
+              $scope.edit_data.justifications = $scope.edit_data.justifications.filter(function (j) { return j.id !== id });
+            }
+          })
+      }
+      $scope.ValidateChanges();
     }
 
   }

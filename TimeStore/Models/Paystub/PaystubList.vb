@@ -17,7 +17,7 @@ Namespace Models.Paystub
       dp.Add("@employee_id", employee_id)
 
       Dim Query As String = $"
-          SELECT
+        SELECT
           H.empl_no employee_id
           ,LTRIM(RTRIM(H.check_no)) check_number
           ,iss_date check_date
@@ -37,19 +37,28 @@ Namespace Models.Paystub
 
     Public Shared Function Get_All_Recent_Paystubs() As List(Of PaystubList)
       Dim Query As String = $"
-        DECLARE @check_date DATE = (SELECT MAX(iss_date) FROM checkhis);
+        DECLARE @check_date DATE = DATEADD(MONTH, -1, GETDATE());
         SELECT
-          empl_no employee_id
-          ,LTRIM(RTRIM(check_no)) check_number
-          ,iss_date check_date
-          ,trans_date transaction_date
-          ,start_date pay_period_start_date
-          ,YEAR(iss_date) pay_stub_year      
-        FROM checkhis
+          H.empl_no employee_id
+          ,LTRIM(RTRIM(H.check_no)) check_number
+          ,H.iss_date check_date
+          ,H.trans_date transaction_date
+          ,H.start_date pay_period_start_date
+          ,YEAR(H.iss_date) pay_stub_year      
+          ,CASE WHEN ISNULL(H.man_void, '') = 'V' THEN 1 ELSE 0 END is_voided
+        FROM checkhis H
+        INNER JOIN check_ytd Y ON H.empl_no = Y.empl_no AND H.check_no = Y.check_no
         WHERE
-          iss_date = @check_date
+          H.iss_date >= @check_date
+          AND ISNULL(H.man_void, '') != 'V'
         ORDER BY
-          empl_no DESC"
+          H.empl_no DESC
+
+        SELECT
+        *
+        FROM payrate
+        WHERE
+          status_x = 'A'"
       Return Get_Data(Of PaystubList)(Query, ConnectionStringType.FinPlus)
     End Function
 

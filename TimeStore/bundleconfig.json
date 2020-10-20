@@ -31,7 +31,16 @@
         "app/timecard/TimeList.directive.tmpl.html",
         "app/calendar/CalendarView.controller.tmpl.html",
         "app/calendar/LeaveCalendar.directive.tmpl.html",
-        "app/paystub/PaystubView.controller.tmpl.html"
+        "app/paystub/PaystubView.controller.tmpl.html",
+        "app/payroll/PayrollOverallProcess.tmpl.html",
+        "app/payroll/PayrollEditProcess.tmpl.html",
+        "app/payroll/PayrollReviewProcess.tmpl.html",
+        "app/paystub/PaystubView.controller.tmpl.html",
+        "app/addtime/DisasterHours.directive.tmpl.html",
+        "app/payroll/PayrollData.directive.tmpl.html",
+        "app/payroll/EditPayrollData.directive.tmpl.html",
+        "app/payroll/PayrollEditGroup.directive.tmpl.html",
+        "app/payroll/PayrollEditDialog.tmpl.html"
       ],
         "minify": {
             "enabled": true
@@ -97,7 +106,16 @@
         "app/timecard/TimeList.directive.js",
         "app/calendar/CalendarView.controller.js",
         "app/calendar/LeaveCalendar.directive.js",
-        "app/paystub/PaystubView.controller.js"
+        "app/paystub/PaystubView.controller.js",
+        "app/payroll/PayrollOverallProcess.Controller.js",
+        "app/payroll/PayrollEditProcess.Controller.js",
+        "app/payroll/PayrollReviewProcess.Controller.js",
+        "app/paystub/PaystubView.controller.js",
+        "app/addtime/DisasterHours.directive.js",
+        "app/payroll/PayrollData.directive.js",
+        "app/payroll/EditPayrollData.directive.js",
+        "app/payroll/PayrollEditGroup.directive.js",
+        "app/payroll/PayrollEditDialog.controller.js"
       ],
         "minify": {
             "enabled": true

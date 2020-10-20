@@ -1,0 +1,117 @@
+﻿<script type="text/ng-template" id="DisasterHours.directive.tmpl.html">
+
+
+  <div layout="row"
+       layout-align="center center"
+       layout-wrap
+       flex="100">
+    <div style="margin-top: .75em; margin-bottom: .75em;"
+         class="short-toolbar my-primary"
+         flex="100"
+         layout="row"
+         layout-align="center center">
+      <span flex="5"></span>
+      <h5>
+        Work Hours For {{event.event_name}}
+      </h5>
+    </div>
+    <div layout="row"
+         flex="35"
+         layout-padding
+         layout-align="center center">
+      <md-input-container flex="100">
+        <label>Hours Worked on {{event.event_name}}</label>
+        <md-select md-on-close="calc()"
+                   flex="80"
+                   multiple
+                   ng-model="event.disaster_work_hours.DisasterSelectedTimes"
+                   placeholder="Hours Worked on {{event.event_name}}"
+                   class="bigpaddingbottom">
+          <md-option ng-repeat="t in fulltimelist track by t.index"
+                     ng-value="t.index">
+            <span class="md-text">
+              {{t.display}}
+            </span>
+          </md-option>
+        </md-select>
+      </md-input-container>
+    </div>
+
+    <div layout="row"
+         layout-align="center center"
+         layout-gt-md="row"
+         layout-align-gt-md="space-around center"
+         layout-wrap
+         flex="65">
+      <!--<md-button ng-click="CopyWorkHoursToDisasterWorkHours()"
+                 class="md-primary md-raised">
+        Copy Work Hours
+      </md-button>-->
+      <md-input-container class="shortpaddingbottom shortInput">
+        <label class="longerLabel"
+               style="width: auto;">Hours Worked</label>
+        <input ng-model="event.disaster_work_hours.DisasterWorkHours"
+               type="number"
+               ng-disabled="true" />
+      </md-input-container>
+      <div layout="row"
+           layout-align="center center"
+           layout-padding
+           flex="40">
+        <md-input-container flex="100">
+          <label>Disaster Work Type</label>
+          <md-select md-on-close="calc()"
+                     flex="100"
+                     ng-model="event.disaster_work_hours.DisasterWorkType"
+                     placeholder="Work Type for {{event.event_name}}"
+                     class="bigpaddingbottom">
+            <md-option value="">
+              Select Work Type
+            </md-option>
+            <md-option value="Debris Pickup">
+              Debris Pickup
+            </md-option>
+            <md-option value="Debris Monitoring">
+              Debris Monitoring
+            </md-option>
+            <md-option value="Call Center">
+              Call Center
+            </md-option>
+            <md-option value="Working in EOC">
+              Working in EOC
+            </md-option>
+            <md-option value="Building Repair">
+              Building Repair
+            </md-option>
+            <md-option value="Road Repair">
+              Road Repair
+            </md-option>
+            <md-option value="Other Repair">
+              Other Repair
+            </md-option>
+            <md-option value="Prep for Storm">
+              Prep for Storm
+            </md-option>
+            <md-option value="Not Listed">
+              Not Listed
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+    </div>
+    <div ng-show="event.disaster_work_hours.DisasterTimesError.length > 0"
+         layout-padding
+         layout="row"
+         layout-wrap
+         flex="100">
+      <p style="margin-top: .5em;"
+         flex="100"
+         layout="row"
+         class="warn">
+        {{ event.disaster_work_hours.DisasterTimesError }}
+      </p>     
+      
+    </div>
+  </div>
+
+</script>

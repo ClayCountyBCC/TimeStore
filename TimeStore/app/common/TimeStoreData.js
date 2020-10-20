@@ -244,6 +244,18 @@
           .format("YYYYMMDD");
       }
 
+      function checkNewPayPeriod()
+      {
+        // this function will return true if it is the first Wednesday, Thursday, or Friday of 
+        // a new pay period.
+        var pps = moment(getPayPeriodStart(), "YYYYMMDD");
+        var wednesday = pps.format("YYYYMMDD");
+        var thursday = moment(getPayPeriodStart(), "YYYYMMDD").add(1, "days").format("YYYYMMDD");
+        var friday = moment(getPayPeriodStart(), "YYYYMMDD").add(2, "days").format("YYYYMMDD");        
+        var today = moment().startOf("day").format("YYYYMMDD");
+        return today === wednesday || today === thursday || today === friday;
+      }
+
       var getGenericTimeData = function (startDate, endDate, fieldsToDisplay)
       {
         var x = {
@@ -431,6 +443,8 @@
           });
       };
 
+
+
       var getUnapproved = function (ppdIndex)
       {
         var p = { ppdIndex: ppdIndex };
@@ -583,6 +597,216 @@
           });
       };
 
+      var getPayrollStatus = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetStatus?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var startPayroll = function (pay_period_ending, include_benefits, target_db)
+      {
+        return $http
+          .get("API/Payroll/Start?PayPeriodEnding=" + pay_period_ending + "&IncludeBenefits=" + include_benefits.toString() + "&TargetDB=" + target_db, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var resetPayroll = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Reset?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      };
+
+      var getPayrollEdits = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/PayrollEdits?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPaycodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/Paycodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getCheckPay = function (employee_id, check_number)
+      {
+        return $http
+          .get("API/Payroll/GetCheck?EmployeeId=" + employee_id + "&CheckNumber=" + check_number, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postPayrollChanges = function (pay_period_ending, employee_id, changes)
+      {
+        return $http
+          .post("API/Payroll/SaveChanges?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, changes,
+            {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPayrollEditsByEmployee = function (pay_period_ending, employee_id)
+      {
+        return $http
+          .get("API/Payroll/PayrollEditsByEmployee?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id, 
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
+
+      var saveJustifications = function (pay_period_ending, employee_id, justifications)
+      {
+        return $http
+          .post("API/Payroll/SaveJustifications?PayPeriodEnding=" + pay_period_ending + "&EmployeeId=" + employee_id.toString(), justifications,
+            {
+              cache: false
+            })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var deleteJustification = function (pay_period_ending, justification_id)
+      {
+        return $http
+          .get("API/Payroll/DeleteJustification?PayPeriodEnding=" + + pay_period_ending + "&id=" + justification_id, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getProjectCodes = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetProjectCodes?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var changesApproved = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/ChangesApproved?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var editsCompleted = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/EditsCompleted?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var editsInComplete = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/EditsInComplete?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var cancelApproval = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/CancelApproval?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var getPayruns = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetPayruns?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+      var postTimestoreData = function (pay_period_ending, payrun)
+      {
+        return $http
+          .get("API/Payroll/PostTimestoreDataToFinplus?PayPeriodEnding=" + pay_period_ending + "&Payrun=" + payrun, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
+
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
         getPayStubByEmployee: getPayStubByEmployee,
@@ -624,7 +848,25 @@
         saveCompTimeEarned: saveCompTimeEarned,
         getDeptLeaveRequests: getDeptLeaveRequests,
         getHolidays: getHolidays,
-        getBirthdays: getBirthdays
+        getBirthdays: getBirthdays,
+        checkNewPayPeriod: checkNewPayPeriod,
+        getPayrollStatus: getPayrollStatus,
+        startPayroll: startPayroll,
+        resetPayroll: resetPayroll,
+        getPayrollEdits: getPayrollEdits,
+        getPaycodes: getPaycodes,
+        getCheckPay: getCheckPay,
+        postPayrollChanges: postPayrollChanges,
+        deleteJustification: deleteJustification,
+        saveJustifications: saveJustifications,
+        getProjectCodes: getProjectCodes,
+        editsCompleted: editsCompleted,
+        changesApproved: changesApproved,
+        editsInComplete: editsInComplete,
+        cancelApproval: cancelApproval,
+        getPayruns: getPayruns,
+        postTimestoreData: postTimestoreData,
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee
       };
     }
   ]);

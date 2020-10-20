@@ -29,7 +29,7 @@ Namespace Controllers
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
 #If DEBUG Then
-      'UserName = "wardj"
+      'UserName = "reyese"
 #End If
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
 
@@ -85,7 +85,8 @@ Namespace Controllers
       Dim jnr As New JsonNetResult
       Try
         Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
-        If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        If Timecard_Access.Check_Access_To_Paystub(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        'If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         Dim paystub_list As List(Of Paystub.PaystubList) = Paystub.PaystubList.Get_Paystubs_By_Employee(eidToUse)
         jnr.Data = paystub_list
         'jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
@@ -102,7 +103,8 @@ Namespace Controllers
       Dim jnr As New JsonNetResult
       Try
         Dim eidToUse As Integer = AD_EmployeeData.GetEmployeeIDFromAD(Request.LogonUserIdentity.Name)
-        If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        If Timecard_Access.Check_Access_To_Paystub(eidToUse, EmployeeId) Then eidToUse = EmployeeId
+        'If Timecard_Access.Check_Access_To_EmployeeId(eidToUse, EmployeeId) Then eidToUse = EmployeeId
         Dim current_paystub As Paystub.Paystub = Paystub.Paystub.Get_Paystub(eidToUse, CheckNumber)
         jnr.Data = current_paystub
         'jnr.JsonRequestBehavior = JsonRequestBehavior.AllowGet
@@ -340,7 +342,7 @@ Namespace Controllers
               If (myEID = AD.EmployeeID Or myEID = AD.Initial_Approval_By_EmployeeID) Then
                 ' You can't approve your own final approval
                 jnr.Data = "Error: You can't approve your own time or time you have initially approved in this manner."
-              ElseIf Not mytca.Check_Access_To_EmployeeId(AD.EmployeeID) OrElse
+              ElseIf Not myTca.Check_Access_To_EmployeeId(AD.EmployeeID) OrElse
                       myTca.DepartmentsToApprove.Contains("VIEW") OrElse
                       myTca.DepartmentsToApprove.Contains("LEAVE") Then
                 jnr.Data = "Error: Unauthorized"
@@ -413,10 +415,10 @@ Namespace Controllers
                  Order By t.employeeID Descending
                  Select t).ToList
         Else
-            adl = (From t In tmpTC
-                   Order By t.departmentNumber, t.employeeID
-                   Where t.employeeID <> tca.EmployeeID
-                   Select t).ToList
+          adl = (From t In tmpTC
+                 Order By t.departmentNumber, t.employeeID
+                 Where t.employeeID <> tca.EmployeeID
+                 Select t).ToList
         End If
 
       Else
@@ -757,7 +759,7 @@ Namespace Controllers
         End If
 
       End If
-        Dim bUseDept As Boolean = (deptId.Length > 0)
+      Dim bUseDept As Boolean = (deptId.Length > 0)
       Dim tca As Timecard_Access = GetTimeCardAccess(Request.LogonUserIdentity.Name)
       Dim jnr As New JsonNetResult
 

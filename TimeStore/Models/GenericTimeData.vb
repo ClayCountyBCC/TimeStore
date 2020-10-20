@@ -82,7 +82,9 @@
 
       Admin = tctd.AdminHours ' This needs to be broken out into the ones below:
       AdminBereavement = tctd.AdminBereavement
-      AdminDisaster = tctd.AdminDisaster
+
+      AdminDisaster = (From t In tctd.DisasterWorkHoursList
+                       Select t.DisasterAdminHours).Sum 'tctd.AdminDisaster ' old
       AdminJuryDuty = tctd.AdminJuryDuty
       AdminMilitaryLeave = tctd.AdminMilitaryLeave
       AdminWorkersComp = tctd.AdminWorkersComp

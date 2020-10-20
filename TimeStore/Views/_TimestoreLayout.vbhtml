@@ -1,9 +1,12 @@
 ﻿@*@Modeltype TimeStore.Models.Timecard_Access*@
 @code
-  Dim LatestVer As String = "V202007211453"
+  Dim LatestVer As String = "V202009290700"
   Dim MaterialVer As String = "1.4" ' was 1.1
   Dim AngularVer As String = "1.5.11" ' was 1.4.2
-
+  Dim LogoText As String = "Timestore"
+  If Not IsProduction() Then
+    LogoText &= " QA"
+  End If
 end code
 <!DOCTYPE html>
 <html ng-app="timestoreApp">
@@ -27,7 +30,7 @@ end code
         <a style="cursor: pointer;"
            class="md-display-1"
            ng-click="switchUser()">
-          Timestore
+          @LogoText
           <md-tooltip md-direction="bottom">
             click here to go to the home menu
           </md-tooltip>
@@ -123,9 +126,14 @@ end code
               Control Access
             </md-button>
           </md-list-item>
-          <md-list-item>
+          @*<md-list-item>
             <md-button ng-click="viewFinanceTools()">
               Finance Tools
+            </md-button>
+          </md-list-item>*@
+          <md-list-item>
+            <md-button ng-click="viewPayrollProcess()">
+              Payroll Process
             </md-button>
           </md-list-item>
           <md-list-item>

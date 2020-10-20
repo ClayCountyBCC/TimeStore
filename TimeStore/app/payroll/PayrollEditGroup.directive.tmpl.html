@@ -1,0 +1,53 @@
+﻿<script type="text/ng-template" id="PayrollEditGroup.directive.tmpl.html">
+
+  <div id="editgroup{{ped.employee.EmployeeId}}"
+       layout="row"
+       layout-wrap
+       style="background-color: #efefef;"
+       flex="100">
+    <div style="padding-left: 1em; padding-right: 1em;"
+         class="my-accent"
+         layout="row"
+         layout-align="start center"
+         layout-wrap
+         flex="100">
+
+      <span flex="30">{{ped.employee.DepartmentName}} ({{ped.employee.Department}}) </span>
+      <a flex="20"
+         style="padding-left: 1em; color: white;"
+         target="_blank"
+         rel="nofollow noopener"
+         href="#/e/{{ped.employee.EmployeeId}}/ppd/{{payPeriod}}">
+        {{ped.employee.EmployeeName}} ({{ped.employee.EmployeeId}})<!--</span><span flex="20" style="padding-left: 1em;">-->
+      </a>
+      <span flex="10">{{ ped.employee.isFulltime ? 'Full time' : 'Part time';}}</span>
+      <span flex="10">{{ ped.employee.IsExempt ? 'Exempt' : 'Non Exempt';}}</span>
+
+      <md-button ng-click="ShowEdit($event)"
+                 class="md-primary md-raised hide-print">
+        Edit
+      </md-button>
+    </div>
+    <div style="padding: 1em 1em 1em 1em;"
+         flex="100">
+      <payroll-data showheader="true"></payroll-data>
+      <payroll-data ng-repeat="pcd in ped.payroll_change_data track by $index"
+                    pd="pcd"
+                    flex="100">
+      </payroll-data>
+      <payroll-data ng-repeat="m in ped.messages track by $index"
+                    messageonly="true"
+                    message="m"
+                    flex="100">
+      </payroll-data>
+      <payroll-data flex="100"
+                    totalonly="true"
+                    totalhours="GetTotalHours(ped.payroll_change_data)"
+                    totalamount="GetTotalAmount(ped.payroll_change_data)">
+
+      </payroll-data>
+    </div>
+
+  </div>
+  
+</script>

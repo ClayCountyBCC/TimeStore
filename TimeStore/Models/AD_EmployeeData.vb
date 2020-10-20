@@ -40,7 +40,7 @@ Namespace Models
 
     Public Shared Function GetCachedEmployeeDataFromAD() As Dictionary(Of Integer, AD_EmployeeData)
       Dim CIP As New CacheItemPolicy With {
-      .AbsoluteExpiration = Now.AddHours(12)
+      .AbsoluteExpiration = Now.AddHours(2)
     }
       Dim key As String = "employee_ad_data"
       Dim aded As Dictionary(Of Integer, AD_EmployeeData) = myCache.GetItem(key, CIP)

@@ -1,0 +1,113 @@
+﻿<script type="text/ng-template" id="PayrollData.directive.tmpl.html">
+
+  <div ng-if="showheader"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+    <span style="text-align: left;"
+          flex="25">
+      Pay Code
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      Hours
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Pay Rate
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      Amount
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      Classify
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      Project Code
+    </span>
+  </div>
+  <hr ng-if="showheader"
+      flex="100" />
+  <div ng-if="!showheader && !messageonly && !totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      {{pd.paycode_detail.title}} ({{pd.paycode}})
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{pd.hours.toFixed(2)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.payrate.toFixed(5)}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{pd.amount.toFixed(2)}}
+    </span>
+    <span style="text-align: center;"
+          flex="15">
+      {{pd.classify}}
+    </span>
+    <span style="text-align: center;"
+          flex="20">
+      {{pd.project_code}}
+    </span>
+  </div>
+  <div style="border-top: 1px dotted #040404; margin-top: .25em;"
+       ng-if="totalonly"
+       layout="row"
+       layout-align="start center"
+       flex="100">
+
+    <span style="text-align: left;"
+          flex="25">
+      TOTAL
+    </span>
+    <span style="text-align: right;"
+          flex="10">
+      {{totalhours}}
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      
+    </span>
+    <span style="text-align: right;"
+          flex="15">
+      {{totalamount}}
+    </span>
+    <span style="text-align: center;"
+          flex="35">
+      
+    </span>
+  </div>
+  <div ng-if="!showheader && !messageonly"
+       ng-repeat="m in pd.messages track by $index"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ m }}
+    </div>
+  </div>
+  <div ng-if="messageonly"
+       flex="100"
+       layout="row"
+       layout-align="start center">
+    <div style="font-size: smaller; text-align: left; background-color: #ffffE0; padding-left: 1em;"
+         flex-offset="25"
+         flex="75">
+      {{ message }}
+    </div>
+  </div>
+
+</script>

@@ -442,6 +442,8 @@ Public Module ModuleMain
             .Holiday_Time_Used = GetHours(e.calculatedTimeList, "123", p)
             .Comp_Time_Banked = GetHours(e.calculatedTimeList, "120", p)
             .Comp_Time_Used = GetHours(e.calculatedTimeList, "121", p)
+            .Comp_Time_Banked += GetHours(e.calculatedTimeList, "118", p)
+            .Comp_Time_Used += GetHours(e.calculatedTimeList, "119", p)
           End If
         End With
         eo.Add(neweo)
@@ -514,6 +516,8 @@ Public Module ModuleMain
             .Holiday_Time_Used = e.Holiday_Time_Used.TotalHours(p)
             .Comp_Time_Banked = e.Comp_Time_Banked.TotalHours(p)
             .Comp_Time_Used = e.Comp_Time_Used.TotalHours(p)
+            .Comp_Time_Banked += e.BC_Comp_Time_Banked.TotalHours(p)
+            .Comp_Time_Used += e.BC_Comp_Time_Used.TotalHours(p)
           End If
           ' Handling Thanksgiving Holidays on 12/3/2014
           'Select Case e.TelestaffProfileType
@@ -667,7 +671,7 @@ Public Module ModuleMain
       .Add("OnCallWorkHours", New Timestore_Field(11, "OnCallWorkHours", "On Call - Work Hours", False))
       .Add("OnCallWorkTimes", New Timestore_Field(12, "OnCallWorkTimes", "On Call - Work Times", False))
       .Add("OnCallTotalHours", New Timestore_Field(13, "OnCallTotalHours", "On Call - Total Hours by Date", True))
-      .Add("LWOPSuspension", New Timestore_Field(15, "LWOPSuspension", "LWOP - Suspension", False))
+      .Add("LWOPSuspension", New Timestore_Field(15, "LWOPSuspension", "LWOP - Suspension", True))
       .Add("ScheduledLWOP", New Timestore_Field(16, "ScheduledLWOP", "Scheduled LWOP", True))
       .Add("SickFamilyLeave", New Timestore_Field(17, "SickFamilyLeave", "Family Sick Leave", True))
       .Add("TermHours", New Timestore_Field(18, "TermHours", "Term Hours", False))
@@ -689,6 +693,8 @@ Public Module ModuleMain
       .Add("101", 3)
       .Add("110", 4)
       .Add("111", 4) ' sick 
+      .Add("118", 10) ' Comp Time accrued for BCs
+      .Add("119", 11) ' Comp Time Used for BCs
       .Add("120", 10) ' Comp time accrued
       .Add("121", 11) ' Banked comp time used
       .Add("122", 10) ' Holiday Time Bank
@@ -721,6 +727,8 @@ Public Module ModuleMain
       .Add("101", "Vacation")
       .Add("110", "Sick")
       .Add("111", "Sick") ' sick 
+      .Add("118", "Comp Time Banked") ' Comp time accrued for BCs
+      .Add("119", "Comp Time Used") ' for BCs
       .Add("120", "Comp Time Banked") ' Comp time accrued
       .Add("121", "Comp Time Used") ' Banked comp time used
       .Add("122", "Holiday Time Banked") ' Holiday Time Bank

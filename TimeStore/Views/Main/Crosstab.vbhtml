@@ -2,33 +2,33 @@
 @ModelType IEnumerable(Of TimeStore.Models.Crosstab)
 
 @code
-    Dim qsCurrent As String = ""
-    Dim qsPrev As String = ""
-    Dim i As Integer = 0
-    If Not Request.QueryString("ppd") Is Nothing Then
-        i = Request.QueryString("ppd")
-        qsPrev = "/TimeStore/main/crosstab?ppd=" & i - 1
-        qsCurrent = "/TimeStore/main/crosstab?ppd=" & i
-    Else
-        qsPrev = "/TimeStore/main/crosstab?ppd=-1"
-        qsCurrent = "/TimeStore/main/crosstab?ppd=0"
-    End If
-    If Not Request.QueryString("et") Is Nothing Then
-        qsPrev &= "&et=" & Request.QueryString("et")
-        qsCurrent &= "&et=" & Request.QueryString("et")
-    End If
+  Dim qsCurrent As String = ""
+  Dim qsPrev As String = ""
+  Dim i As Integer = 0
+  If Not Request.QueryString("ppd") Is Nothing Then
+    i = Request.QueryString("ppd")
+    qsPrev = "/TimeStore/main/crosstab?ppd=" & i - 1
+    qsCurrent = "/TimeStore/main/crosstab?ppd=" & i
+  Else
+    qsPrev = "/TimeStore/main/crosstab?ppd=-1"
+    qsCurrent = "/TimeStore/main/crosstab?ppd=0"
+  End If
+  If Not Request.QueryString("et") Is Nothing Then
+    qsPrev &= "&et=" & Request.QueryString("et")
+    qsCurrent &= "&et=" & Request.QueryString("et")
+  End If
 
-    Dim ppdStart As Date = Model.First.PayPeriodStart
-    'GetPayPeriodStart(Today.AddDays(i * 14))
-    Dim sbTmp As New StringBuilder
-    With sbTmp
-        .Append("<tr>")
-        For a As Integer = 0 To 23
-            .Append("<td>&nbsp;</td>")
-        Next
-        .Append("</tr>")
-    End With
-    Dim BlankLine As String = sbTmp.ToString
+  Dim ppdStart As Date = Model.First.PayPeriodStart
+  'GetPayPeriodStart(Today.AddDays(i * 14))
+  Dim sbTmp As New StringBuilder
+  With sbTmp
+    .Append("<tr>")
+    For a As Integer = 0 To 25
+      .Append("<td>&nbsp;</td>")
+    Next
+    .Append("</tr>")
+  End With
+  Dim BlankLine As String = sbTmp.ToString
 End code
 
   <md-toolbar class="short-toolbar md-accent">
@@ -85,6 +85,12 @@ End code
         </th>
         <th>
           111
+        </th>
+        <th>
+          118
+        </th>
+        <th>
+          119
         </th>
         <th>
           120
@@ -150,22 +156,22 @@ End code
           Else
             @item.EmployeeID_d
             @*@<a href="/TimeStore/#/e/@item.EmployeeID">
-                  @item.EmployeeID_d
-              </a>*@
+                @item.EmployeeID_d
+            </a>*@
           End If
 
         </td>
         <td>
           @Html.DisplayFor(Function(modelItem) item.LastName)
           @*<a href="/TimeStore/#/e/@item.EmployeeID">
-                @Html.DisplayFor(Function(modelItem) item.LastName)
-            </a>*@
+              @Html.DisplayFor(Function(modelItem) item.LastName)
+          </a>*@
         </td>
         <td>
           @Html.DisplayFor(Function(modelItem) item.FirstName)
           @*<a href="/TimeStore/#/e/@item.EmployeeID">
-                @Html.DisplayFor(Function(modelItem) item.FirstName)
-            </a>*@
+              @Html.DisplayFor(Function(modelItem) item.FirstName)
+          </a>*@
         </td>
         <td>
           @item.Regular_d
@@ -175,7 +181,7 @@ End code
             @item.pc007_d
           Else
             @item.pc006_d
-          End If          
+          End If
         </td>
         <td>
           @item.pc046_d
@@ -183,9 +189,9 @@ End code
         <td>
           @item.pc090_d
         </td>
-         <td>
-           @item.pc095_d
-         </td>
+        <td>
+          @item.pc095_d
+        </td>
         <td>
           @item.pc100_d
         </td>
@@ -198,6 +204,14 @@ End code
         <td>
           @item.pc111_d
         </td>
+
+        <td>
+          @item.pc118_d
+        </td>
+        <td>
+          @item.pc119_d
+        </td>
+
         <td>
           @item.pc120_d
         </td>
@@ -231,28 +245,28 @@ End code
         <td>
           @item.pc232_d
         </td>
-         <td>
-           @item.pc299_d
-         </td>
-         <td>
-           @item.pc300_d
-         </td>
-         <td>
-           @item.pc301_d
-         </td>
-         <td>
-           @item.pc302_d
-         </td>
-         <td>
-           @item.pc303_d
-         </td>
+        <td>
+          @item.pc299_d
+        </td>
+        <td>
+          @item.pc300_d
+        </td>
+        <td>
+          @item.pc301_d
+        </td>
+        <td>
+          @item.pc302_d
+        </td>
+        <td>
+          @item.pc303_d
+        </td>
         <td>
           @item.Total_d
         </td>
       </tr>
-            @If item.EmployeeID = "" Then
-              @Html.Raw(BlankLine)
-            End If
+      @If item.EmployeeID = "" Then
+        @Html.Raw(BlankLine)
+      End If
     Next
 
   </table>

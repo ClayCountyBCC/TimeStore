@@ -17,7 +17,7 @@
         Disaster_Start,
         Disaster_End, 
         Period_Type
-      FROM Disaster_Data
+      FROM Disaster_Data_OLD
       ORDER BY Disaster_Start"
       Try
         Return Get_Data(Of Disaster)(query, ConnectionStringType.Timestore)

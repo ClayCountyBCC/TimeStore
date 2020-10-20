@@ -1,0 +1,252 @@
+﻿<script type="text/ng-template" id="PayrollOverall.tmpl.html">
+
+
+  <div flex="100"
+       layout="row"
+       layout-align="center start"
+       layout-wrap
+       layout-margin>
+
+    <div flex="90"
+         class="md-whiteframe-z1">
+      <date-selector title="Pay Period Ending:"
+                     label="Select Pay Period"
+                     datetype="ppd"
+                     flex="100">
+      </date-selector>
+    </div>
+
+    <div style="margin-top: 3em;"
+         layout="row"
+         layout-align="start center"
+         class="md-whiteframe-z1"
+         layout-wrap
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Set up Payroll Process
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="space-around center">
+        <md-input-container flex="35">
+          <label>Target Database</label>
+          <md-select ng-disabled="!currentStatus.can_start"
+                     ng-model="currentStatus.target_db"
+                     multiple="false"
+                     aria-label="Select the target Database">
+            <md-option value="0">
+              Production (finplus51)
+            </md-option>
+            <md-option value="1">
+              Training (trnfinplus51)
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="40"
+                            class="md-input-has-value"
+                            layout="row"
+                            layout-align="space-around center"
+                            layout-wrap>
+          <label>
+            Include Pay Benefits (pay_group S)
+          </label>
+          <md-radio-group ng-model="currentStatus.include_benefits"
+                          ng-disabled="!currentStatus.can_start"
+                          layout="row"
+                          layout-align="center center"
+                          layout-wrap>
+            <md-radio-button ng-value="true">
+              Yes (Default)
+            </md-radio-button>
+            <md-radio-button ng-value="false">
+              No
+              <md-tooltip>
+                This should probably be answered no if this is the third paycheck that will be paid this month.
+              </md-tooltip>
+            </md-radio-button>
+          </md-radio-group>
+        </md-input-container>
+        <md-button class="md-primary md-raised"
+                   ng-click="StartPayroll()"
+                   ng-show="currentStatus.can_start && !StartOrResetInProgress">
+          Start
+        </md-button>
+        <md-button class="md-primary md-raised"
+                   ng-click="ResetPayroll()"
+                   ng-show="currentStatus.can_reset && !StartOrResetInProgress">
+          Reset Data
+          <md-tooltip>
+            This button should only be used when you know the data in Finplus has been changed since this process was originally started.
+          </md-tooltip>
+        </md-button>
+        <md-progress-circular ng-if="StartOrResetInProgress"
+                              md-mode="indeterminate">
+        </md-progress-circular>
+      </div>
+      <div flex="100">
+        <p style="padding-left: 1em;"
+           ng-if="currentStatus.started_by.length > 0">
+          Started by {{ currentStatus.started_by }} on {{ currentStatus.started_on_display }}
+        </p>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          View / Edit Timestore / Finplus Data
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-click="ViewEdits()"
+                   ng-disabled="currentStatus.started_by.length === 0"
+                   class="md-primary md-raised">
+          View Edits
+        </md-button>
+        <md-button ng-disabled="!currentStatus.can_edit || currentStatus.edits_completed_by.length > 0"
+                   ng-click="EditsCompleted()"
+                   class="md-warn md-raised">
+          Mark Edits Completed
+        </md-button>
+        <md-button ng-show="currentStatus.edits_completed_by.length > 0 && currentStatus.edits_approved_by.length === 0"
+                   ng-click="MarkEditsIncomplete()"
+                   class="md-warn md-raised">
+          Mark Edits Incomplete
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.edits_completed_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Completed by {{ currentStatus.edits_completed_by }} on {{ currentStatus.edits_completed_on_display }}
+        </p>
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Approve Timestore Payroll changes
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-align="center center">
+        <md-button ng-disabled="currentStatus.started_by.length === 0"
+                   ng-click="ViewChanges()"
+                   class="md-primary md-raised">
+          View Changes
+        </md-button>
+        <md-button ng-click="ChangesApproved()"
+                   ng-disabled="currentStatus.edits_completed_by.length === 0 || currentStatus.edits_approved_by.length > 0"
+                   class="md-warn md-raised">
+          Approve All Changes
+        </md-button>
+        <md-button ng-show="currentStatus.edits_approved_by.length > 0"
+                   ng-click="CancelApproval()"
+                   class="md-warn md-raised">
+          Cancel Approval
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.edits_approved_by.length > 0"
+           style="padding-left: 1em;">
+          Edits Approved by {{ currentStatus.edits_approved_by }} on {{ currentStatus.edits_approved_on_display }}
+        </p>
+        <!--<ol style="padding-right: 1em;">
+          <li>
+            This action can only be performed after the completion of the View / Edit Timestore / Finplus data step.
+          </li>
+          <li>
+            This is done by the Finance director or their designee
+          </li>
+          <li>
+            This is the last step to be performed by the BCC.  When this is completed, the data is now available to be sent to Finplus.
+          </li>
+        </ol>-->
+      </div>
+    </div>
+
+    <div layout="row"
+         layout-align="start center"
+         layout-wrap
+         class="md-whiteframe-z1"
+         flex="90">
+      <div layout="row"
+           layout-align="center center"
+           class="short-toolbar my-accent"
+           flex-gt-md="50"
+           flex="100">
+        <h5 style="text-align: center;">
+          Post Timestore Data / Changes to Finplus
+        </h5>
+      </div>
+      <div flex="50"
+           layout="row"
+           layout-wrap
+           layout-align="center center">
+
+        <md-input-container flex="55">
+          <label>Select Pay Run</label>
+          <!--ng-disabled="!currentStatus.can_update_finplus"-->
+          <md-select ng-model="postPayrun"
+                     multiple="false"
+                     md-on-close="selectPayRun()"
+                     aria-label="Select the target payrun">
+            <md-option ng-value="">
+              No payrun
+            </md-option>
+            <md-option ng-repeat="p in payruns track by $index"
+                       ng-value="p">
+              {{p}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-button ng-click="GetPayruns()"
+                   class="md-warn md-raised">
+          Refresh Pay Runs
+        </md-button>
+        <md-button ng-click="PostTimestoreData()"
+                   ng-disabled="!currentStatus.can_update_finplus || !postPayrun"
+                   class="md-primary md-raised">
+          Post to Finplus
+        </md-button>
+      </div>
+      <div flex="100">
+        <p ng-if="currentStatus.finplus_updated_by.length > 0"
+           style="padding-left: 1em;">
+          Data Posted to Finplus by {{ currentStatus.finplus_updated_by }} on {{ currentStatus.finplus_updated_on_display }}
+        </p>
+        <p ng-if="payruns.length === 0 && currentStatus.can_update_finplus">
+          No pay runs were found in Finplus.  It doesn't look like the pay roll has been started there.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+
+</script>

@@ -8,5 +8,6 @@
     Property DepartmentsToApprove As List(Of String)
     Property DataType As String
     Property CanChangeAccess As Boolean
+    Property PayrollAccess As Integer
   End Class
 End Namespace
