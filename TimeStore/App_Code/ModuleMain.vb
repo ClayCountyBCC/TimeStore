@@ -48,7 +48,8 @@ Public Module ModuleMain
       Case "12/11/2019"
         Return PayPeriodStart.AddDays(12).AddHours(16)
       Case Else
-        Return PayPeriodStart.AddDays(14).AddHours(PayPeriodEndingCutoff)
+        Return PayrollLock.Get_Cached_PayrollLock(PayPeriodStart.AddDays(13)).calculated_lock_datetime
+        'Return PayPeriodStart.AddDays(14).AddHours(PayPeriodEndingCutoff)
     End Select
 
 

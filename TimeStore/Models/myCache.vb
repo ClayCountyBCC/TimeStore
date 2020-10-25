@@ -37,6 +37,10 @@ Namespace Models
       Return _cache.Get(key)
     End Function
 
+    Public Shared Sub SetObject(key As String, NewValue As Object, CIP As CacheItemPolicy)
+      _cache.Set(key, NewValue, CIP)
+    End Sub
+
     Private Shared Function InitItem(key As String) As Object
       ' Do something expensive to initialize item
       Dim s() As String = key.Split(",")
@@ -45,6 +49,10 @@ Namespace Models
         '    Dim eid As Integer = s(1), ppd As String = s(2)
         '    Dim dtmp As Date = GetPayPeriodStart(Today.AddDays(ppd * 14))
         '    Return New GenericTimecard(dtmp, eid)
+        Case "payroll_lock"
+          Dim ppe As Date = Date.Parse(s(1))
+          Return PayrollLock.Get_PayrollLock(ppe)
+
         Case "filtered_project_codes"
           Dim pps As Date = Date.Parse(s(1))
           Return FinplusProjectCodes.GetFilteredProjectCodes(pps)

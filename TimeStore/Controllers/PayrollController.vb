@@ -18,6 +18,25 @@ Namespace Controllers
     End Function
 
     <HttpGet>
+    <Route("GetPayrollLock")>
+    Public Function GetPayrollLock(PayPeriodEnding As Date)
+      Return PayrollLock.Get_Cached_PayrollLock(PayPeriodEnding)
+    End Function
+
+    <HttpPost>
+    <Route("SavePayrollLock")>
+    Public Function SavePayrollLock(lock As PayrollLock)
+      Dim tca As Timecard_Access = GetTimeCardAccess(User.Identity.Name)
+      If tca.PayrollAccess > 0 Then
+        lock.calculated_lock_datetime = Date.Parse(lock.lock_date.ToShortDateString & " " & lock.lock_time)
+        lock.created_by = User.Identity.Name
+        lock.created_on = Now
+        lock.Update()
+      End If
+      Return Ok()
+    End Function
+
+    <HttpGet>
     <Route("Start")>
     Public Function StartPayroll(PayPeriodEnding As Date, IncludeBenefits As Boolean, TargetDB As Integer) As PayrollStatus
       StartPayrollProcess(PayPeriodEnding,

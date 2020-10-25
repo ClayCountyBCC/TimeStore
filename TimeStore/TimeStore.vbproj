@@ -488,6 +488,7 @@
     <Compile Include="Models\Payroll\PayrollData.vb" />
     <Compile Include="Models\Payroll\PayrollEditData.vb" />
     <Compile Include="Models\Payroll\PayrollChangeJustification.vb" />
+    <Compile Include="Models\Payroll\PayrollLock.vb" />
     <Compile Include="Models\Payroll\PayrollModule.vb" />
     <Compile Include="Models\Payroll\PayrollStatus.vb" />
     <Compile Include="Models\Payroll\Timestore_Error.vb" />

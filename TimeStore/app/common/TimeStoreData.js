@@ -806,6 +806,30 @@
           });
       }
 
+      var getPayrollLock = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetPayrollLock?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }      
+
+      var postPayrollLock = function (lock)
+      {
+        return $http
+          .post("API/Payroll/SavePayrollLock", lock, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -866,7 +890,10 @@
         cancelApproval: cancelApproval,
         getPayruns: getPayruns,
         postTimestoreData: postTimestoreData,
-        getPayrollEditsByEmployee: getPayrollEditsByEmployee
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee,
+        getPayrollLock: getPayrollLock,
+        postPayrollLock: postPayrollLock
+
       };
     }
   ]);

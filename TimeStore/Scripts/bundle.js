@@ -49412,6 +49412,30 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           });
       }
 
+      var getPayrollLock = function (pay_period_ending)
+      {
+        return $http
+          .get("API/Payroll/GetPayrollLock?PayPeriodEnding=" + pay_period_ending, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }      
+
+      var postPayrollLock = function (lock)
+      {
+        return $http
+          .post("API/Payroll/SavePayrollLock", lock, {
+            cache: false
+          })
+          .then(function (response)
+          {
+            return response.data;
+          });
+      }
+
 
       return {
         getPayStubListByEmployee: getPayStubListByEmployee,
@@ -49472,7 +49496,10 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         cancelApproval: cancelApproval,
         getPayruns: getPayruns,
         postTimestoreData: postTimestoreData,
-        getPayrollEditsByEmployee: getPayrollEditsByEmployee
+        getPayrollEditsByEmployee: getPayrollEditsByEmployee,
+        getPayrollLock: getPayrollLock,
+        postPayrollLock: postPayrollLock
+
       };
     }
   ]);
@@ -55341,23 +55368,42 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
     $scope.postPayrun = "";
     $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");    
     $scope.StartOrResetInProgress = false;
-    //$scope.showSetUpDetails = false;
-    //$scope.setUpDetails = "";
-    //$scope.setUpCompleted = false;    
+    $scope.UpdateLockInProgress = false;
+    $scope.payroll_lock = {};
 
-    //$scope.showEditDetails = false;
-    //$scope.editDetails = "";
-    //$scope.editCompleted = false;
+    $scope.PostPayrollLock = function ()
+    {
+      if ($scope.payroll_lock === null) return;
+      $scope.UpdateLockInProgress = true;
+      $scope.payroll_lock.lock_date = $scope.payroll_lock.lock_date_display;
+      timestoredata.postPayrollLock($scope.payroll_lock)
+        .then(function ()
+        {
+          $scope.GetPayrollLock();
+          $scope.UpdateLockInProgress = false;
+        }, function ()
+        {
+            console.log('error saving payroll lock');
+            $scope.UpdateLockInProgress = false;
+        });
+    }
 
-    //$scope.showChangeDetails = false;
-    //$scope.changeDetails = "";
-    //$scope.changeCompleted = false;
+    $scope.GetPayrollLock = function ()
+    {
+      timestoredata.getPayrollLock($scope.pay_period_ending)
+        .then(function (data)
+        {
+          data.created_on_display = formatDatetime(data.created_on)
+          data.default_lock_date_display = formatDate(data.default_lock_date);
+          data.lock_date_display = formatDate(data.lock_date);
+          console.log("payroll lock", data);          
+          $scope.payroll_lock = data;          
+        }, function ()
+        {
+            console.log('error getting payroll lock');
+        });
+    }
 
-    //$scope.showPostDetails = false;
-    //$scope.postDetails = "";
-    //$scope.postCompleted = false;
-
-    
     $scope.PostTimestoreData = function ()
     {
       $scope.StartOrResetInProgress = true;
@@ -55404,6 +55450,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         })
     }
 
+    $scope.GetPayrollLock();
     $scope.GetPayruns();
 
     $scope.ChangesApproved = function ()
@@ -55500,6 +55547,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       data.edits_approved_on_display = formatDatetime(data.edits_approved_on);
       data.finplus_updated_on_display = formatDatetime(data.finplus_updated_on);
       return data;
+    }
+
+    function formatDate(d)
+    {
+      return d ? new Date(d).toLocaleDateString('en-us') : "";
     }
 
     function formatDatetime(d)
