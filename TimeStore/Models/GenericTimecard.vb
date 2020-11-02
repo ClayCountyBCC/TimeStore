@@ -1277,6 +1277,7 @@
             calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, "", p))
             calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, "", p))
             calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, "", p))
+            calculatedTimeList.Add(New WorkType("Cares Doubletime OT 2.0", e.Cares_Doubletime, 9, "", p))
             calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 10, p, e.DisasterPayRules))
             calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p, e.DisasterPayRules))
             calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p, e.DisasterPayRules))

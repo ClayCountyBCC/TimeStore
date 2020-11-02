@@ -14,6 +14,7 @@
     Property Department As String = ""
     Property DepartmentName As String = ""
     Property Classify As String = ""
+    Property Bargain As String = ""
     'Property PayPeriodStart As Date = Date.MinValue
     Property HoursNeededForOvertime As Double = 0
     Property Base_Payrate As Double = 0
@@ -39,6 +40,7 @@
         EmployeeId = dr("empl_no")
         EmployeeLastName = dr("l_name").ToString.Trim
         EmployeeFirstName = dr("f_name").ToString.Trim
+        Bargain = dr("bargain").trim
         EmployeeName = EmployeeFirstName & " " & EmployeeLastName
         EmployeeType = IsNull(dr("empl_type"), "")
         BirthDate = IsNull(dr("birthdate"), Date.MinValue)

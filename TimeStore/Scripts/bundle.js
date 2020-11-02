@@ -56254,6 +56254,11 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           default:
             switch ($scope.pd.paycode_detail.pay_type)
             {
+              case 'A':
+                $scope.disableamount = false;
+                $scope.disablehours = false;
+                $scope.disablepayrate = false;
+                break;
               case 'P':
                 $scope.disableamount = false;
                 break;

@@ -59,7 +59,7 @@ Public Module ModuleDataAccess
     ' MSIL03, CLAYBCCDV10 = Development / Testing
     ' CLAYBCCIIS01 = Production
     Select Case Environment.MachineName.ToUpper
-      Case "CLAYBCCDV10", "MISSL01" ' QA
+      Case "CLAYBCCDV10" ', "MISSL01" ' QA
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -83,7 +83,7 @@ Public Module ModuleDataAccess
             Return ""
         End Select
 
-      Case "CLAYBCCIIS01" ', "MISSL01" ' Production
+      Case "CLAYBCCIIS01", "MISSL01" ' Production
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -203,9 +203,11 @@ Public Module ModuleDataAccess
         LTRIM(RTRIM(E.l_name)) AS l_name, 
         LTRIM(RTRIM(E.f_name)) AS f_name, 
         E.home_orgn AS department, 
-        E.birthdate, C.title, 
+        E.birthdate, 
+        C.title, 
         D.desc_x AS department_name, 
-        PR.classify, P.part_time, 
+        PR.classify, 
+        P.part_time, 
         PR.rate, 
         PR.pay_hours, 
         PAY.lv1_cd, 
@@ -221,7 +223,8 @@ Public Module ModuleDataAccess
         PAY.lv6_cd, 
         PAY.lv6_bal, 
         P.empl_type, 
-        P.term_date 
+        P.term_date,
+        ISNULL(P.bargain, '') bargain
       FROM employee E 
       INNER JOIN person P ON E.empl_no=P.empl_no 
       INNER JOIN payrate PR ON E.empl_no=PR.empl_no 
@@ -1307,7 +1310,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
         newRate = payrate * 1.5
       Case "231", "131", "302"
         newRate = payrate * 1.5
-      Case "232", "303"
+      Case "232", "303", "304"
         newRate = payrate * 2
       Case Else
         newRate = payrate

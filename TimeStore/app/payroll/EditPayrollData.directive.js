@@ -147,6 +147,11 @@
           default:
             switch ($scope.pd.paycode_detail.pay_type)
             {
+              case 'A':
+                $scope.disableamount = false;
+                $scope.disablehours = false;
+                $scope.disablepayrate = false;
+                break;
               case 'P':
                 $scope.disableamount = false;
                 break;

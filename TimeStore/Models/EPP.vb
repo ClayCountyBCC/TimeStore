@@ -16,6 +16,7 @@
     Private _disaster_overtime As New GroupedHours
     Private _disaster_doubletime As New GroupedHours
     Private _admin_leave_disaster As New GroupedHours
+    Private _cares_doubletime As New GroupedHours
     Public DisasterPayRules As List(Of DisasterEventRules) = New List(Of DisasterEventRules)()
     Public Property Banked_Holiday_Hours As Double = 0
     Public Property TelestaffHoursNeededForOvertime As Double = Double.MinValue
@@ -66,6 +67,7 @@
       _disaster_overtime.PayCode = "302"
       _disaster_straighttime.PayCode = "301"
       _disaster_regular.PayCode = "299"
+      _cares_doubletime.PayCode = "304"
 
       Select Case TelestaffProfileType
         Case TelestaffProfileType.Field
@@ -109,6 +111,15 @@
       Balance_Hours()
       Check_Exceptions()
       Handle_Holiday_Modifier(False)
+      Handle_Cares_Hours()
+    End Sub
+
+    Private Sub Handle_Cares_Hours()
+      If EmployeeData.Bargain.Length > 0 Then
+        'let's move all of the hours from 231 and 302 into 304
+        _disaster_overtime.Move_Last(_disaster_overtime.TotalHours, _cares_doubletime, Timelist)
+        _unscheduled_overtime.Move_Last(_unscheduled_overtime.TotalHours, _cares_doubletime, Timelist)
+      End If
     End Sub
 
     Private Sub Handle_Holiday_Modifier(Add As Boolean)
@@ -1254,6 +1265,12 @@
     Public ReadOnly Property Unscheduled_Overtime As GroupedHours
       Get
         Return _unscheduled_overtime
+      End Get
+    End Property
+
+    Public ReadOnly Property Cares_Doubletime As GroupedHours
+      Get
+        Return _cares_doubletime
       End Get
     End Property
 
