@@ -702,6 +702,7 @@ Public Module ModuleMain
       .Add("123", 11) ' Holiday time bank Hours Requested to be used
       .Add("130", 5) ' Scheduled Regular overtime
       .Add("131", 1) ' Scheduled OT
+      .Add("132", 1) ' scheduled double ot
       .Add("134", 6) ' paid holiday
       .Add("230", 7) ' Unscheduled Regular OT
       .Add("231", 8) ' Unscheduled OT
@@ -710,6 +711,7 @@ Public Module ModuleMain
       .Add("301", 15)
       .Add("302", 16)
       .Add("303", 17)
+      .Add("304", 18) ' cares double OT
       .Add("777", 11) ' Disaster 1.5
     End With
     Return ltrOrder
@@ -737,6 +739,7 @@ Public Module ModuleMain
       .Add("124", "Banked Holidays Paid")
       .Add("130", "Scheduled OT 1.0") ' Scheduled Regular overtime
       .Add("131", "Scheduled OT 1.5") ' Scheduled OT
+      .Add("132", "Scheduled OT 2.0") ' Scheduled OT
       .Add("134", "Paid Holiday") ' paid holiday
       .Add("230", "Unscheduled OT 1.0") ' Unscheduled Regular OT
       .Add("231", "Unscheduled OT 1.5") ' Unscheduled OT
@@ -746,6 +749,7 @@ Public Module ModuleMain
       .Add("301", "Disaster 1.0")
       .Add("302", "Disaster 1.5")
       .Add("303", "Disaster 2.0")
+      .Add("304", "Cares OT 2.0")
       .Add("800", "Ineligible Holiday")
     End With
     Return p

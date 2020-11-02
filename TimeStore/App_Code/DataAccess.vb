@@ -1310,7 +1310,7 @@ GROUP BY ROLLUP (T1.orgn, T1.employee_id);"
         newRate = payrate * 1.5
       Case "231", "131", "302"
         newRate = payrate * 1.5
-      Case "232", "303", "304"
+      Case "232", "303", "304", "132"
         newRate = payrate * 2
       Case Else
         newRate = payrate

@@ -5,6 +5,7 @@
     Property Timelist As List(Of TelestaffTimeData)
     Property RawTimeList As List(Of TelestaffTimeData)
     Private _regular, _scheduled_overtime, _lwop, _vacation, _sick As New GroupedHours
+    Private _scheduled_double_overtime As New GroupedHours
     Private _scheduled_regular_overtime, _holiday_paid As New GroupedHours
     Private _unscheduled_overtime, _unscheduled_regular_overtime As New GroupedHours
     Private _unscheduled_double_overtime, _holiday_time_banked As New GroupedHours
@@ -68,6 +69,7 @@
       _disaster_straighttime.PayCode = "301"
       _disaster_regular.PayCode = "299"
       _cares_doubletime.PayCode = "304"
+      _scheduled_double_overtime.PayCode = "132"
 
       Select Case TelestaffProfileType
         Case TelestaffProfileType.Field
@@ -119,6 +121,8 @@
         'let's move all of the hours from 231 and 302 into 304
         _disaster_overtime.Move_Last(_disaster_overtime.TotalHours, _cares_doubletime, Timelist)
         _unscheduled_overtime.Move_Last(_unscheduled_overtime.TotalHours, _cares_doubletime, Timelist)
+        ' let's move all of the hours in 131 to 132
+        _scheduled_overtime.Move_Last(_scheduled_overtime.TotalHours, _scheduled_double_overtime, Timelist)
       End If
     End Sub
 
@@ -320,6 +324,8 @@
               _unscheduled_regular_overtime.Add(T)
             Case "131" ' Scheduled OT
               _scheduled_overtime.Add(T)
+            Case "132"
+              _scheduled_double_overtime.Add(T)
             Case "231" ' Unscheduled OT
               ' If an office staffer works on a sunday or a holiday, they get double overtime.
               _unscheduled_overtime.Add(T)
@@ -386,7 +392,8 @@
               _disaster_overtime.Add(T)
             Case "303"
               _disaster_doubletime.Add(T)
-
+            Case "304"
+              _cares_doubletime.Add(T)
             Case Else
               If T.IsPaidTime Then
                 Log("Unknown Payroll Code", T.WorkCode, T.EmployeeId.ToString, T.WorkTypeAbrv)
@@ -1181,6 +1188,12 @@
     Public ReadOnly Property Scheduled_Overtime As GroupedHours
       Get
         Return _scheduled_overtime
+      End Get
+    End Property
+
+    Public ReadOnly Property Scheduled_Double_Overtime As GroupedHours
+      Get
+        Return _scheduled_double_overtime
       End Get
     End Property
 

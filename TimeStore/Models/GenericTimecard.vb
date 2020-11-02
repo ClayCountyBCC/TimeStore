@@ -1155,7 +1155,7 @@
         x.workTime &= " " & sTmp
         Dim wtName As String = "", wtLROrder As Integer = -1
         Select Case t.WorkCode
-          Case "002", "230", "131", "231", "232", "130"  ' straight time aka regular
+          Case "002", "230", "131", "231", "232", "130", "132"  ' straight time aka regular
             wtName = "Regular Work"
             wtLROrder = 0
           Case "090", "095" ' Leave without pay
@@ -1274,6 +1274,8 @@
             calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, "", p))
             calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, "", p))
             calculatedTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1, "", p))
+            'Scheduled_Double_Overtime
+            calculatedTimeList.Add(New WorkType("Scheduled OT 2.0", e.Scheduled_Double_Overtime, 1, "", p))
             calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, "", p))
             calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, "", p))
             calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, "", p))
