@@ -275,7 +275,7 @@ Public Module ModuleMain
            "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG", "SUO", "OTSUO", "OTMSUO",
            "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUBC", "OTSUBC", "OTMSUBC",
            "OLTRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG", "DOTSUBC", "DOTSUO", "DOTSUE",
-           "ST10", "ST12", "STE", "STO", "STBC", "SUED"
+           "ST10", "ST12", "STE", "STO", "STBC", "SUED", "SUOD", "SUOBC"
         Return True
       Case Else
         Return False
@@ -312,13 +312,13 @@ Public Module ModuleMain
              "SU10", "OT10", "OTLC10", "OTLR10"
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
-        Case "SUE", "SUED", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG"  ' Step up engineer 
+        Case "SUE", "SUED", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG", "SUED", "OTMDSUE"  ' Step up engineer 
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
-        Case "SUO", "OTSUO", "OTMSUO", "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG" ' Step up Officer
+        Case "SUO", "OTSUO", "OTMSUO", "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUOD", "OTMDSUO" ' Step up Officer
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
-        Case "SUBC", "OTSUBC", "OTMSUBC", "OLTRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG" ' Step up BC
+        Case "SUBC", "OTSUBC", "OTMSUBC", "OTLRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG", "OTMDSUBC", "SUBCD" ' Step up BC
           Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
         Case "DOTSUBC" ' Step Up Doubletime BC ' For those rare occasions when someone steps up as a BC when they're on office duty, so they are eligible for double time.

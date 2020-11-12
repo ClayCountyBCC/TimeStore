@@ -117,12 +117,16 @@
     End Sub
 
     Private Sub Handle_Cares_Hours()
-      If EmployeeData.Bargain.Length > 0 Then
-        'let's move all of the hours from 231 and 302 into 304
-        _disaster_overtime.Move_Last(_disaster_overtime.TotalHours, _cares_doubletime, Timelist)
-        _unscheduled_overtime.Move_Last(_unscheduled_overtime.TotalHours, _cares_doubletime, Timelist)
-        ' let's move all of the hours in 131 to 132
-        _scheduled_overtime.Move_Last(_scheduled_overtime.TotalHours, _scheduled_double_overtime, Timelist)
+      Dim CaresPeriodStart As Date = Date.Parse("10/28/2020")
+      Dim CaresPeriodEnd As Date = Date.Parse("12/22/2020")
+      If PayPeriodStart >= CaresPeriodStart AndAlso PayPeriodStart <= CaresPeriodEnd Then
+        If EmployeeData.Bargain.Length > 0 Then
+          'let's move all of the hours from 231 and 302 into 304
+          _disaster_overtime.Move_Last(_disaster_overtime.TotalHours, _cares_doubletime, Timelist)
+          _unscheduled_overtime.Move_Last(_unscheduled_overtime.TotalHours, _cares_doubletime, Timelist)
+          ' let's move all of the hours in 131 to 132
+          _scheduled_overtime.Move_Last(_scheduled_overtime.TotalHours, _scheduled_double_overtime, Timelist)
+        End If
       End If
     End Sub
 
