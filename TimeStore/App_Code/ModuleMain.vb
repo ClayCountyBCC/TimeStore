@@ -306,49 +306,62 @@ Public Module ModuleMain
 
       Select Case WorkType
         Case "SU12", "OT12", "OTLC12", "OTLR12", "OTM12" ' for older work codes
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 1.12)
 
         Case "SU10", "OT10", "OTLC10", "OTLR10", "OTM10",' for older work codes, these shouldn't be used any longer.
              "SU10", "OT10", "OTLC10", "OTLR10"
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 1.1)
 
         Case "SUE", "SUED", "OTSUE", "OTMSUE", "OTLCSUE", "OTLRSUE", "OTSUED", "SUEG", "SUED", "OTMDSUE"  ' Step up engineer 
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 1.1)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
 
         Case "SUO", "OTSUO", "OTMSUO", "OTLRSUO", "OTLCSUO", "OTSUOD", "SUOG", "SUOD", "OTMDSUO" ' Step up Officer
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 1.12)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
         Case "SUBC", "OTSUBC", "OTMSUBC", "OTLRSUBC", "OTLCSUBC", "OTSUBCD", "SUBCG", "OTMDSUBC", "SUBCD" ' Step up BC
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 1.12)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
 
         Case "DOTSUBC" ' Step Up Doubletime BC ' For those rare occasions when someone steps up as a BC when they're on office duty, so they are eligible for double time.
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 2.12)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
 
         Case "DOTSUO" ' Step up Doubletime Officer ' Same as above
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 2.12)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.12, HoursByYear)
 
         Case "DOTSUE" ' Step up Doubletime Engineer ' Same as above.
-          Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.1, HoursByYear)
+          Return Calculate_Stepup_Rate(PR, 2.1)
+          'Return Calculate_Stepup_Rate(PR, TotalIncentive, 2.1, HoursByYear)
 
           ' Shift trades from here down
         Case "ST10" ' older work codes, not used anymore
-          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, 1.1)
+          'Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case "ST12" ' older work codes, not used anymore
-          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, 1.12)
+          'Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case "STE" ' Shift trade Engineer
-          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, 1.1)
+          'Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.1, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case "STO"
-          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, 1.12)
+          'Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case "STBC" ' Shift Trade
-          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
+          Dim StepupRate As Double = Calculate_Stepup_Rate(PR, 1.12)
+          'Dim StepupRate As Double = Calculate_Stepup_Rate(PR, TotalIncentive, 1.12, HoursByYear)
           Return Math.Round(StepupRate - PR, 5)
 
         Case Else
@@ -359,7 +372,9 @@ Public Module ModuleMain
 
   Public Function Calculate_Telestaff_Incentives(Job As String, Specialties As String, ByRef Incentives As List(Of Incentive)) As Double
     Dim s() As String = Specialties.Replace("*", "").Split(New String() {"/"}, StringSplitOptions.RemoveEmptyEntries)
-    Dim TotalIncentive As Double = (From i In Incentives Where s.Contains(i.Incentive_Abrv) Select i.Incentive_Amount).Sum
+    Dim TotalIncentive As Double = (From i In Incentives
+                                    Where s.Contains(i.Incentive_Abrv)
+                                    Select i.Incentive_Amount).Sum
     Select Case Job 'EMT/*L/PM/*SF/*SPOPS
       Case "E", "FF"
       Case Else
@@ -372,7 +387,13 @@ Public Module ModuleMain
     Return TotalIncentive
   End Function
 
-  Public Function Calculate_Stepup_Rate(RegularPayrate As Double, TotalIncentive As Double, Wagefactor As Double, HoursByYear As Double) As Double
+  Public Function Calculate_Stepup_Rate(RegularPayrate As Double, Wagefactor As Double) As Double
+    Return Math.Round(RegularPayrate * Wagefactor, 5)
+  End Function
+
+  Public Function Calculate_Old_Stepup_Rate(RegularPayrate As Double, TotalIncentive As Double, Wagefactor As Double, HoursByYear As Double) As Double
+    ' This function was deprecated on 12/21/2020.  
+    ' The step up rate calculation change was ordered by Jennifer Bethelmy.
     Dim newPayrate As Double = 0
     Dim basePR As Double = ((RegularPayrate * HoursByYear) - TotalIncentive) / HoursByYear
     Return Math.Round(((basePR * Wagefactor * HoursByYear) + TotalIncentive) / HoursByYear, 5)

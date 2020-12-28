@@ -29,7 +29,7 @@ Namespace Controllers
 
     Private Function GetTimeCardAccess(UserName As String) As Timecard_Access
 #If DEBUG Then
-      'UserName = "reyese"
+      'UserName = "ayrest"
 #End If
       Dim EID As Integer = AD_EmployeeData.GetEmployeeIDFromAD(UserName)
 

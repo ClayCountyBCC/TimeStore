@@ -283,6 +283,15 @@ Namespace Models
       If tca.PayrollAccess > 0 Then Return True
       Dim employee_data = GetCachedEmployeeDataFromFinplusAsDictionary()
       If Not employee_data.ContainsKey(AccessBy) Then Return False
+      ' Per email on 12/28 from Troy Nagle, I was instructed to give pay stub access for public safety
+      ' to these individuals.
+      Select Case AccessBy
+        Case 2438, 1101, 1379, 3082 ' Chief Mock, Chief Motes, Chief Boree, and Tara Ayres
+          Select Case employee_data(AccessTo).Department
+            Case "1703", "2103", "2102" ' Fire, Admin, Emergency Management
+              Return True
+          End Select
+      End Select
       Return employee_data(AccessBy).Department = "0103" AndAlso tca.Raw_Access_Type = Access_Types.All_Access
     End Function
 
