@@ -118,7 +118,8 @@
 
     Private Sub Handle_Cares_Hours()
       Dim CaresPeriodStart As Date = Date.Parse("10/28/2020")
-      Dim CaresPeriodEnd As Date = Date.Parse("12/22/2020")
+      'Dim CaresPeriodEnd As Date = Date.Parse("12/22/2020") ' This was the original cares period end.  It has been extended as of 12/29/2020 to 2/2/2021
+      Dim CaresPeriodEnd As Date = Date.Parse("2/22/2021")
       If PayPeriodStart >= CaresPeriodStart AndAlso PayPeriodStart <= CaresPeriodEnd Then
         If EmployeeData.Bargain.Length > 0 Then
           'let's move all of the hours from 231 and 302 into 304
