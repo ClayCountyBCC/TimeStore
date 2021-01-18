@@ -395,7 +395,15 @@ Namespace Controllers
       Dim payperiodstart As Date
       If ppdIndex = 0 Then
         payperiodstart = GetPayPeriodStart(Today)
-        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        If Today = payperiodstart Then
+          If Not IsItPastCutoffDate(Today.AddDays(-1)) Then
+            payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+          End If
+          'If Now.Hour < PayPeriodEndingCutoff Then
+          '  payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+          'End If
+        End If
+        'If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
       Else
         payperiodstart = GetPayPeriodStart(Today.AddDays(ppdIndex * 14))
       End If
@@ -748,15 +756,20 @@ Namespace Controllers
                                         Optional deptId As String = "",
                                         Optional StartDate As Date = Nothing,
                                         Optional IncludeReportsTo As Boolean = False) As JsonNetResult
-
       Dim payperiodstart As Date
       If StartDate > Date.MinValue Then
         payperiodstart = GetPayPeriodStart(StartDate)
       Else
         payperiodstart = GetPayPeriodStart(Today)
-        If Today = payperiodstart And Now.Hour < PayPeriodEndingCutoff Then
-          payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+        If Today = payperiodstart Then
+          If Not IsItPastCutoffDate(Today.AddDays(-1)) Then
+            payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+          End If
+          'If Now.Hour < PayPeriodEndingCutoff Then
+          '  payperiodstart = GetPayPeriodStart(Today.AddDays(-1))
+          'End If
         End If
+
 
       End If
       Dim bUseDept As Boolean = (deptId.Length > 0)

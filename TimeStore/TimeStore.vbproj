@@ -358,7 +358,7 @@
     <None Include="compilerconfig.json.defaults">
       <DependentUpon>compilerconfig.json</DependentUpon>
     </None>
-    <Content Include="images\2020 W4.pdf" />
+    <Content Include="images\2021 W4.pdf" />
     <None Include="My Project\PublishProfiles\DeployFolder.pubxml" />
     <None Include="My Project\PublishProfiles\DV10.pubxml" />
     <Content Include="images\ClayCountySeal-128b.png">
