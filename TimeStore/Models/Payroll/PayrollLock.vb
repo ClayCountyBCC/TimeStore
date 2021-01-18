@@ -29,7 +29,7 @@ Namespace Models
       Get
         If _lock_dates.Count = 0 Then
           Dim start = default_lock_date.AddDays(-7)
-          For i = 0 To 13
+          For i = 0 To 8 ' Changed from 13, the most we will probably ever push the payroll process is one day.
             _lock_dates.Add(start.AddDays(i).ToShortDateString)
           Next
         End If
@@ -41,8 +41,8 @@ Namespace Models
       Get
         If _lock_times.Count = 0 Then
           Dim start = Today
-          For i = 0 To 23
-            _lock_times.Add(start.AddHours(i).ToShortTimeString)
+          For i = 0 To 95
+            _lock_times.Add(start.AddMinutes(i * 15).ToShortTimeString)
           Next
         End If
         Return _lock_times
