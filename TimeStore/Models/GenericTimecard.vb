@@ -1298,6 +1298,7 @@
             timeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, "", p))
             calculatedTimeList.Add(New WorkType("Union Time Pool", e.Union_Time_Pool, 12, "", p))
           End If
+
           If Not isExempt Then
             calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, "", p))
             calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, "", p))
@@ -1344,9 +1345,6 @@
                     calculatedTimeList.Add(New WorkType("Comp Time Used", e.BC_Comp_Time_Used, 11, "", p))
 
                 End Select
-
-
-
 
                 If e.Holiday_Time_Used.TotalHours > 0 Then
                   timeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, "", p))

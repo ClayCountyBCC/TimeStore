@@ -160,7 +160,7 @@ SELECT
   ,SH.shift_abrv_ch
   ,SH.Shift_TimeDuration_Ch
   ,SH.shift_type_no_in
-  ,R.payinfo_no_in
+  ,ISNULL(R.payinfo_no_in, 2) payinfo_no_in -- SET Default value to Office.
   ,ISNULL(BSDR.Specialties,'') Specialties
   ,ISNULL(SPEC.Specialties
           ,'') ProfileSpecialties

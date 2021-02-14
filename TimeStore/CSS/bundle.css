@@ -184,6 +184,8 @@ table .crosstab, .crosstab th, .crosstab td {
   body {
     overflow: visible;
     overflow-y: visible; }
+  .no-print {
+    display: none !important; }
   md-toolbar {
     display: none !important; }
   date-selector {
@@ -347,7 +349,6 @@ md-toolbar {
 
 .termedEmployee {
   color: red; }
-
 
 /*!
  * AngularJS Material Design

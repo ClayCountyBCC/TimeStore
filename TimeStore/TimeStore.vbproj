@@ -392,6 +392,7 @@
     <Content Include="images\ic_save_24px.svg" />
     <Content Include="images\ic_search_24px.svg" />
     <Content Include="images\ic_settings_backup_restore_24px.svg" />
+    <Content Include="images\warning-24px.svg" />
     <Content Include="Main.css" />
     <Content Include="Main.min.css">
       <DependentUpon>Main.css</DependentUpon>

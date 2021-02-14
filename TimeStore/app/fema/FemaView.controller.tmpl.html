@@ -1,91 +1,129 @@
 ﻿<script type="text/ng-template" id="FemaView.tmpl.html">
   <div style="overflow: visible !important; width: 100%;">
 
-    <md-progress-linear ng-if="showProgress === true"
+    <md-progress-linear class="no-print"
+                        ng-if="showProgress"
                         flex="100"
                         md-mode="indeterminate">
     </md-progress-linear>
 
-    <!--<div id="femaGroupSelection"
+    <div class="no-print"
+         flex="100"
          layout="row"
-         layout-align="center center"
-         flex="100">
-      <md-input-container>
-        <label>Select Group and Pay Period</label>
-        <md-select ng-change="processSelectedGroup()"
-                   ng-model="selectedGroup">
-          <md-option ng-value="$index"
-                     ng-repeat="g in GroupsByPayperiodData">
-            {{ g.ppe }} - {{ g.group }}
-          </md-option>
-        </md-select>
-      </md-input-container>
-    </div>-->
-    <span>{{Message}}</span>
+         layout-align="center start"
+         layout-wrap
+         layout-margin>
 
-    <table style="width: 95%; margin-left: 1em;"
-           class="addPageBreak"
-           ng-if="Message === ''"
-           ng-repeat="t in timeData track by $index">
-      <tr>
-        <td style="width: 100%;">
-          <div layout-wrap
-               layout-align="center center"
-               layout="row">
-            <span layout="row"
-                  layout-align="center center"
-                  flex="100">
-              <span layout-align="center center"
-                    layout="row"
-                    flex="25">
-                {{ t.employeeName }} ( {{ t.employeeID }} )
-              </span>
-              <span layout-align="center center"
-                    layout="row"
-                    flex="35">
-                {{ t.title }}
-              </span>
-              <span layout-align="center center"
-                    layout="row"
-                    flex="40">
-                {{ t.department }}
-              </span>
-            </span>
-            <span layout="row"
-                 flex="100">
-              <span flex="50"
-                    layout="row"
-                    layout-align="center center">
-                Initial Approval By {{ t.Initial_Approval_By}} on {{ t.Initial_Approval_DateTime }}
-              </span>
-              <span flex="50"
-                    layout="row"
-                    layout-align="center center">
-                Final Approval By {{ t.Final_Approval_By }} on {{ t.Final_Approval_DateTime }}
-              </span>
-            </span>
-          </div>
+      <div flex="90"
+           class="md-whiteframe-z1">
+        <date-selector title="Pay Period Ending:"
+                       label="Select Pay Period"
+                       datetype="ppd"
+                       flex="100">
+        </date-selector>
+      </div>
+      <div layout="row"
+           layout-align="start center"
+           flex="90">
+        <md-input-container flex="50">
+          <label>Employee Ids</label>
+          <textarea style="border-width: 1px; "
+                    md-no-autogrow
+                    rows="6"
+                    max-rows="6"
+                    flex="100"
+                    md-maxlength="5000"
+                    maxlength="5000"
+                    typeof="text"
+                    class="md-input"
+                    ng-model="employeeids"></textarea>
+        </md-input-container>
+
+      </div>
+      <div layout="row"
+           layout-align="start center"
+           flex="90">
+        <span class="ErrorText">
+          {{errors}}
+        </span>
+      </div>
+      <div layout="row"
+           layout-align="start center"
+           flex="90">
+        <md-button class="md-button md-primary md-raised"
+                   ng-click="GetTimecards()">
+          Get Employee Timecards
+        </md-button>
+      </div>
 
 
-          <!--<timecard-header flex="100"
+    </div>
+
+      <span>{{Message}}</span>
+
+      <table style="width: 95%; margin-left: 1em;"
+             class="addPageBreak"
+             ng-if="Message === ''"
+             ng-repeat="t in timeData track by $index">
+        <tr>
+          <td style="width: 100%;">
+            <div layout-wrap
+                 layout-align="center center"
+                 layout="row">
+              <span layout="row"
+                    layout-align="center center"
+                    flex="100">
+                <span layout-align="center center"
+                      layout="row"
+                      flex="25">
+                  {{ t.employeeName }} ( {{ t.employeeID }} )
+                </span>
+                <span layout-align="center center"
+                      layout="row"
+                      flex="35">
+                  {{ t.title }}
+                </span>
+                <span layout-align="center center"
+                      layout="row"
+                      flex="40">
+                  {{ t.department }}
+                </span>
+              </span>
+              <span layout="row"
+                    flex="100">
+                <span flex="50"
+                      layout="row"
+                      layout-align="center center">
+                  Initial Approval By {{ t.Initial_Approval_By}} on {{ t.Initial_Approval_DateTime }}
+                </span>
+                <span flex="50"
+                      layout="row"
+                      layout-align="center center">
+                  Final Approval By {{ t.Final_Approval_By }} on {{ t.Final_Approval_DateTime }}
+                </span>
+              </span>
+            </div>
+
+
+            <!--<timecard-header flex="100"
                            shortheader="true"
                            timecard="t">
           </timecard-header>-->
-        </td>
-      </tr>
-      <tr>
-        <td style="width: 100%;">
+          </td>
+        </tr>
+        <tr>
+          <td style="width: 100%;">
 
-          <timecard-week-table style="width: 100%;" title="Week 1" week="t.RawTime_Week1"
-                               typelist="t.Get_Types_Used"></timecard-week-table>
-        </td>
-      </tr>
-      <tr>
-        <td style="width: 100%;">
-          <timecard-week-table style="width: 100%;" title="Week 2" week="t.RawTime_Week2"
-                               typelist="t.Get_Types_Used"></timecard-week-table>
-        </td>
-      </tr>
-    </table>
-  </div>
+            <timecard-week-table style="width: 100%;" title="Week 1" week="t.RawTime_Week1"
+                                 typelist="t.Get_Types_Used"></timecard-week-table>
+          </td>
+        </tr>
+        <tr>
+          <td style="width: 100%;">
+            <timecard-week-table style="width: 100%;" title="Week 2" week="t.RawTime_Week2"
+                                 typelist="t.Get_Types_Used"></timecard-week-table>
+          </td>
+        </tr>
+      </table>
+    </div>
 </script>

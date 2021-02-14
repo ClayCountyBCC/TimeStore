@@ -48470,9 +48470,9 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             }]
           }
         })
-        .when('/fema/', {
+        .when('/fema/ppd/:payPeriod', {
           controller: 'FemaViewController',
-          templateUrl: 'FemaView.tmpl.html' 
+          templateUrl: 'FemaView.tmpl.html'
         })
         .when('/signature/ppd/:payPeriod', {
           controller: 'SignatureViewController',
@@ -49628,9 +49628,16 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         {
           go('/unapproved/ppd/' + timestoredata.getPayPeriodEnd());
         }
-        function goFema()
+        function goFema(ppd)
         {
-          go('/fema/');
+          if (!ppd)
+          {
+            go('/fema/ppd/' + timestoredata.getPayPeriodEnd());
+          }
+          else
+          {
+            go('/fema/ppd/' + ppd);
+          }
         }
 
         function goAddTime(eid, d)
@@ -54194,44 +54201,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
   {
 
     //$scope.showProgress = true;
+    $scope.showProgress = false;
     $scope.filtered = [];
     $scope.Message = '';
     $scope.timeData = [];
     $scope.rawData = [];
     $scope.selectedGroup = -1;
     $scope.selectedPPI = 0;
-    $scope.GroupsByPayperiodData = GroupsByPayPeriod();
-
-    //$scope.processSelectedGroup = function ()
-    //{
-    //  if ($scope.selectedGroup === -1) return;
-    //  var g = $scope.GroupsByPayperiodData[$scope.selectedGroup];
-    //  var ppi = timestoredata.getPayPeriodIndex(moment(g.ppe, 'M/D/YYYY'));
-    //  if (ppi !== $scope.selectedPPI)
-    //  {
-    //    $scope.showProgress = true;
-    //    $scope.Message = '';
-    //    timestoredata.getFemaData(ppi).then(function (data)
-    //    {
-    //      $scope.rawData = data;
-    //      $scope.selectedPPI = ppi;
-    //      $scope.timeData = FilterRawData($scope.rawData, g.employees);
-    //      if (data.length === 0)
-    //      {
-    //        $scope.Message = 'No timecards found.';
-    //      }
-    //      $scope.showProgress = false;
-    //    });
-    //  }
-    //  else
-    //  {
-    //    $scope.timeData = FilterRawData($scope.rawData, g.employees);
-    //  }
-    //};
-
+    $scope.errors = "";
+    $scope.GroupsByPayperiodData = null;//GroupsByPayPeriod();
+    $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");        
     $scope.processAllGroups = function ()
     {
-      $scope.showProgress = true;
+      //$scope.showProgress = true;
       //var g = $scope.GroupsByPayperiodData[$scope.selectedGroup];
       var ppis = [];
       var es = [];
@@ -54252,28 +54234,19 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         }
         else
         {
-          //for (var j = 0; j < g[i].employees.length; j++)
-          //{
-          //  if (es[x].indexOf(g[i].employees[j]) > -1)
-          //  {
-          //    console.log('duplicate employee', g[i].employees[j], es[x]);
-          //  }
-          //  else
-          //  {
-          //    es[x].push(g[i].employees[j]);
-          //  }
-          //}
+
           es[x].push.apply(es[x], g[i].employees);
         }
       }
       //console.log('ppi', ppis, 'employees', es);
       getData(ppis.pop(), es.pop(), ppis, es);
       //console.log('all filtered', filtered);
-      $scope.showProgress = false;
+      
     };
 
     function getData(ppi, employees, ppis, es)
     {
+      $scope.showProgress = true;
       if (!ppi)
       {
 
@@ -54297,12 +54270,12 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var fd = FilterRawData(data, employees);
         $scope.filtered.push.apply($scope.filtered, fd);
         getData(ppis.pop(), es.pop(), ppis, es);
-
+        $scope.showProgress = false;
       });
     }
 
 
-    $scope.processAllGroups();
+    //$scope.processAllGroups();
 
     viewOptions.viewOptions.showSearch = false;
     viewOptions.viewOptions.share();
@@ -54321,31 +54294,56 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       //console.log('timedata', $scope.timeData);
     }
 
-    function GroupsByPayPeriod()
+    function GroupsByPayPeriod(ppd, employees)
     {
       return [
         {
-          "ppe": "5/26/2020",
-          "employees": [
-            1259,
-1298,
-3036,
-1552,
-3085,
-2564,
-3071,
-2797,
-2850,
-1848,
-2875,
-2033,
-2385,
-2551
-
-          ]
+          "ppe": ppd,
+          "employees": employees
         }
       ];
     }
+
+    $scope.GetTimecards = function ()
+    {
+      $scope.timeData = [];
+      $scope.errors = "";
+      var e = $scope.employeeids;
+      console.log('employee id raw', e);
+      e.replace(",", "").replace('\t', "");
+      var d = e.split('\n');
+      console.log('employee id array', d);
+      var employees = [];
+      for (let i = 0; i < d.length; i++)
+      {
+        if (d[i].length > 0)
+        {
+          if (!isNaN(d[i]))
+          {
+            let t = parseInt(d[i]);
+            employees.push(t);
+          }
+          else
+          {
+            $scope.errors = $scope.errors + " Invalid Employee Id: " + d[i] + ".";
+          }
+        }
+
+      }
+      if ($scope.errors.length === 0)
+      {
+        console.log('employee id array final', employees);
+        $scope.pay_period_ending = moment($routeParams.payPeriod, "YYYYMMDD").format("MM/DD/YYYY");
+        console.log('pay period ending check', $scope.pay_period_ending);
+        $scope.GroupsByPayperiodData = GroupsByPayPeriod($scope.pay_period_ending, employees);
+        $scope.processAllGroups();
+      }
+      else
+      {
+        console.log("scope errors", $scope.errors);
+      }
+    }
+    // Vaccine clinic 
 
     // CAT B 17333 PW Callcenter after first 30 data
     // [{"ppe": "10/17/2017", "employees": [1270,1304,1313,1433,1508,1719,1816,2037,2097,2282,2474,2489,2493,2704,2710,2742,2753,2768,2819,2849,2855]}, {"ppe": "10/31/2017", "employees": [1184,1304,1433,1483,1508,1719,1848,1889,2033,2282,2348,2474,2489,2493,2644,2704,2753,2759,2794,2819,2826]}, {"ppe": "11/14/2017", "employees": [1433,1508,1719,1830,1889,2037,2644,2704,2753,2758,2794,2819,2834,2849]}, {"ppe": "11/28/2017", "employees": [1184,1341,1719,1889,2258,2471,2634,2644,2704,2794,2819]}, {"ppe": "12/12/2017", "employees": [1270,1304,1719,1889,2097,2348,2634,2644,2704,2753,2794,2809,2826,2832]}, {"ppe": "12/26/2017", "employees": [2644]}]

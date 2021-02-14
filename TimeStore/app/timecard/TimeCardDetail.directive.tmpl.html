@@ -66,10 +66,10 @@
       </div>
 
     </md-tab>
-    <md-tab ng-if="ctrl.timecard.exemptStatus !== 'Exempt' && ctrl.timecard.Data_Type === 'timecard'"
+    <md-tab ng-if="ctrl.timecard.exemptStatus !== 'Exempt' && (ctrl.timecard.Data_Type === 'timecard' || ctrl.timecard.TelestaffProfileType === 2)"
             label="Handle Comp Time">
       <add-comp-time flex="100"
-                     ng-show="ctrl.timecard.exemptStatus !== 'Exempt' && ctrl.timecard.Data_Type === 'timecard'"
+                     ng-show="ctrl.timecard.exemptStatus !== 'Exempt' && (ctrl.timecard.Data_Type === 'timecard' || ctrl.timecard.TelestaffProfileType === 2) "
                      timecard="ctrl.timecard"></add-comp-time>
     </md-tab>
       
@@ -90,12 +90,12 @@
 
     </md-tab>
 
-    <md-tab ng-if="ctrl.timecard.isPubWorks"
+    <!--<md-tab ng-if="ctrl.timecard.isPubWorks"
             label="Incentives">
       <div flex="100">
 
       </div>
-    </md-tab>
+    </md-tab>-->
 
     <md-tab label="Holiday" 
             ng-if="(ctrl.timecard.HolidaysInPPD.length > 0 || ctrl.timecard.bankedHoliday > 0) && ctrl.timecard.Data_Type === 'telestaff'">

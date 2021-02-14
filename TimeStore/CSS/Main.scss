@@ -239,6 +239,10 @@ table .crosstab, .crosstab th, .crosstab td {
         overflow-y: visible;
     }
 
+    .no-print {
+      display: none !important;
+    }
+
     md-toolbar {
         display: none !important;
     }

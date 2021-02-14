@@ -71,9 +71,16 @@
         {
           go('/unapproved/ppd/' + timestoredata.getPayPeriodEnd());
         }
-        function goFema()
+        function goFema(ppd)
         {
-          go('/fema/');
+          if (!ppd)
+          {
+            go('/fema/ppd/' + timestoredata.getPayPeriodEnd());
+          }
+          else
+          {
+            go('/fema/ppd/' + ppd);
+          }
         }
 
         function goAddTime(eid, d)

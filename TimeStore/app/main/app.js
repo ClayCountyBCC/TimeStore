@@ -105,9 +105,9 @@
             }]
           }
         })
-        .when('/fema/', {
+        .when('/fema/ppd/:payPeriod', {
           controller: 'FemaViewController',
-          templateUrl: 'FemaView.tmpl.html' 
+          templateUrl: 'FemaView.tmpl.html'
         })
         .when('/signature/ppd/:payPeriod', {
           controller: 'SignatureViewController',
