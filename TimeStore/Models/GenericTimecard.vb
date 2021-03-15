@@ -40,6 +40,12 @@
     End Class
 
     Public Class WorkType
+      Public Enum Week
+        PayPeriod = 0
+        Week1 = 1
+        Week2 = 2
+      End Enum
+
       Property name As String = ""
       Property projectCode As String = ""
       Property payCode As String = ""
@@ -62,13 +68,55 @@
 
       End Sub
 
-      Public Sub New(NameToUse As String, GH As GroupedHours, LeftToRightOrderToUse As Integer,
-                     projectCodeToUse As String, Optional pr As Double = 0)
+      Public Sub New(NameToUse As String,
+                     GH As GroupedHours,
+                     LeftToRightOrderToUse As Integer,
+                     projectCodeToUse As String,
+                     Optional pr As Double = 0)
         If pr > 0 Then
           payRate = pr
           hours = GH.TotalHours(pr)
         Else
           hours = GH.TotalHours
+        End If
+        name = NameToUse
+        leftToRightOrder = LeftToRightOrderToUse
+        payCode = GH.PayCode
+        projectCode = projectCodeToUse
+      End Sub
+
+      Public Sub New(NameToUse As String,
+                     GH As GroupedHours,
+                     WeekToUse As Week,
+                     LeftToRightOrderToUse As Integer,
+                     projectCodeToUse As String,
+                     Optional pr As Double = 0,
+                     Optional comp_time_banked As Double = 0)
+        If pr > 0 Then
+          payRate = pr
+          Select Case WeekToUse
+            Case Week.PayPeriod
+              hours = GH.TotalHours(pr) - comp_time_banked
+
+            Case Week.Week1
+              hours = GH.TotalHours_Week1(pr) - comp_time_banked
+
+            Case Week.Week2
+              hours = GH.TotalHours_Week2(pr) - comp_time_banked
+
+          End Select
+        Else
+          Select Case WeekToUse
+            Case Week.PayPeriod
+              hours = GH.TotalHours() - comp_time_banked
+
+            Case Week.Week1
+              hours = GH.TotalHours_Week1() - comp_time_banked
+
+            Case Week.Week2
+              hours = GH.TotalHours_Week2() - comp_time_banked
+
+          End Select
         End If
         name = NameToUse
         leftToRightOrder = LeftToRightOrderToUse
@@ -100,6 +148,7 @@
 
       Public Shared Function Disaster_Handling(NameToUse As String,
                                                GH As GroupedHours,
+                                               WeekToUse As Week,
                                                LeftToRightOrderToUse As Integer,
                                                pr As Double,
                                                DisasterPayRules As List(Of DisasterEventRules)) As List(Of WorkType)
@@ -109,13 +158,36 @@
         For Each pc In projectcodes
           Try
             If pc.Length = 0 Then
-              workTypes.Add(New WorkType(NameToUse & " " & pc, GH.TotalHours(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+              Select Case WeekToUse
+                Case Week.PayPeriod
+                  workTypes.Add(New WorkType(NameToUse & " " & pc, GH.TotalHours(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+                Case Week.Week1
+                  workTypes.Add(New WorkType(NameToUse & " " & pc, GH.TotalHours_Week1(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+                Case Week.Week2
+                  workTypes.Add(New WorkType(NameToUse & " " & pc, GH.TotalHours_Week2(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+              End Select
+
             Else
               Dim event_names = (From dpr In DisasterPayRules
                                  Where dpr.finplus_project_code = pc
                                  Select dpr.period_name).Distinct.ToList()
 
-              workTypes.Add(New WorkType(NameToUse & " " & IIf(event_names.Count > 0, event_names.First, pc), GH.TotalHours(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+              Select Case WeekToUse
+                Case Week.PayPeriod
+                  workTypes.Add(New WorkType(NameToUse & " " & IIf(event_names.Count > 0, event_names.First, pc), GH.TotalHours(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+                Case Week.Week1
+                  workTypes.Add(New WorkType(NameToUse & " " & IIf(event_names.Count > 0, event_names.First, pc), GH.TotalHours_Week1(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+                Case Week.Week2
+                  workTypes.Add(New WorkType(NameToUse & " " & IIf(event_names.Count > 0, event_names.First, pc), GH.TotalHours_Week2(pr, pc), LeftToRightOrderToUse, GH.PayCode, pc, pr))
+
+              End Select
+
+
             End If
 
           Catch ex As Exception
@@ -957,7 +1029,10 @@
       End If
     End Sub
 
-    Public Sub New(e As EPP, STD As List(Of Saved_Timecard_Data), SavedNotes As List(Of Note), Optional allowDataSave As Boolean = False)
+    Public Sub New(e As EPP,
+                   STD As List(Of Saved_Timecard_Data),
+                   SavedNotes As List(Of Note),
+                   Optional allowDataSave As Boolean = False)
       foundEmployee = True
       Load_EPP(e)
       Current_Timecard_Data.AddRange(STD)
@@ -1016,7 +1091,8 @@
         Else
 
           Dim ttdl As List(Of TelestaffTimeData) = TelestaffTimeData.GetEmployeeDataFromTelestaff(payPeriodStart, EmployeeID)
-          Dim e As New EPP(ttdl, fd, payPeriodStart)
+          Dim CTE As New Saved_TimeStore_Comp_Time_Earned(EmployeeID, payPeriodStart.AddDays(13))
+          Dim e As New EPP(ttdl, fd, payPeriodStart, CTE)
           Load_EPP(e)
 
         End If
@@ -1300,27 +1376,27 @@
           End If
 
           If Not isExempt Then
-            calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, "", p))
-            calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, "", p))
-            calculatedTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1, "", p))
-            'Scheduled_Double_Overtime
-            calculatedTimeList.Add(New WorkType("Scheduled OT 2.0", e.Scheduled_Double_Overtime, 1, "", p))
-            calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, "", p))
-            calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, "", p))
-            calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, "", p))
-            calculatedTimeList.Add(New WorkType("Cares Doubletime OT 2.0", e.Cares_Doubletime, 9, "", p))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 10, p, e.DisasterPayRules))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p, e.DisasterPayRules))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p, e.DisasterPayRules))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.5", e.Disaster_Overtime, 11, p, e.DisasterPayRules))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p, e.DisasterPayRules))
-            'calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 11, p))
-            'calculatedTimeList.Add(New WorkType("Disaster Admin Hours", e.Admin_Leave_Disaster, 11, p))
-            'calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
-            'calculatedTimeList.Add(New WorkType("Disaster Hours 1.5", e.Disaster_Overtime, 11, p))
-            'calculatedTimeList.Add(New WorkType("Disaster Hours 2.0", e.Disaster_Doubletime, 11, p))
+
+
             Select Case e.TelestaffProfileType
               Case TelestaffProfileType.Dispatch, TelestaffProfileType.Field
+                ' Changed to allow us to change how Comp Time is handled
+                calculatedTimeList.Add(New WorkType("Regular Work", e.Regular, 0, "", p))
+                calculatedTimeList.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, 5, "", p))
+                calculatedTimeList.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, 1, "", p))
+                calculatedTimeList.Add(New WorkType("Scheduled OT 2.0", e.Scheduled_Double_Overtime, 1, "", p))
+                calculatedTimeList.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, 7, "", p))
+                calculatedTimeList.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, 8, "", p))
+                calculatedTimeList.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, 9, "", p))
+                calculatedTimeList.Add(New WorkType("Cares Doubletime OT 2.0", e.Cares_Doubletime, 9, "", p))
+                calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 0, 10, p, e.DisasterPayRules))
+                calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Admin Hours", e.Admin_Leave_Disaster, 0, 11, p, e.DisasterPayRules))
+                calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 0, 11, p, e.DisasterPayRules))
+                calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.5", e.Disaster_Overtime, 0, 11, p, e.DisasterPayRules))
+                calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 2.0", e.Disaster_Doubletime, 0, 11, p, e.DisasterPayRules))
+
+                ' End Changed
+
                 timeList.Add(New WorkType("Holiday", e.Holiday_Paid, 6, "", p))
                 timeList.Add(New WorkType("Holiday Time Banked", e.Holiday_Time_Banked, 10, "", p))
                 timeList.Add(New WorkType("Holiday Time Used", e.Holiday_Time_Used, 11, "", p))
@@ -1332,29 +1408,108 @@
               Case TelestaffProfileType.Office
                 Select Case e.EmployeeData.Comp_Time_Code
                   Case "500" ' Not BCs
-                    timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
+                    'timeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
+                    timeList.Add(New WorkType("Comp Time Banked", e.CompTimeEarned.total_comp_time_earned, 10, "120", "", p))
+                    'timeList.Add(New WorkType("Comp Time Banked", e.CompTimeEarned.comp_time_earned_week1 + e.CompTimeEarned.comp_time_earned_week2, 10, "", p))
                     timeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, "", p))
+                    For a As Integer = 0 To 2
+                      Dim c As List(Of WorkType) = calculatedTimeList
+                      Dim comp_time_banked As Double = 0
+                      Select Case a
+                        Case 0
+                          c = calculatedTimeList
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week1 + e.CompTimeEarned.comp_time_earned_week2
+                        Case 1
+                          c = calculatedTimeList_Week1
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week1
+                        Case 2
+                          c = calculatedTimeList_Week2
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week2
+                      End Select
+                      c.Add(New WorkType("Comp Time Banked", comp_time_banked, 10, "120", "", p))
+                      'c.Add(New WorkType("Comp Time Banked", comp_time_banked, a, 10, "", p))
+                      c.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, a, 11, "", p))
+                    Next
+                    'calculatedTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
+                    'calculatedTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, "", p))
 
-                    calculatedTimeList.Add(New WorkType("Comp Time Banked", e.Comp_Time_Banked, 10, "", p))
-                    calculatedTimeList.Add(New WorkType("Comp Time Used", e.Comp_Time_Used, 11, "", p))
+
                   Case "600" ' BCs
-                    timeList.Add(New WorkType("Comp Time Banked", e.BC_Comp_Time_Banked, 10, "", p))
+                    'timeList.Add(New WorkType("Comp Time Banked", e.BC_Comp_Time_Banked, 10, "", p))
+                    timeList.Add(New WorkType("Comp Time Banked", e.CompTimeEarned.total_comp_time_earned, 10, "118", "", p))
+                    ''timeList.Add(New WorkType("Comp Time Banked", e.CompTimeEarned.comp_time_earned_week1 + e.CompTimeEarned.comp_time_earned_week2, 10, "", p))
                     timeList.Add(New WorkType("Comp Time Used", e.BC_Comp_Time_Used, 11, "", p))
 
-                    calculatedTimeList.Add(New WorkType("Comp Time Banked", e.BC_Comp_Time_Banked, 10, "", p))
-                    calculatedTimeList.Add(New WorkType("Comp Time Used", e.BC_Comp_Time_Used, 11, "", p))
+                    For a As Integer = 0 To 2
+                      Dim c As List(Of WorkType) = calculatedTimeList
+                      Dim comp_time_banked As Double = 0
+                      Select Case a
+                        Case 0
+                          c = calculatedTimeList
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week1 + e.CompTimeEarned.comp_time_earned_week2
+                        Case 1
+                          c = calculatedTimeList_Week1
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week1
+                        Case 2
+                          c = calculatedTimeList_Week2
+                          comp_time_banked = e.CompTimeEarned.comp_time_earned_week2
+                      End Select
+                      c.Add(New WorkType("Comp Time Banked", comp_time_banked, 10, "118", "", p))
 
+
+                      'c.Add(New WorkType("Comp Time Banked", comp_time_banked, a, 10, "", p))
+                      c.Add(New WorkType("Comp Time Used", e.BC_Comp_Time_Used, a, 11, "", p))
+                    Next
                 End Select
 
                 If e.Holiday_Time_Used.TotalHours > 0 Then
                   timeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, "", p))
-                  calculatedTimeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, 11, "", p))
+                  For a As Integer = 0 To 2
+                    calculatedTimeList.Add(New WorkType("Banked Holiday Used", e.Holiday_Time_Used, a, 11, "", p))
+                  Next
+
                 End If
+                For a As Integer = 0 To 2
+                  Dim c As List(Of WorkType) = calculatedTimeList
+                  Dim comp_time_banked As Double = 0
+                  Select Case a
+                    Case 0
+                      c = calculatedTimeList
+                      comp_time_banked = e.CompTimeEarned.comp_time_earned_week1 + e.CompTimeEarned.comp_time_earned_week2
+                    Case 1
+                      c = calculatedTimeList_Week1
+                      comp_time_banked = e.CompTimeEarned.comp_time_earned_week1
+                    Case 2
+                      c = calculatedTimeList_Week2
+                      comp_time_banked = e.CompTimeEarned.comp_time_earned_week2
+                  End Select
+
+                  c.Add(New WorkType("Regular Work", e.Regular, a, 0, "", p))
+                  c.Add(New WorkType("Scheduled OT 1.0", e.Scheduled_Regular_Overtime, a, 5, "", p))
+                  c.Add(New WorkType("Scheduled OT 1.5", e.Scheduled_Overtime, a, 1, "", p))
+                  c.Add(New WorkType("Scheduled OT 2.0", e.Scheduled_Double_Overtime, a, 1, "", p))
+                  c.Add(New WorkType("Unscheduled OT 1.0", e.Unscheduled_Regular_Overtime, a, 7, "", p))
+                  c.Add(New WorkType("Unscheduled OT 1.5", e.Unscheduled_Overtime, a, 8, "", p, comp_time_banked))
+                  c.Add(New WorkType("Unscheduled OT 2.0", e.Unscheduled_Double_Overtime, a, 9, "", p))
+                  c.Add(New WorkType("Cares Doubletime OT 2.0", e.Cares_Doubletime, a, 9, "", p))
+                  c.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, a, 10, p, e.DisasterPayRules))
+                  c.AddRange(WorkType.Disaster_Handling("Disaster Admin Hours", e.Admin_Leave_Disaster, a, 11, p, e.DisasterPayRules))
+                  c.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, a, 11, p, e.DisasterPayRules))
+                  c.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.5", e.Disaster_Overtime, a, 11, p, e.DisasterPayRules))
+                  c.AddRange(WorkType.Disaster_Handling("Disaster Hours 2.0", e.Disaster_Doubletime, a, 11, p, e.DisasterPayRules))
+                  If a > 0 Then
+                    c.Add(New WorkType("Term Hours", e.Term_Hours, a, 2, "", p))
+                    c.Add(New WorkType("LWOP", e.Leave_Without_Pay, a, 2, "", p))
+                    c.Add(New WorkType("Vacation", e.Vacation, a, 3, "", p))
+                    c.Add(New WorkType("Sick", e.Sick, a, 4, "", p))
+                  End If
+
+                Next
 
             End Select
           Else
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 10, p, e.DisasterPayRules))
-            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p, e.DisasterPayRules))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Regular Hours", e.Disaster_Regular, 0, 10, p, e.DisasterPayRules))
+            calculatedTimeList.AddRange(WorkType.Disaster_Handling("Disaster Hours 1.0", e.Disaster_StraightTime, 0, 11, p, e.DisasterPayRules))
             'calculatedTimeList.Add(New WorkType("Disaster Hours 1.0", e.Disaster_StraightTime, 11, p))
             'calculatedTimeList.Add(New WorkType("Disaster Regular Hours", e.Disaster_Regular, 10, p))
             tmp = 80 - e.Vacation.TotalHours - e.Sick.TotalHours - e.Leave_Without_Pay.TotalHours - e.Disaster_Regular.TotalHours

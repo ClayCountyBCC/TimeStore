@@ -51808,7 +51808,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
             {
               return (Math.round(n * 4) / 4).toFixed(2);
             }
-            updateEligibleOT();
+            
             // They can only have a maximum of 32 hours of comp time banked
             // In order to enforce this maximum, we need to know how many
             // comp time hours they already have banked
@@ -51839,6 +51839,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
               $scope.week2CompTimeEarned = getComptime($scope.timecard.calculatedTimeList_Week2);
             }
 
+            updateEligibleOT();
+
             function getTotalCompTimeBanked()
             {
               $scope.totalCompTimeBanked = getComptime($scope.timecard.calculatedTimeList_Week1) + getComptime($scope.timecard.calculatedTimeList_Week2);
@@ -51861,13 +51863,15 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
 
             function getComptime(week)
             {
-              return getTime(week, '120');
+              return getTime(week, '120') + getTime(week, '118');
             }
 
             function getComptimeUsed()
             {
               return getTime($scope.timecard.calculatedTimeList_Week1, '121') +
-                getTime($scope.timecard.calculatedTimeList_Week2, '121');
+                getTime($scope.timecard.calculatedTimeList_Week2, '121') + 
+                getTime($scope.timecard.calculatedTimeList_Week1, '119') +
+                getTime($scope.timecard.calculatedTimeList_Week2, '119');
             }
 
             function getTime(week, payCode)

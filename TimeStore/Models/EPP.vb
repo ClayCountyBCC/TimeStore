@@ -27,6 +27,7 @@
     Public Property PayPeriodStart As Date
     Public Property ErrorList As New List(Of String)
     Public Property WarningList As New List(Of String)
+    Public Property CompTimeEarned As Saved_TimeStore_Comp_Time_Earned = Nothing
 
     Public Shared Function PopulateDisasterWorkDates(PayPeriodStart As Date, DisasterPayRules As List(Of DisasterEventRules)) As List(Of Date)
       Dim workdates As List(Of Date) = New List(Of Date)()
@@ -91,10 +92,16 @@
       Return l
     End Function
 
-    Sub New(T As List(Of TelestaffTimeData), F As FinanceData, PPS As Date)
+    Sub New(T As List(Of TelestaffTimeData), F As FinanceData, PPS As Date, CTE As Saved_TimeStore_Comp_Time_Earned)
       ', ProfileID As Integer, ProfileDesc As String)
       PayPeriodStart = PPS
-      RawTimeList = CloneTelestaffTimeData(T)
+      'RawTimeList = CloneTelestaffTimeData(T) ' Moved down on 3/8/2021
+      If CTE Is Nothing Then
+        CompTimeEarned = New Saved_TimeStore_Comp_Time_Earned()
+      Else
+        CompTimeEarned = CTE
+      End If
+
       Timelist = T
       EmployeeData = F
       Banked_Holiday_Hours = F.Banked_Holiday_Hours
@@ -110,7 +117,14 @@
       'Dim j As Double = Total_Hours
 
       Parse_Hours()
+      RawTimeList = CloneTelestaffTimeData(T)
       Balance_Hours()
+      If CompTimeEarned IsNot Nothing Then
+        If Unscheduled_Overtime.TotalHours_Week1 < CompTimeEarned.comp_time_earned_week1 Or
+          Unscheduled_Overtime.TotalHours_Week2 < CompTimeEarned.comp_time_earned_week2 Then
+          CTE.Delete()
+        End If
+      End If
       Check_Exceptions()
       Handle_Holiday_Modifier(False)
       Handle_Cares_Hours()
@@ -364,12 +378,20 @@
             Case "119"
               _bc_comp_time_used.Add(T)
             Case "120" ' Comp time accrued
-              Select Case EmployeeData.Comp_Time_Code
-                Case "500"
-                  _comp_time_banked.Add(T)
-                Case "600"
-                  _bc_comp_time_banked.Add(T)
-              End Select
+              ' Removed on 3/8/2021 for changes to Comp Time Earned
+              'Select Case EmployeeData.Comp_Time_Code
+              '  Case "500"
+              '    _comp_time_banked.Add(T)
+              '  Case "600"
+              '    _bc_comp_time_banked.Add(T)
+              'End Select
+              T.WorkCode = "231"
+              T.WorkType = "Staff Overtime"
+              T.WorkTypeAbrv = "SOT"
+              T.IsPaidTime = True
+              _unscheduled_overtime.Add(T)
+
+
             Case "121" ' Banked comp time used
               Select Case EmployeeData.Comp_Time_Code
                 Case "500"
@@ -1095,12 +1117,17 @@
       End If
 
 
-
+      ' Updated on 3/8/2021
       If (Total_Non_Working_Hours_Week1 > (Scheduled_Regular_Overtime.TotalHours_Week1 +
-        Comp_Time_Banked.TotalHours_Week1 + BC_Comp_Time_Banked.TotalHours_Week1 +
         Unscheduled_Regular_Overtime.TotalHours_Week1) - Unscheduled_Double_Overtime.TotalHours_Week1) AndAlso Unscheduled_Overtime.TotalHours_Week1 > 0 Then
-        Dim diff As Double = Total_Hours_Week1 + (Comp_Time_Banked.TotalHours_Week1 + BC_Comp_Time_Banked.TotalHours_Week1) - Total_Non_Working_Hours_Week1 -
-          HoursNeededForOvertimeByWeek - Unscheduled_Double_Overtime.TotalHours_Week1
+        ' Updated on 3/8/2021
+        'Dim diff As Double = Total_Hours_Week1 +
+        '  (Comp_Time_Banked.TotalHours_Week1 + BC_Comp_Time_Banked.TotalHours_Week1) -
+        '  Total_Non_Working_Hours_Week1 - HoursNeededForOvertimeByWeek - Unscheduled_Double_Overtime.TotalHours_Week1
+        Dim diff As Double = Total_Hours_Week1 -
+          Total_Non_Working_Hours_Week1 -
+          HoursNeededForOvertimeByWeek -
+          Unscheduled_Double_Overtime.TotalHours_Week1
         'If there are any scheduled_regular_overtime hours, they've already been subtracted from the total non working hours
         If diff >= 0 Then
           ' This is the total number of unscheduled OT
@@ -1145,9 +1172,10 @@
         Unscheduled_Overtime.TotalHours_Week2 > 0 Then
         Unscheduled_Overtime.Move_Week2(Unscheduled_Overtime.TotalHours_Week2, _unscheduled_regular_overtime, Timelist)
       End If
-      If (Total_Non_Working_Hours_Week2 > (Scheduled_Regular_Overtime.TotalHours_Week2 + Comp_Time_Banked.TotalHours_Week2 + BC_Comp_Time_Banked.TotalHours_Week2 + Unscheduled_Regular_Overtime.TotalHours_Week2) -
-                    Unscheduled_Double_Overtime.TotalHours_Week2) AndAlso Unscheduled_Overtime.TotalHours_Week2 > 0 Then
-        Dim diff As Double = Total_Hours_Week2 + (Comp_Time_Banked.TotalHours_Week2 + BC_Comp_Time_Banked.TotalHours_Week2) - Total_Non_Working_Hours_Week2 - HoursNeededForOvertimeByWeek - Unscheduled_Double_Overtime.TotalHours_Week2
+      ' Updated on 3/8/2021
+      If (Total_Non_Working_Hours_Week2 > Scheduled_Regular_Overtime.TotalHours_Week2 - Unscheduled_Double_Overtime.TotalHours_Week2) AndAlso Unscheduled_Overtime.TotalHours_Week2 > 0 Then
+        ' Updated on 3/8/2021
+        Dim diff As Double = Total_Hours_Week2 - Total_Non_Working_Hours_Week2 - HoursNeededForOvertimeByWeek - Unscheduled_Double_Overtime.TotalHours_Week2
         'If there are any scheduled_regular_overtime hours, they've already been subtracted from the total non working hours
         If diff >= 0 Then
           ' This is the total number of unscheduled OT
@@ -1611,11 +1639,12 @@
       If e.TelestaffProfileType = TelestaffProfileType.Office Then
         Select Case e.EmployeeData.Comp_Time_Code
           Case "500"
-            If e.Comp_Time_Banked.TotalHours + EmployeeData.Banked_Comp_Hours - Comp_Time_Used.TotalHours > 32 Then
+            ' Updated on 3/8/2021
+            If e.CompTimeEarned.total_comp_time_earned + EmployeeData.Banked_Comp_Hours - Comp_Time_Used.TotalHours > 32 Then
               TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "You can only bank a maximum of 32 hours of Comp Time."))
             End If
           Case "600"
-            If e.BC_Comp_Time_Banked.TotalHours + EmployeeData.Banked_Comp_Hours - BC_Comp_Time_Used.TotalHours > 32 Then
+            If e.CompTimeEarned.total_comp_time_earned + EmployeeData.Banked_Comp_Hours - BC_Comp_Time_Used.TotalHours > 32 Then
               TEList.Add(New TimecardTimeException(e.EmployeeData, TelestaffExceptionType.exceptionError, "You can only bank a maximum of 32 hours of Comp Time."))
             End If
         End Select

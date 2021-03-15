@@ -129,6 +129,15 @@ Public Module ModuleMain
           HolidayList.Add(DateSerial(vYear, 12, 24)) ' for 2014 & 2017, the holidays are set to 12/25 and 12/26
         End If
 
+      Case 2021
+        If MoveDays Then
+          HolidayList.Add(DateSerial(vYear, 12, 23))
+          HolidayList.Add(DateSerial(vYear, 12, 24))
+        Else
+          HolidayList.Add(DateSerial(vYear, 12, 24))
+          HolidayList.Add(DateSerial(vYear, 12, 25))
+        End If
+
       Case Else
         ' Christmas Eve         Dec 24
         HolidayList.Add(DateSerial(vYear, 12, 24))
@@ -139,7 +148,10 @@ Public Module ModuleMain
     End Select
 
     ' Christmas Day         Dec 25
-    HolidayList.Add(DateSerial(vYear, 12, 25))
+    If vYear <> 2021 Then
+      HolidayList.Add(DateSerial(vYear, 12, 25))
+    End If
+
 
     'saturday holidays are moved to Fri; Sun to Mon
     If MoveDays Then
@@ -536,9 +548,10 @@ Public Module ModuleMain
             .Unscheduled_Double_Overtime = e.Unscheduled_Double_Overtime.TotalHours(p)
             .Holiday_Time_Banked = e.Holiday_Time_Banked.TotalHours(p)
             .Holiday_Time_Used = e.Holiday_Time_Used.TotalHours(p)
-            .Comp_Time_Banked = e.Comp_Time_Banked.TotalHours(p)
+            ' Updated 3/8/2021
+            .Comp_Time_Banked = e.CompTimeEarned.total_comp_time_earned 'e.Comp_Time_Banked.TotalHours(p)
             .Comp_Time_Used = e.Comp_Time_Used.TotalHours(p)
-            .Comp_Time_Banked += e.BC_Comp_Time_Banked.TotalHours(p)
+            '.Comp_Time_Banked += e.BC_Comp_Time_Banked.TotalHours(p)
             .Comp_Time_Used += e.BC_Comp_Time_Used.TotalHours(p)
           End If
           ' Handling Thanksgiving Holidays on 12/3/2014

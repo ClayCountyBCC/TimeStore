@@ -4,12 +4,23 @@
     Property pay_period_ending As Date = Date.MaxValue
     Property comp_time_earned_week1 As Double = 0
     Property comp_time_earned_week2 As Double = 0
+    ReadOnly Property total_comp_time_earned As Double
+      Get
+        Return comp_time_earned_week1 + comp_time_earned_week2
+      End Get
+    End Property
     Property date_added As Date = Date.MaxValue
     Property date_last_updated As Date = Date.MaxValue
     Property by_employeeid As Integer = 0
     Property by_username As String = ""
     Property by_machinename As String = ""
     Property by_ip_address As String = ""
+
+    Public Sub New()
+      employee_id = 0
+      comp_time_earned_week1 = 0
+      comp_time_earned_week2 = 0
+    End Sub
 
     Public Sub New(EmployeeID As Integer, PayPeriodEnding As Date)
       PopulateCompTimeEarnedData(EmployeeID, PayPeriodEnding)
@@ -79,6 +90,8 @@
       DeleteCompTimeEarnedData(employee_id, pay_period_ending)
       Clear_Saved_Timestore_Data(employee_id, pay_period_ending.AddDays(-13))
       Add_Timestore_Note(employee_id, pay_period_ending, "Your hours have changed, your Comp Time choices and approval has been removed.")
+      comp_time_earned_week1 = 0
+      comp_time_earned_week2 = 0
     End Sub
   End Class
 End Namespace

@@ -59,7 +59,7 @@ Public Module ModuleDataAccess
     ' MSIL03, CLAYBCCDV10 = Development / Testing
     ' CLAYBCCIIS01 = Production
     Select Case Environment.MachineName.ToUpper
-      Case "CLAYBCCDV10" ', "MISSL01" ' QA
+      Case "CLAYBCCDV10", "MISSL01" ' QA
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -83,7 +83,7 @@ Public Module ModuleDataAccess
             Return ""
         End Select
 
-      Case "CLAYBCCIIS01", "MISSL01" ' Production
+      Case "CLAYBCCIIS01" ', "MISSL01" ' Production
         Select Case cst
           Case ConnectionStringType.Telestaff
             Return ConfigurationManager.ConnectionStrings("TimestoreProduction").ConnectionString
@@ -960,19 +960,27 @@ WHERE access_type >= " & accessType
     '(el.TerminationDate > PayPeriodStart And
     'el.TerminationDate <= PayPeriodEnding)) And
 
+    Dim checkCompTime As Boolean = tsctedata.Count > 0 ' This only needs to be evaluated once.
     ' Now let's build some timecards
+
     For Each e In employeeList
+      ' Handle the saved comp time here.
+      Dim tmpCTE As Saved_TimeStore_Comp_Time_Earned = Nothing
+      If checkCompTime Then
+        Dim cte = (From c In tsctedata Where c.employee_id = e.EmployeeId Select c)
+        If cte.Count > 0 Then tmpCTE = cte.First
+      End If
+
       If PublicSafety.Contains(e.Department) Then ' Telestaff
         Try
-
 
           Dim tmpStd As List(Of Saved_Timecard_Data) = (From s In std Where s.EmployeeId = e.EmployeeId Select s).ToList
           Dim tmpTele As List(Of TelestaffTimeData) = (From t In teledata Where t.EmployeeId = e.EmployeeId Select t).ToList
           Dim tmpNotes As List(Of Note) = (From n In notes Where n.EmployeeID = e.EmployeeId Select n).ToList
           If tmpStd.Count > 0 Then
-            gtc.Add(New GenericTimecard(New EPP(tmpTele, e, PayPeriodStart), tmpStd, tmpNotes, allowDataSave))
+            gtc.Add(New GenericTimecard(New EPP(tmpTele, e, PayPeriodStart, tmpCTE), tmpStd, tmpNotes, allowDataSave))
           Else
-            gtc.Add(New GenericTimecard(New EPP(tmpTele, e, PayPeriodStart), allowDataSave))
+            gtc.Add(New GenericTimecard(New EPP(tmpTele, e, PayPeriodStart, tmpCTE), allowDataSave))
           End If
         Catch ex As Exception
           Log(ex)
@@ -982,11 +990,11 @@ WHERE access_type >= " & accessType
         Try
           Dim tmpStd As List(Of Saved_Timecard_Data) = (From s In std Where s.EmployeeId = e.EmployeeId Select s).ToList
           Dim tmpTC As List(Of TimecardTimeData) = (From t In tcdata Where t.EmployeeID = e.EmployeeId Select t).ToList
-          Dim tmpCTE As Saved_TimeStore_Comp_Time_Earned = Nothing
+          'Dim tmpCTE As Saved_TimeStore_Comp_Time_Earned = Nothing
           If tmpTC.Count = 0 Then
             tmpTC = (From t In tsdata Where t.EmployeeID = e.EmployeeId Select t).ToList
-            Dim cte = (From c In tsctedata Where c.employee_id = e.EmployeeId Select c)
-            If cte.Count > 0 Then tmpCTE = cte.First
+            '  Dim cte = (From c In tsctedata Where c.employee_id = e.EmployeeId Select c)
+            '  If cte.Count > 0 Then tmpCTE = cte.First
           End If
           Dim tmpNotes As List(Of Note) = (From n In notes Where n.EmployeeID = e.EmployeeId Select n).ToList
           If tmpStd.Count > 0 Then
