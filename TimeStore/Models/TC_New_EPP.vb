@@ -4,6 +4,7 @@
   Public Class TC_New_EPP
 
     Public PayPeriodStart As Date = GetPayPeriodStart(Today)
+    Public Holidays As New List(Of Date)
     Public EmployeeData As FinanceData
     Public TL As New List(Of TimecardTimeData)
     Public BaseTS As New List(Of TimeSegment)
@@ -96,6 +97,7 @@
       EmployeeData = F
       TL = TCTD
       PayPeriodStart = pps
+      Holidays = Get_Holidays_By_Payperiod(pps, True)
       DisasterPayRules = DisasterEventRules.Get_Cached_Disaster_Rules(pps.AddDays(13))
       Process_Times()
       'PopulateDisasterWorkDates() ' Removed on 8/21/2020
@@ -114,6 +116,7 @@
       EmployeeData = F
       TL = TCTD
       PayPeriodStart = pps
+      Holidays = Get_Holidays_By_Payperiod(pps, True)
       DisasterPayRules = DisasterEventRules.Get_Cached_Disaster_Rules(pps.AddDays(13))
       Process_Times()
       If TCTD.Count > 0 Then
@@ -650,7 +653,7 @@
           End If
 
         Case 1
-          If ts.work_date.DayOfWeek = DayOfWeek.Sunday Then
+          If ts.work_date.DayOfWeek = DayOfWeek.Sunday Or Holidays.Contains(ts.work_date) Then
             DisasterDoubletime(ts.week) += ts.total_hours
             tsDisasterDoubletime.Add(ts)
           Else

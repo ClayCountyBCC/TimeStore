@@ -4,6 +4,7 @@
     Property EmployeeData As FinanceData
     Property Timelist As List(Of TelestaffTimeData)
     Property RawTimeList As List(Of TelestaffTimeData)
+    Public Property Holidays As New List(Of Date)
     Private _regular, _scheduled_overtime, _lwop, _vacation, _sick As New GroupedHours
     Private _scheduled_double_overtime As New GroupedHours
     Private _scheduled_regular_overtime, _holiday_paid As New GroupedHours
@@ -95,6 +96,7 @@
     Sub New(T As List(Of TelestaffTimeData), F As FinanceData, PPS As Date, CTE As Saved_TimeStore_Comp_Time_Earned)
       ', ProfileID As Integer, ProfileDesc As String)
       PayPeriodStart = PPS
+      Holidays = Get_Holidays_By_Payperiod(PPS, True)
       'RawTimeList = CloneTelestaffTimeData(T) ' Moved down on 3/8/2021
       If CTE Is Nothing Then
         CompTimeEarned = New Saved_TimeStore_Comp_Time_Earned()
@@ -390,7 +392,9 @@
               T.WorkTypeAbrv = "SOT"
               T.IsPaidTime = True
               _unscheduled_overtime.Add(T)
-
+              If ErrorList.Where(Function(p) p.Contains("Comp Time")).Count() = 0 Then
+                ErrorList.Add("The Comp Time Earned Work code in Telestaff should no longer be used.  These hours should be entered as Staff Overtime hours. The Handle Comp Time tab in Timestore can be used to change overtime hours into Comp Time Earned hours.")
+              End If
 
             Case "121" ' Banked comp time used
               Select Case EmployeeData.Comp_Time_Code
@@ -666,22 +670,24 @@
                               t.DisasterRule = 1
                             Select t.WorkHours).Sum
         ' no one is scheduled to work Saturdays or Sundays
-        If d.DayOfWeek = DayOfWeek.Sunday Then
+        If dr > 0 Then
+          If (d.DayOfWeek = DayOfWeek.Sunday Or Holidays.Contains(d)) Then
 
-          Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Doubletime, Timelist)
-
-        Else
-
-          If d.DayOfWeek = DayOfWeek.Saturday Then
-            Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Overtime, Timelist)
+            Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Doubletime, Timelist)
 
           Else
-            If d = "9/2/2019" Then ' 9/2/2019 is hte holiday, 9/3 is the date of the full activation start.
+
+            If d.DayOfWeek = DayOfWeek.Saturday Then
               Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Overtime, Timelist)
+
+            Else
+              If d = "9/2/2019" Then ' 9/2/2019 is hte holiday, 9/3 is the date of the full activation start.
+                Disaster_Regular.Move_Day(dr, d, DisasterRegular, Disaster_Overtime, Timelist)
+              End If
             End If
           End If
-        End If
 
+        End If
 
       Next
 

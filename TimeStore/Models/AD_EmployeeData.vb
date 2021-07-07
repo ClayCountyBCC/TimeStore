@@ -95,23 +95,27 @@ Namespace Models
         ds.Filter = "(&(objectClass=user)(employeeID=*))"
         Dim src As SearchResultCollection = ds.FindAll()
         For Each s As SearchResult In src
-          Dim eid As Integer = GetADProperty(s, "employeeID")
-          If eid > 0 Then
-            Dim name As String = GetADProperty_String(s, "displayName")
-            Dim mail As String = GetADProperty_String(s, "mail")
-            Dim user As String = GetADProperty_String(s, "sAMAccountName")
-            Dim pwLastChangedDate = DateTime.MaxValue
-            Try
-              Dim rawvalue As String = GetADProperty_String(s, "pwdLastSet")
-              If rawvalue.Length > 0 Then
-                pwLastChangedDate = DateTime.FromFileTimeUtc(rawvalue)
-              End If
-            Catch ex As Exception
-              Log(ex)
-            End Try
-            Dim passworddoesnotexpire = PasswordSetToNeverExpire(s)
-            aded(eid) = New AD_EmployeeData(eid, name, mail, user.ToLower, pwLastChangedDate, passworddoesnotexpire)
-          End If
+          Try
+            Dim eid As Integer = GetADProperty(s, "employeeID")
+            If eid > 0 Then
+              Dim name As String = GetADProperty_String(s, "displayName")
+              Dim mail As String = GetADProperty_String(s, "mail")
+              Dim user As String = GetADProperty_String(s, "sAMAccountName")
+              Dim pwLastChangedDate = DateTime.MaxValue
+              Try
+                Dim rawvalue As String = GetADProperty_String(s, "pwdLastSet")
+                If rawvalue.Length > 0 Then
+                  pwLastChangedDate = DateTime.FromFileTimeUtc(rawvalue)
+                End If
+              Catch ex As Exception
+                Log(ex)
+              End Try
+              Dim passworddoesnotexpire = PasswordSetToNeverExpire(s)
+              aded(eid) = New AD_EmployeeData(eid, name, mail, user.ToLower, pwLastChangedDate, passworddoesnotexpire)
+            End If
+          Catch ex As Exception
+            Log(ex)
+          End Try
         Next
       Catch ex As Exception
         Log(ex)
@@ -182,7 +186,16 @@ Namespace Models
 
     Private Shared Function GetADProperty(ByRef sr As SearchResult, propertyName As String) As Integer
       If sr Is Nothing Then Return 0
-      If sr.Properties(propertyName).Count > 0 Then Return sr.Properties(propertyName)(0).ToString.Trim Else Return 0
+      If sr.Properties(propertyName).Count > 0 Then
+        Dim s As String = sr.Properties(propertyName)(0).ToString.Trim
+        If s.Length > 0 AndAlso IsNumeric(s) Then
+          Return CInt(s)
+        Else
+          Return 0
+        End If
+      Else
+        Return 0
+      End If
     End Function
 
     Private Shared Function GetADProperty_String(ByRef sr As SearchResult, propertyName As String) As String

@@ -308,7 +308,7 @@
         // let's make sure these disaster hours don't overlap the regular hours worked
         if (!HoursWorkedMustOverlap($scope.TCTD.selectedTimes, dwh.DisasterSelectedTimes))
         {
-          dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " must overlap your regular hours worked.";
+          dwh.DisasterTimesError = "Your hours worked on " + special_event.event_name + " must overlap your regular hours worked.";
           $scope.errorList.push(dwh.DisasterTimesError);
           return;
         }
@@ -324,13 +324,13 @@
               let dwh_ff = special_event_ff.disaster_work_hours;
               if (!HoursWorkedMustNotOverlap(dwh.DisasterSelectedTimes, dwh_ff.DisasterSelectedTimes))
               {
-                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                dwh.DisasterTimesError = "Your hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
                 $scope.errorList.push(dwh.DisasterTimesError);
                 return;
               }
               if (!HoursWorkedMustNotOverlap(dwh_ff.DisasterSelectedTimes, dwh.DisasterSelectedTimes))
               {
-                dwh.DisasterTimesError = "Yours hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
+                dwh.DisasterTimesError = "Your hours worked on " + special_event.event_name + " are overlapping the hours you entered for " + special_event_ff.event_name + ". The same time range cannot be allocated more than once.";
                 $scope.errorList.push(dwh.DisasterTimesError);
                 return;
               }
