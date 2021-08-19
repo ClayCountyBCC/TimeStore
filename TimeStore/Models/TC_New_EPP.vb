@@ -555,7 +555,7 @@
       Dim normallyscheduled As Double = GetNormallyScheduledHours(ts)
       If normallyscheduled > 0 Then
         Dim diff = normallyscheduled - GetHoursWorked(ts)
-        If diff = 0 Then
+        If diff <= 0 Then
           Handle_Disaster_Regular_Non_Exempt_By_Payrule(ts)
         Else
           If diff > 0 Then
@@ -575,7 +575,7 @@
             End If
 
           Else
-            Dim el As New ErrorLog("Disaster Calculation normally scheduled error", ts.work_date.ToShortDateString, ts.start_time_raw, ts.end_time_raw, "")
+            Dim el As New ErrorLog("Disaster Calculation normally scheduled error", ts.work_date.ToShortDateString & " " & EmployeeData.EmployeeId, ts.start_time_raw, ts.end_time_raw, "")
           End If
         End If
       Else
@@ -590,7 +590,7 @@
       Dim normallyscheduled As Double = GetNormallyScheduledHours(ts)
       If normallyscheduled > 0 Then
         Dim diff = normallyscheduled - GetHoursWorked(ts)
-        If diff = 0 Then
+        If diff <= 0 Then
           Handle_Disaster_Regular_Exempt_By_Payrule(ts)
         Else
           If diff > 0 Then
@@ -612,7 +612,7 @@
             End If
 
           Else
-            Dim el As New ErrorLog("Disaster Calculation normally scheduled error", ts.work_date.ToShortDateString, ts.start_time_raw, ts.end_time_raw, "")
+            Dim el As New ErrorLog("Disaster Calculation normally scheduled error", ts.work_date.ToShortDateString & " " & EmployeeData.EmployeeId, ts.start_time_raw, ts.end_time_raw, "")
           End If
         End If
       Else
@@ -853,7 +853,7 @@
         End If
 
         If (From t In TL Select t.AdminBereavement + t.AdminHours + t.AdminDisaster +
-                           t.AdminJuryDuty + t.AdminMilitaryLeave +
+                           t.AdminJuryDuty + t.AdminMilitaryLeave + t.AdminCovid +
                            t.AdminOther + t.AdminWorkersComp).Sum > 24 Then
           WarningList.Add("More than 24 hours of Admin Leave used.")
         End If
@@ -893,7 +893,12 @@
             ' They were hired in this week, so we'll relax the hour requirements
           Else
             If Not EmployeeData.IsExempt AndAlso Total_Hours(1) < 40 Then
-              ErrorList.Add("Employee does not have 40 hours recorded in Week 1.")
+              If Total_Hours(1) + Total_Hours(2) >= 80 Then
+                WarningList.Add("Employee does not have 40 hours recorded in Week 1.")
+              Else
+                ErrorList.Add("Employee does not have 40 hours recorded in Week 1.")
+              End If
+
             End If
           End If
         End If
@@ -903,7 +908,11 @@
             ' They were hired this week, so we'll relax the hour requirements
           Else
             If Not EmployeeData.IsExempt AndAlso Total_Hours(2) < 40 Then
-              ErrorList.Add("Employee does not have 40 hours recorded in Week 2.")
+              If Total_Hours(1) + Total_Hours(2) >= 80 Then
+                WarningList.Add("Employee does not have 40 hours recorded in Week 2.")
+              Else
+                ErrorList.Add("Employee does not have 40 hours recorded in Week 2.")
+              End If
             End If
           End If
         End If
@@ -1043,6 +1052,12 @@
     Public ReadOnly Property Admin_WorkersComp(Week As Integer) As Double
       Get
         Return (From t In Week_TL(Week) Select t.AdminWorkersComp).Sum
+      End Get
+    End Property
+
+    Public ReadOnly Property Admin_Covid(Week As Integer) As Double
+      Get
+        Return (From t In Week_TL(Week) Select t.AdminCovid).Sum
       End Get
     End Property
 

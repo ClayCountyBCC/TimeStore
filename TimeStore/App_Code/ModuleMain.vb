@@ -710,6 +710,7 @@ Public Module ModuleMain
       .Add("ScheduledLWOP", New Timestore_Field(16, "ScheduledLWOP", "Scheduled LWOP", True))
       .Add("SickFamilyLeave", New Timestore_Field(17, "SickFamilyLeave", "Family Sick Leave", True))
       .Add("TermHours", New Timestore_Field(18, "TermHours", "Term Hours", False))
+      .Add("AdminCovid", New Timestore_Field(20, "AdminCovid", "Admin Leave for Covid", True))
     End With
     Return tflist
   End Function

@@ -2128,7 +2128,9 @@
         If tctd.DoubleTimeHours > 0 Then wcl.Add(New WorkType("Double Time", tctd.DoubleTimeHours, 7, "", 0))
         Dim AdminDisaster = (From d In tctd.DisasterWorkHoursList
                              Select d.DisasterAdminHours).Sum
-        Dim TotalAdmin As Double = tctd.AdminBereavement + AdminDisaster + tctd.AdminJuryDuty + tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminHours + tctd.AdminWorkersComp
+        Dim TotalAdmin As Double = tctd.AdminBereavement + AdminDisaster + tctd.AdminJuryDuty +
+          tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminHours + tctd.AdminWorkersComp +
+          tctd.AdminCovid
         If TotalAdmin > 0 Then wcl.Add(New WorkType("Admin", TotalAdmin, 8, "", 0))
         'If tctd.AdminBereavement > 0 Then wcl.Add(New WorkType("Admin", tctd.AdminHours, 8, ""))
         If tctd.OnCallTotalHours > 0 Then wcl.Add(New WorkType("Call Adjusted Hours", tctd.OnCallTotalHours, 9, "", 0))

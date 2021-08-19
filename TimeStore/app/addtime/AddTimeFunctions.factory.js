@@ -162,6 +162,7 @@
           "CompTimeUsed",
           "AdminHours",
           "AdminBereavement",
+          "AdminCovid",
           "AdminDisaster",
           "AdminWorkersComp",
           "AdminJuryDuty",
@@ -193,7 +194,7 @@
       {
         
         let newAdminDisaster = rawtctd.DisasterWorkHoursList.reduce(function (j, current) { return { DisasterAdminHours: j.DisasterAdminHours + current.DisasterAdminHours }; }, 0);
-        let adminDisasterValue = newAdminDisaster.DisasterAdminHours;
+        let adminDisasterValue = newAdminDisaster.DisasterAdminHours ?? 0;
         return (
           rawtctd.AdminBereavement +
           rawtctd.AdminDisaster +
@@ -202,7 +203,8 @@
           rawtctd.AdminMilitaryLeave +
           rawtctd.AdminOther +
           rawtctd.AdminWorkersComp + 
-          adminDisasterValue
+          rawtctd.AdminCovid +
+          adminDisasterValue 
         );
       }
 
@@ -409,6 +411,7 @@
           showAdminHours: false,
           AdminHours: getDefaultHours("Admin - Total", true), // meant to be a total for the other Admin hours.
           AdminOther: getDefaultHours("Other Admin"),
+          AdminCovid: getDefaultHours("Admin COVID"),
           AdminBereavement: getDefaultHours("Bereavement"),
           AdminDisaster: getDefaultHours("Disaster"),
           AdminJuryDuty: getDefaultHours("Jury Duty"),
@@ -429,6 +432,7 @@
           disasterSelectedTimesDisplay: "",
           disasterSelectedTimes: []
         };
+        tctd.AdminCovid.highvisibility = true;
         console.log('fully reset tctd', tctd);
         return tctd;
       }
@@ -460,6 +464,7 @@
           showOnCall: getCacheValue("showOnCall"),
           showAdminHours: false,
           AdminHours: getValue(tctd.AdminHours.value),
+          AdminCovid: getValue(tctd.AdminCovid.value),
           AdminBereavement: getValue(tctd.AdminBereavement.value),
           AdminDisaster: getValue(tctd.AdminDisaster.value),
           AdminWorkersComp: getValue(tctd.AdminWorkersComp.value),
@@ -494,6 +499,7 @@
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminDisaster.value);
+        th += getValue(tctd.AdminCovid.value);
         for (let i = 0; i < tctd.EventsByWorkDate.length; i++)
         {
           th += getValue(tctd.EventsByWorkDate[i].disaster_work_hours.DisasterAdminHours);
@@ -575,6 +581,7 @@
           min: getCacheValue("shiftMin"),
           max: getCacheValue("shiftMax"),
           step: getCacheValue("shiftStep"),
+          highvisibility: false,
           value: value,
           visible: visible,
           disabled: disabled === undefined ? false : disabled
@@ -1118,6 +1125,7 @@
         hourTypes.push("SickHours");
         hourTypes.push("SickLeavePoolHours");
         hourTypes.push("CompTimeUsed");
+        hourTypes.push("AdminCovid");
         hourTypes.push("AdminOther");
         hourTypes.push("AdminBereavement");
         hourTypes.push("AdminDisaster");

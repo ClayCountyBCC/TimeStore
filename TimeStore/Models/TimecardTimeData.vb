@@ -44,6 +44,7 @@ Namespace Models
     Property AdminJuryDuty As Double = 0
     Property AdminMilitaryLeave As Double = 0
     Property AdminOther As Double = 0
+    Property AdminCovid As Double = 0
     Property ScheduledLWOPHours As Double = 0
     Property LWOPSuspensionHours As Double = 0
     Property LWOPHours As Double = 0
@@ -66,7 +67,7 @@ Namespace Models
                                 Select dwh.DisasterAdminHours).Sum
         Return VacationHours + SickHours + SickFamilyLeave + SickLeavePoolHours + CompTimeUsed +
           AdminBereavement + AdminDisaster + AdminWorkersComp + AdminJuryDuty + AdminMilitaryLeave +
-          AdminOther + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours + NewAdminDisaster
+          AdminOther + AdminCovid + ScheduledLWOPHours + LWOPSuspensionHours + LWOPHours + NewAdminDisaster
       End Get
     End Property
 
@@ -162,6 +163,8 @@ Namespace Models
             TermHours = s.hours_used
           Case 19
             AdminDisaster = s.hours_used
+          Case 20
+            AdminCovid = s.hours_used
         End Select
       Next
     End Sub
@@ -201,6 +204,7 @@ Namespace Models
       d.Add("ScheduledLWOP", New Timestore_Field_With_Hours(TSF("ScheduledLWOP"), ScheduledLWOPHours))
       d.Add("SickFamilyLeave", New Timestore_Field_With_Hours(TSF("SickFamilyLeave"), SickFamilyLeave))
       d.Add("TermHours", New Timestore_Field_With_Hours(TSF("TermHours"), TermHours))
+      d.Add("AdminCovid", New Timestore_Field_With_Hours(TSF("AdminCovid"), AdminCovid))
       'd.Add("AdminHours", New Timestore_Field_With_Hours(TSF("AdminHours"), AdminHours))
       'd.Add("TotalHours", New Timestore_Field_With_Hours(TSF("WorkHours"), TotalHours))
       'd.Add("BreakCreditHours", New Timestore_Field_With_Hours(TSF("WorkHours"), BreakCreditHours)
@@ -383,6 +387,9 @@ Namespace Models
       End If
       If AdminDisaster > 0 Then
         dt.Rows.Add(19, "", AdminDisaster)
+      End If
+      If AdminCovid > 0 Then
+        dt.Rows.Add(20, "", AdminCovid)
       End If
       Return dt
     End Function

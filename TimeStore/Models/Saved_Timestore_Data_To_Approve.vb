@@ -122,6 +122,9 @@ Namespace Models
       If tctd.AdminDisaster > 0 Then
         dt.Rows.Add(work_hours_id, 19, "", tctd.AdminDisaster)
       End If
+      If tctd.AdminCovid > 0 Then
+        dt.Rows.Add(work_hours_id, 20, "", tctd.AdminCovid)
+      End If
       Return dt
     End Function
 

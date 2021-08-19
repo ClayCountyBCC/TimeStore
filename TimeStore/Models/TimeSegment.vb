@@ -170,7 +170,7 @@
       End If
 
       Dim total_admin As Double = tctd.AdminBereavement + tctd.AdminHours + tctd.AdminJuryDuty +
-        tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminWorkersComp + tctd.OnCallMinimumHours
+        tctd.AdminMilitaryLeave + tctd.AdminOther + tctd.AdminWorkersComp + tctd.OnCallMinimumHours + tctd.AdminCovid
       If total_admin > 0 Then
         combined.Add(RefineAdminHours(tctd, total_admin, pay_period_start, payrate))
       End If

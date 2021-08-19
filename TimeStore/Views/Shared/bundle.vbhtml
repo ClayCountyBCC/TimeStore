@@ -663,14 +663,15 @@
           <md-input-container ng-repeat="ee in TCTD.EventsByWorkDate track by ee.event_id"
                               class="shortpaddingbottom shortInput">
             <label class="longerLabel"
-                   style="width: auto;">{{ee.event_name}} Admin Hours</label>
+                   style="width: auto;">{{ee.event_name}}Admin Hours</label>
             <input ng-model="ee.disaster_work_hours.DisasterAdminHours"
                    type="number"
                    min="0"
                    max="24"
-                   step=".25" 
+                   step=".25"
                    ng-change="calculateTotalHours()" />
           </md-input-container>
+          <hours-display tctd="TCTD" hours="TCTD.AdminCovid" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminOther" calc="calculateTotalHours()"></hours-display>
           <hours-display tctd="TCTD" hours="TCTD.AdminHours" calc="calculateTotalHours()"></hours-display>
 
@@ -868,7 +869,7 @@
     <md-input-container ng-show="::hours.visible"
                         class="shortpaddingbottom shortInput">
         <label class="longerLabel"
-               style="width: auto;"
+               style="width: auto; {{ hours.highvisibility ? 'font-weight: bolder;' : ''}}"
                >{{ ::hours.label }}</label>
         <input ng-model-options="{ debounce: 1500 }"
                ng-model="hours.value"

@@ -2,7 +2,7 @@
     <md-input-container ng-show="::hours.visible"
                         class="shortpaddingbottom shortInput">
         <label class="longerLabel"
-               style="width: auto;"
+               style="width: auto; {{ hours.highvisibility ? 'font-weight: bolder;' : ''}}"
                >{{ ::hours.label }}</label>
         <input ng-model-options="{ debounce: 1500 }"
                ng-model="hours.value"

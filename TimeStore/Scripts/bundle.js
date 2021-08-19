@@ -49954,6 +49954,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           "CompTimeUsed",
           "AdminHours",
           "AdminBereavement",
+          "AdminCovid",
           "AdminDisaster",
           "AdminWorkersComp",
           "AdminJuryDuty",
@@ -49985,7 +49986,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
       {
         
         let newAdminDisaster = rawtctd.DisasterWorkHoursList.reduce(function (j, current) { return { DisasterAdminHours: j.DisasterAdminHours + current.DisasterAdminHours }; }, 0);
-        let adminDisasterValue = newAdminDisaster.DisasterAdminHours;
+        let adminDisasterValue = newAdminDisaster.DisasterAdminHours ?? 0;
         return (
           rawtctd.AdminBereavement +
           rawtctd.AdminDisaster +
@@ -49994,7 +49995,8 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           rawtctd.AdminMilitaryLeave +
           rawtctd.AdminOther +
           rawtctd.AdminWorkersComp + 
-          adminDisasterValue
+          rawtctd.AdminCovid +
+          adminDisasterValue 
         );
       }
 
@@ -50201,6 +50203,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           showAdminHours: false,
           AdminHours: getDefaultHours("Admin - Total", true), // meant to be a total for the other Admin hours.
           AdminOther: getDefaultHours("Other Admin"),
+          AdminCovid: getDefaultHours("Admin COVID"),
           AdminBereavement: getDefaultHours("Bereavement"),
           AdminDisaster: getDefaultHours("Disaster"),
           AdminJuryDuty: getDefaultHours("Jury Duty"),
@@ -50221,6 +50224,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           disasterSelectedTimesDisplay: "",
           disasterSelectedTimes: []
         };
+        tctd.AdminCovid.highvisibility = true;
         console.log('fully reset tctd', tctd);
         return tctd;
       }
@@ -50252,6 +50256,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           showOnCall: getCacheValue("showOnCall"),
           showAdminHours: false,
           AdminHours: getValue(tctd.AdminHours.value),
+          AdminCovid: getValue(tctd.AdminCovid.value),
           AdminBereavement: getValue(tctd.AdminBereavement.value),
           AdminDisaster: getValue(tctd.AdminDisaster.value),
           AdminWorkersComp: getValue(tctd.AdminWorkersComp.value),
@@ -50286,6 +50291,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         var th = 0;
         th += getValue(tctd.AdminBereavement.value);
         th += getValue(tctd.AdminDisaster.value);
+        th += getValue(tctd.AdminCovid.value);
         for (let i = 0; i < tctd.EventsByWorkDate.length; i++)
         {
           th += getValue(tctd.EventsByWorkDate[i].disaster_work_hours.DisasterAdminHours);
@@ -50367,6 +50373,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
           min: getCacheValue("shiftMin"),
           max: getCacheValue("shiftMax"),
           step: getCacheValue("shiftStep"),
+          highvisibility: false,
           value: value,
           visible: visible,
           disabled: disabled === undefined ? false : disabled
@@ -50910,6 +50917,7 @@ Nd.millisecond=Nd.milliseconds=Md,Nd.utcOffset=Na,Nd.utc=Pa,Nd.local=Qa,Nd.parse
         hourTypes.push("SickHours");
         hourTypes.push("SickLeavePoolHours");
         hourTypes.push("CompTimeUsed");
+        hourTypes.push("AdminCovid");
         hourTypes.push("AdminOther");
         hourTypes.push("AdminBereavement");
         hourTypes.push("AdminDisaster");
